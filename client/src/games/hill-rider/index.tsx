@@ -29,7 +29,6 @@ const SPEC: ControlSpec = {
 
 const WORLD_H = 60;
 const VIEW_W = 120;
-const BASE_SPEED = 26;
 const MAX_SPEED = 70;
 const ACCEL = 26;
 const BRAKE = 46;

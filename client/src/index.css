@@ -5,9 +5,8 @@
    frequently a boxes-and-tofu fallback. Bengali needs the higher weight range
    (400–700) because its conjuncts lose legibility at small optical sizes.
 
-   The Google Fonts stylesheet is requested from client/index.html, not with a CSS
-   `@import` here: an `@import` is only discovered after this stylesheet has loaded,
-   which serialised the fonts behind it. See the comment in index.html. */
+   Fonts are self-hosted via Fontsource (`client/src/fonts.css`, bundled by Vite),
+   not Google Fonts: zero third-party requests, offline-capable once cached. */
 @import "tailwindcss";
 @import "tw-animate-css";
 

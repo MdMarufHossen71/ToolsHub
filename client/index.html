@@ -12,6 +12,9 @@
          place per route (and the prerendered shells carry their own copies), so a
          social crawler that never runs scripts still gets a complete card. -->
     <link rel="canonical" href="https://tools-hub-71.vercel.app/" />
+    <link rel="alternate" hreflang="en" href="https://tools-hub-71.vercel.app/" />
+    <link rel="alternate" hreflang="bn" href="https://tools-hub-71.vercel.app/bn/" />
+    <link rel="alternate" hreflang="x-default" href="https://tools-hub-71.vercel.app/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="ToolsHub" />
     <meta property="og:title" content="ToolsHub — Browser Workbench" />
@@ -45,19 +48,9 @@
     <!-- The browser chrome matches the active paper/ink field before any script runs. -->
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f7f6f1" />
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a1025" />
-    <!-- Fonts. Requested here rather than with an `@import` inside index.css: a CSS
-         `@import` cannot start until the bundled stylesheet has itself downloaded and
-         parsed, which put the fonts CSS — and then the font binaries — on a serial
-         chain behind the app's own CSS. A plain stylesheet link starts during the first
-         HTML parse, in parallel with it. Same families, weights and `display=swap` as
-         before: this is the same Google Fonts request the page already made, only
-         earlier, so the privacy disclosure stays accurate. The preconnects open the TLS
-         connections while this stylesheet is still on the wire. -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" />
+    <!-- Fonts are self-hosted via Fontsource and bundled by Vite (see
+         `client/src/fonts.css`): no third-party font request, fully offline-capable
+         once cached. `display=swap` behaviour is preserved by Fontsource CSS. -->
   </head>
 
   <body>

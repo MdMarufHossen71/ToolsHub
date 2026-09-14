@@ -99,7 +99,7 @@ describe("unavailable storage (fresh module, no localStorage)", () => {
   it("falls back without throwing", async () => {
     vi.resetModules();
     const saved = (globalThis as Record<string, unknown>).localStorage;
-    // @ts-expect-error simulate private browsing
+    // simulate private browsing
     delete (globalThis as Record<string, unknown>).localStorage;
     const fresh = await import("./storage");
     expect(fresh.storageAvailable()).toBe(false);

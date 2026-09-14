@@ -109,12 +109,6 @@ export default function GeoQuiz({ slug, title }: GameModuleProps) {
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
-  const finish = (state: QuizState) => {
-    setQuiz({ ...state, over: true });
-    session.commit({ score: state.score, level: 1, resources: state.correct });
-    session.end({ score: state.score, level: 1, resources: state.correct });
-  };
-
   // The clock runs only while the session runs: pausing or hiding the tab
   // freezes the countdown through `useGameInterval`, with nothing to clean up.
   useGameInterval(session, 1000, () => {

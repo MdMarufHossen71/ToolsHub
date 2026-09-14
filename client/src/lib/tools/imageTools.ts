@@ -532,7 +532,7 @@ export const runImageTools: ToolRunner = async (slug, input, _option, _t, extra)
       const grain = crypto.getRandomValues(new Int16Array(pix.width * pix.height));
       let seed = 0;
       return finishPix(
-        mapPixels(pix, (r, g, b, a, x, y) => {
+        mapPixels(pix, (r, g, b, a, _x, _y) => {
           const noise = grain[seed++ % grain.length] * (amount / 32768);
           return [r + noise, g + noise, b + noise, a];
         }),
@@ -722,7 +722,7 @@ export const runImageTools: ToolRunner = async (slug, input, _option, _t, extra)
     return finishPix(overlayPix(base, top, Math.round(num("x", 20, -5000, 5000)), Math.round(num("y", 20, -5000, 5000)), opacity), files[0], "overlay.png");
   }
   if (slug === "split-image") {
-    const { pix, file } = await firstPix();
+    const { pix } = await firstPix();
     const rows = Math.round(num("rows", 2, 1, 8));
     const cols = Math.round(num("cols", 2, 1, 8));
     const tileW = Math.floor(pix.width / cols);

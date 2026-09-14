@@ -13,8 +13,23 @@
  * served by a static shell, and all canonical/OG URLs point at that clean path.
  */
 
-/** Production origin. The shells are only generated for this deployment. */
-export const SITE_URL = "https://tools-hub-71.vercel.app";
+/** Production origin. Overridable via `VITE_SITE_URL` so preview deploys canonicalise correctly. */
+export const DEFAULT_SITE_URL = "https://tools-hub-71.vercel.app";
+
+function resolveSiteUrl(): string {
+  const fromVite = (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.VITE_SITE_URL;
+  const env = typeof process !== "undefined" ? process.env : undefined;
+  const fromNode = env?.VITE_SITE_URL ?? env?.SITE_URL;
+  const fromVercel = env?.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : env?.VERCEL_URL
+      ? `https://${env.VERCEL_URL}`
+      : undefined;
+  const raw = (fromVite ?? fromNode ?? fromVercel ?? DEFAULT_SITE_URL).trim();
+  return raw.replace(/\/+$/, "");
+}
+
+export const SITE_URL = resolveSiteUrl();
 
 export const OG_IMAGE_PATH = "/og-image.png";
 export const OG_IMAGE_WIDTH = 1200;
@@ -85,13 +100,29 @@ export function canonicalUrl(path: string): string {
   return `${SITE_URL}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
+/**
+ * The Bangla shell of a clean path lives under `/bn`, e.g. `/tools/x/` →
+ * `/bn/tools/x/`. The hash app itself reads language from storage, so the bn
+ * shells serve crawlers and no-JS readers with fully translated copy while the
+ * interactive hand-over goes to the same hash route.
+ */
+export function localizedPath(path: string, locale: Locale): string {
+  const clean = path.startsWith("/") ? path : `/${path}`;
+  return locale === "bn" ? `/bn${clean}` : clean;
+}
+
+/** Absolute URL for a clean path in the given locale. */
+export function localizedUrl(path: string, locale: Locale): string {
+  return canonicalUrl(localizedPath(path, locale));
+}
+
 export function ogLocale(locale: Locale): string {
   return locale === "bn" ? "bn_BD" : "en_US";
 }
 
 export type MetaTag =
   | { kind: "meta"; attr: "name" | "property"; key: string; content: string }
-  | { kind: "link"; rel: string; href: string };
+  | { kind: "link"; rel: string; href: string; hreflang?: string };
 
 export type PageMetaInput = {
   /** Full document title, without the brand suffix. */
@@ -100,7 +131,16 @@ export type PageMetaInput = {
   locale: Locale;
   /** Absolute canonical URL, or null for a route that has none. */
   canonical: string | null;
+  /**
+   * Absolute per-locale URLs for hreflang alternates. Pass both when the route
+   * has bn + en shells; omit (or pass nulls) and no alternate links are emitted.
+   */
+  alternates?: { en: string | null; bn: string | null };
 };
+
+function hreflangOf(locale: Locale): string {
+  return locale === "bn" ? "bn" : "en";
+}
 
 /**
  * The complete tag set every route sets: description, Open Graph, Twitter card and
@@ -108,7 +148,7 @@ export type PageMetaInput = {
  * set `document.title`/`<title>` by different means.
  */
 export function buildPageMetaTags(input: PageMetaInput): MetaTag[] {
-  const { title, description, locale, canonical } = input;
+  const { title, description, locale, canonical, alternates } = input;
   const tags: MetaTag[] = [
     { kind: "meta", attr: "name", key: "description", content: description },
     { kind: "meta", attr: "property", key: "og:title", content: title },
@@ -129,6 +169,14 @@ export function buildPageMetaTags(input: PageMetaInput): MetaTag[] {
     tags.push({ kind: "meta", attr: "property", key: "og:url", content: canonical });
     tags.push({ kind: "link", rel: "canonical", href: canonical });
   }
+
+  // hreflang alternates (plus x-default → English) so crawlers pair each bn
+  // shell with its en twin instead of treating translated copy as duplicate.
+  const en = alternates?.en ?? null;
+  const bn = alternates?.bn ?? null;
+  if (en) tags.push({ kind: "link", rel: "alternate", href: en, hreflang: hreflangOf("en") });
+  if (bn) tags.push({ kind: "link", rel: "alternate", href: bn, hreflang: hreflangOf("bn") });
+  if (en ?? bn) tags.push({ kind: "link", rel: "alternate", href: (en ?? bn) as string, hreflang: "x-default" });
 
   return tags;
 }

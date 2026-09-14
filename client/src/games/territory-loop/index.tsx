@@ -297,7 +297,7 @@ export default function TerritoryLoop({ slug, title }: GameModuleProps) {
     }
   };
 
-  const rivalDecide = (current: LoopState, rival: Rival): { x: number; y: number } | null => {
+  const rivalDecide = (_current: LoopState, rival: Rival): { x: number; y: number } | null => {
     const options = Object.values(VECTORS).filter(({ x, y }) => {
       if (x === -rival.dx && y === -rival.dy && (rival.dx !== 0 || rival.dy !== 0)) return false;
       return inBounds(rival.x + x, rival.y + y);

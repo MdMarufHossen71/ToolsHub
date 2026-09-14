@@ -7,15 +7,14 @@
  * real hashed app-shell list and a version derived from that list. Nothing here
  * makes a network request the page would not already make: the app promise is that
  * everything runs on the device, and the worker only caches what the browser
- * requested anyway (including the Google Fonts already loaded by `index.css`).
+ * requested anyway. Fonts are self-hosted via Fontsource and bundled with the
+ * app CSS, so they ride the same-origin cache-first path — no third-party origin.
  *
  * Strategy:
  *   - navigations: network first, so a deploy is picked up on the next visit, with
  *     the precached shell as the offline fallback;
  *   - same-origin GETs: cache first (hashed assets are immutable, and the shell,
  *     manifest and icons are precached), network fallback that fills the cache;
- *   - Google Fonts: cache first in a separate runtime cache so offline keeps the
- *     Bengali face instead of falling back to tofu;
  *   - anything else, including every non-GET request, is left to the browser.
  */
 
@@ -23,11 +22,7 @@ const VERSION = "__BUILD_VERSION__";
 const PRECACHE = ["__PRECACHE__"];
 
 const SHELL_CACHE = `toolshub-shell-${VERSION}`;
-const RUNTIME_CACHE = `toolshub-runtime-${VERSION}`;
-const CURRENT_CACHES = [SHELL_CACHE, RUNTIME_CACHE];
-
-/** Origins whose responses are safe to keep because the page already requested them. */
-const FONT_HOSTS = ["fonts.googleapis.com", "fonts.gstatic.com"];
+const CURRENT_CACHES = [SHELL_CACHE];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -110,25 +105,5 @@ self.addEventListener("fetch", (event) => {
       })(),
     );
     return;
-  }
-
-  // Google Fonts (already requested by index.css): keep a copy for offline.
-  if (FONT_HOSTS.includes(url.hostname)) {
-    event.respondWith(
-      (async () => {
-        const cached = await caches.match(request);
-        if (cached) return cached;
-        try {
-          const response = await fetch(request);
-          if (response.ok || response.type === "opaque") {
-            const cache = await caches.open(RUNTIME_CACHE);
-            cache.put(request, response.clone());
-          }
-          return response;
-        } catch {
-          return Response.error();
-        }
-      })(),
-    );
   }
 });

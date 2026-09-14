@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { OG_IMAGE_URL, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH, SITE_URL, SECTION_ROUTES, buildPageMetaTags, canonicalUrl, ogLocale, parseRoute } from "./seo";
+import { OG_IMAGE_URL, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH, SITE_URL, SECTION_ROUTES, buildPageMetaTags, canonicalUrl, localizedPath, localizedUrl, ogLocale, parseRoute } from "./seo";
 
 describe("parseRoute", () => {
   it("maps the home route to a root clean path", () => {
@@ -65,6 +65,35 @@ describe("buildPageMetaTags", () => {
   it("maps the locale", () => {
     expect(ogLocale("bn")).toBe("bn_BD");
     expect(ogLocale("en")).toBe("en_US");
+  });
+
+  it("emits hreflang alternates plus x-default when both locales exist", () => {
+    const withAlts = buildPageMetaTags({
+      title: "x",
+      description: "y",
+      locale: "bn",
+      canonical: `${SITE_URL}/bn/tools/x/`,
+      alternates: { en: `${SITE_URL}/tools/x/`, bn: `${SITE_URL}/bn/tools/x/` },
+    });
+    const links = withAlts.filter((tag) => tag.kind === "link" && tag.rel === "alternate");
+    expect(links).toMatchObject([
+      { href: `${SITE_URL}/tools/x/`, hreflang: "en" },
+      { href: `${SITE_URL}/bn/tools/x/`, hreflang: "bn" },
+      { href: `${SITE_URL}/tools/x/`, hreflang: "x-default" },
+    ]);
+  });
+
+  it("emits no alternates when none are passed", () => {
+    const bare = buildPageMetaTags({ title: "x", description: "y", locale: "en", canonical: `${SITE_URL}/` });
+    expect(bare.some((tag) => tag.kind === "link" && tag.rel === "alternate")).toBe(false);
+  });
+});
+
+describe("localized paths", () => {
+  it("keeps English at the clean path and nests Bangla under /bn", () => {
+    expect(localizedPath("/tools/x/", "en")).toBe("/tools/x/");
+    expect(localizedPath("/tools/x/", "bn")).toBe("/bn/tools/x/");
+    expect(localizedUrl("/tools/x/", "bn")).toBe(`${SITE_URL}/bn/tools/x/`);
   });
 });
 

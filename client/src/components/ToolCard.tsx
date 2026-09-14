@@ -1,7 +1,7 @@
 /** Cobalt Workshop design reminder: cards are instrument labels—not generic containers—with a visible category signal and a confident directional affordance. */
 import { ArrowUpRight } from "lucide-react";
 import { Link } from "wouter";
-import { getToolIcon, groupMeta, type Tool } from "@/data/tools";
+import { getToolIcon, type Tool } from "@/data/tools";
 import { useSettings } from "@/contexts/AppSettingsContext";
 import { FavoriteButton } from "@/components/FavoriteButton";
 

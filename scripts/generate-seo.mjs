@@ -7,7 +7,9 @@
  *     (`/tools/<slug>/index.html`, `/games/<slug>/index.html`);
  *   - a shell for each section route listed in the sitemap
  *     (`/tools/`, `/games/`, `/links/`, `/ai/`, `/about/`, `/how-to/`, `/privacy/`);
- *   - `sitemap.xml`.
+ *   - the same shells translated under `/bn` (`/bn/tools/<slug>/`, …) plus a
+ *     Bangla home shell at `/bn/` (the English home is `index.html` itself);
+ *   - `sitemap.xml` and `robots.txt`.
  *
  * Every string is taken from the same sources the app renders — `client/src/data/
  * tools.ts`, `toolDescriptions.ts`, `games.ts`, `client/src/lib/toolGuide.ts` and the
@@ -26,14 +28,17 @@ import { gameRegistry } from "../client/src/data/games.ts";
 import { IMPLEMENTED_TOOLS } from "../client/src/lib/implementedTools.ts";
 import { guideKind, toolGuideSteps } from "../client/src/lib/toolGuide.ts";
 import { translations, interpolate } from "../client/src/i18n/translations.ts";
-import { SITE_URL, SECTION_ROUTES, buildPageMetaTags, canonicalUrl } from "../client/src/lib/seo.ts";
-import { buildJsonLdGraph, gameNodes, toolNodes } from "../client/src/lib/structuredData.ts";
+import { SITE_URL, SECTION_ROUTES, buildPageMetaTags, canonicalUrl, localizedUrl } from "../client/src/lib/seo.ts";
+import { buildJsonLdGraph, gameNodes, toolNodes, websiteNode } from "../client/src/lib/structuredData.ts";
 import { renderShellHtml } from "../client/src/lib/seoShell.ts";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const DIST = path.join(ROOT, "dist", "public");
 const INDEX = path.join(DIST, "index.html");
 const LAST_MOD = new Date().toISOString().slice(0, 10);
+
+/** Every locale the shells are generated in. Tool names stay English; copy is translated. */
+const LOCALES = ["en", "bn"];
 
 if (!existsSync(INDEX)) throw new Error(`[seo] ${INDEX} is missing — run this after \`vite build\``);
 const indexHtml = readFileSync(INDEX, "utf8");
@@ -56,115 +61,161 @@ function writeShell(urlPath, html) {
   written += 1;
 }
 
-// --- Tools --------------------------------------------------------------------
-for (const tool of toolRegistry) {
-  const locale = "en";
-  const kind = guideKind(tool.slug, IMPLEMENTED_TOOLS.has(tool.slug));
-  const description = tool.description.en;
-  const urlPath = `/tools/${tool.slug}/`;
-  const canonical = canonicalUrl(urlPath);
-  const steps = toolGuideSteps(tool, locale, kind).map((item) => t(item.key, locale, item.values));
-  const howTo = steps.length > 0 ? steps : [t("tool.unavailable.copy", locale)];
-
-  const html = renderShellHtml({
-    title: `${tool.name} · ToolsHub`,
-    description,
-    metaTags: buildPageMetaTags({ title: `${tool.name} · ToolsHub`, description, locale, canonical }),
-    jsonLd: buildJsonLdGraph(toolNodes(tool, locale, { home: t("seo.breadcrumbHome", locale), section: t("nav.tools", locale) })),
-    h1: tool.name,
-    intro: [],
-    sections: [
-      { heading: t("tool.guide.aboutTitle", locale), paragraphs: [description, t(`tool.guide.about.${kind}`, locale), `${t("tool.guide.notDo", locale)} ${t("tool.guide.privacy", locale)}`] },
-      { heading: t("tool.guide.howTitle", locale), steps: howTo },
-    ],
-    redirectTo: `/#${urlPath.replace(/\/$/, "")}`,
-    stylesheetHref,
-    openLabel: t("seo.openInApp", locale),
-    noscriptNote: t("seo.shell.noscript", locale),
-  });
-  writeShell(urlPath, html);
+/** hreflang pair for a clean path: self-canonical per locale, cross-linked. */
+function alternatesFor(urlPath) {
+  return { en: canonicalUrl(urlPath), bn: localizedUrl(urlPath, "bn") };
 }
 
-// --- Games --------------------------------------------------------------------
-for (const game of gameRegistry) {
-  const locale = "en";
-  const description = game.description.en;
-  const urlPath = `/games/${game.slug}/`;
-  const canonical = canonicalUrl(urlPath);
-
-  const html = renderShellHtml({
-    title: `${game.name} · ToolsHub`,
-    description,
-    metaTags: buildPageMetaTags({ title: `${game.name} · ToolsHub`, description, locale, canonical }),
-    jsonLd: buildJsonLdGraph(gameNodes(game, locale, { home: t("seo.breadcrumbHome", locale), section: t("nav.games", locale) })),
-    h1: game.name,
-    intro: [description],
-    sections: [
-      {
-        heading: t("seo.gameAbout", locale),
-        paragraphs: [`${t("seo.gameGenre", locale)}: ${game.genre}.`, t("seo.gameLocal", locale)],
-      },
-    ],
-    redirectTo: `/#${urlPath.replace(/\/$/, "")}`,
-    stylesheetHref,
-    openLabel: t("seo.openInApp", locale),
-    noscriptNote: t("seo.shell.noscript", locale),
-  });
-  writeShell(urlPath, html);
+/** Output path for a locale: English at the clean path, Bangla under `/bn`. */
+function outPath(locale, urlPath) {
+  return locale === "bn" ? `/bn${urlPath}` : urlPath;
 }
 
-// --- Section routes -----------------------------------------------------------
-const SECTION_COPY = {
-  tools: { title: "tools.title", copy: "tools.copy" },
-  games: { title: "games.title", copy: "games.copy" },
-  links: { title: "links.title", copy: "links.copy" },
-  ai: { title: "ai.title", copy: "ai.copy" },
-  about: { title: "static.about.title", copy: "static.about.copy" },
-  "how-to": { title: "static.how.title", copy: "static.how.copy" },
-  privacy: { title: "static.privacy.title", copy: "static.privacy.copy" },
-  changelog: { title: "changelog.title", copy: "changelog.copy" },
-};
+for (const locale of LOCALES) {
+  // --- Tools ------------------------------------------------------------------
+  for (const tool of toolRegistry) {
+    const kind = guideKind(tool.slug, IMPLEMENTED_TOOLS.has(tool.slug));
+    const description = tool.description[locale] ?? tool.description.en;
+    const urlPath = `/tools/${tool.slug}/`;
+    const canonical = canonicalUrl(outPath(locale, urlPath));
+    const steps = toolGuideSteps(tool, locale, kind).map((item) => t(item.key, locale, item.values));
+    const howTo = steps.length > 0 ? steps : [t("tool.unavailable.copy", locale)];
 
-for (const route of SECTION_ROUTES) {
-  const copy = SECTION_COPY[route.kind];
-  if (!copy) throw new Error(`[seo] no shell copy mapped for section "${route.kind}"`);
-  const locale = "en";
-  const title = t(copy.title, locale);
-  const description = t(copy.copy, locale);
-  const canonical = canonicalUrl(route.path);
+    const html = renderShellHtml({
+      title: `${tool.name} · ToolsHub`,
+      description,
+      metaTags: buildPageMetaTags({ title: `${tool.name} · ToolsHub`, description, locale, canonical, alternates: alternatesFor(urlPath) }),
+      jsonLd: buildJsonLdGraph(toolNodes(tool, locale, { home: t("seo.breadcrumbHome", locale), section: t("nav.tools", locale) })),
+      lang: locale,
+      h1: tool.name,
+      intro: [],
+      sections: [
+        { heading: t("tool.guide.aboutTitle", locale), paragraphs: [description, t(`tool.guide.about.${kind}`, locale), `${t("tool.guide.notDo", locale)} ${t("tool.guide.privacy", locale)}`] },
+        { heading: t("tool.guide.howTitle", locale), steps: howTo },
+      ],
+      redirectTo: `/#${urlPath.replace(/\/$/, "")}`,
+      stylesheetHref,
+      openLabel: t("seo.openInApp", locale),
+      noscriptNote: t("seo.shell.noscript", locale),
+    });
+    writeShell(outPath(locale, urlPath), html);
+  }
 
+  // --- Games ------------------------------------------------------------------
+  for (const game of gameRegistry) {
+    const description = game.description[locale] ?? game.description.en;
+    const urlPath = `/games/${game.slug}/`;
+    const canonical = canonicalUrl(outPath(locale, urlPath));
+
+    const html = renderShellHtml({
+      title: `${game.name} · ToolsHub`,
+      description,
+      metaTags: buildPageMetaTags({ title: `${game.name} · ToolsHub`, description, locale, canonical, alternates: alternatesFor(urlPath) }),
+      jsonLd: buildJsonLdGraph(gameNodes(game, locale, { home: t("seo.breadcrumbHome", locale), section: t("nav.games", locale) })),
+      lang: locale,
+      h1: game.name,
+      intro: [description],
+      sections: [
+        {
+          heading: t("seo.gameAbout", locale),
+          paragraphs: [`${t("seo.gameGenre", locale)}: ${game.genre}.`, t("seo.gameLocal", locale)],
+        },
+      ],
+      redirectTo: `/#${urlPath.replace(/\/$/, "")}`,
+      stylesheetHref,
+      openLabel: t("seo.openInApp", locale),
+      noscriptNote: t("seo.shell.noscript", locale),
+    });
+    writeShell(outPath(locale, urlPath), html);
+  }
+
+  // --- Section routes -----------------------------------------------------------
+  const SECTION_COPY = {
+    tools: { title: "tools.title", copy: "tools.copy" },
+    games: { title: "games.title", copy: "games.copy" },
+    links: { title: "links.title", copy: "links.copy" },
+    ai: { title: "ai.title", copy: "ai.copy" },
+    about: { title: "static.about.title", copy: "static.about.copy" },
+    "how-to": { title: "static.how.title", copy: "static.how.copy" },
+    privacy: { title: "static.privacy.title", copy: "static.privacy.copy" },
+    changelog: { title: "changelog.title", copy: "changelog.copy" },
+  };
+
+  for (const route of SECTION_ROUTES) {
+    const copy = SECTION_COPY[route.kind];
+    if (!copy) throw new Error(`[seo] no shell copy mapped for section "${route.kind}"`);
+    const title = t(copy.title, locale);
+    const description = t(copy.copy, locale);
+    const canonical = canonicalUrl(outPath(locale, route.path));
+
+    const html = renderShellHtml({
+      title: `${title} · ToolsHub`,
+      description,
+      metaTags: buildPageMetaTags({ title: `${title} · ToolsHub`, description, locale, canonical, alternates: alternatesFor(route.path) }),
+      jsonLd: null,
+      lang: locale,
+      h1: title,
+      intro: [description],
+      sections: [],
+      redirectTo: `/#${route.path.replace(/\/$/, "")}`,
+      stylesheetHref,
+      openLabel: t("seo.openInApp", locale),
+      noscriptNote: t("seo.shell.noscript", locale),
+    });
+    writeShell(outPath(locale, route.path), html);
+  }
+}
+
+// --- Bangla home shell (English home is index.html itself) ----------------------
+{
+  const locale = "bn";
+  const title = `${t("home.metaTitle", locale)} · ToolsHub`;
+  const description = t("home.copy", locale);
   const html = renderShellHtml({
-    title: `${title} · ToolsHub`,
+    title,
     description,
-    metaTags: buildPageMetaTags({ title: `${title} · ToolsHub`, description, locale, canonical }),
-    jsonLd: null,
+    metaTags: buildPageMetaTags({
+      title,
+      description,
+      locale,
+      canonical: canonicalUrl("/bn/"),
+      alternates: { en: canonicalUrl("/"), bn: canonicalUrl("/bn/") },
+    }),
+    jsonLd: buildJsonLdGraph([websiteNode({ description, locale })]),
+    lang: locale,
     h1: title,
     intro: [description],
     sections: [],
-    redirectTo: `/#${route.path.replace(/\/$/, "")}`,
+    redirectTo: "/#",
     stylesheetHref,
     openLabel: t("seo.openInApp", locale),
     noscriptNote: t("seo.shell.noscript", locale),
   });
-  writeShell(route.path, html);
+  writeShell("/bn/", html);
 }
 
-if (written !== toolRegistry.length + gameRegistry.length + SECTION_ROUTES.length) {
-  throw new Error(`[seo] wrote ${written} shells, expected ${toolRegistry.length + gameRegistry.length + SECTION_ROUTES.length}`);
+const perLocale = toolRegistry.length + gameRegistry.length + SECTION_ROUTES.length;
+if (written !== perLocale * LOCALES.length + 1) {
+  throw new Error(`[seo] wrote ${written} shells, expected ${perLocale * LOCALES.length + 1}`);
 }
 
-// --- sitemap.xml --------------------------------------------------------------
-const urls = [
-  `${SITE_URL}/`,
-  ...SECTION_ROUTES.map((route) => canonicalUrl(route.path)),
-  ...toolRegistry.map((tool) => canonicalUrl(`/tools/${tool.slug}/`)),
-  ...gameRegistry.map((game) => canonicalUrl(`/games/${game.slug}/`)),
+// --- sitemap.xml + robots.txt ---------------------------------------------------
+const enPaths = [
+  "/",
+  ...SECTION_ROUTES.map((route) => route.path),
+  ...toolRegistry.map((tool) => `/tools/${tool.slug}/`),
+  ...gameRegistry.map((game) => `/games/${game.slug}/`),
 ];
+const urls = [...enPaths.map((p) => canonicalUrl(p)), ...enPaths.filter((p) => p !== "/").map((p) => localizedUrl(p, "bn")), canonicalUrl("/bn/")];
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls
   .map((url) => `  <url><loc>${url}</loc><lastmod>${LAST_MOD}</lastmod></url>`)
   .join("\n")}\n</urlset>\n`;
 writeFileSync(path.join(DIST, "sitemap.xml"), sitemap);
+writeFileSync(
+  path.join(DIST, "robots.txt"),
+  `# ToolsHub - ${SITE_URL}\n# Every tool and game has a crawlable static shell at its clean path.\nUser-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\n`,
+);
 
 console.log(
-  `[seo] wrote ${written} shells (${toolRegistry.length} tools, ${gameRegistry.length} games, ${SECTION_ROUTES.length} sections) and sitemap.xml with ${urls.length} URLs; stylesheet=${stylesheetHref ?? "none"}`,
+  `[seo] wrote ${written} shells (${toolRegistry.length} tools ×2, ${gameRegistry.length} games ×2, ${SECTION_ROUTES.length} sections ×2, bn home) and sitemap.xml with ${urls.length} URLs; stylesheet=${stylesheetHref ?? "none"}`,
 );

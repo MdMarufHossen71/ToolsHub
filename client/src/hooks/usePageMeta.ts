@@ -16,7 +16,7 @@ import { useTranslation } from "@/contexts/AppSettingsContext";
 import type { TranslationKey } from "@/i18n/translations";
 import { findTool } from "@/data/tools";
 import { findGame } from "@/data/games";
-import { buildPageMetaTags, canonicalUrl, parseRoute, type MetaTag } from "@/lib/seo";
+import { buildPageMetaTags, canonicalUrl, localizedUrl, parseRoute, type MetaTag } from "@/lib/seo";
 import { buildJsonLdGraph, gameNodes, toolNodes, websiteNode, type JsonLdNode } from "@/lib/structuredData";
 
 const BRAND = "ToolsHub";
@@ -44,10 +44,14 @@ function upsertMeta(tag: Extract<MetaTag, { kind: "meta" }>) {
 }
 
 function upsertLink(tag: Extract<MetaTag, { kind: "link" }>) {
-  let element = document.head.querySelector<HTMLLinkElement>(`link[rel="${tag.rel}"]`);
+  // hreflang alternates share `rel="alternate"`, so the selector must include
+  // it — otherwise the bn link would overwrite the en one on every navigation.
+  const selector = tag.hreflang ? `link[rel="${tag.rel}"][hreflang="${tag.hreflang}"]` : `link[rel="${tag.rel}"]`;
+  let element = document.head.querySelector<HTMLLinkElement>(selector);
   if (!element) {
     element = document.createElement("link");
     element.setAttribute("rel", tag.rel);
+    if (tag.hreflang) element.setAttribute("hreflang", tag.hreflang);
     document.head.appendChild(element);
     created.push(element);
   }
@@ -83,11 +87,15 @@ export function usePageMeta(titleKey: TranslationKey, descriptionKey?: Translati
 
     const hasEntity = route.kind !== "tool" && route.kind !== "game" ? true : Boolean(tool || game);
     const canonical = route.kind === "other" || !hasEntity ? null : canonicalUrl(route.path);
+    const alternates =
+      route.kind === "other" || !hasEntity
+        ? undefined
+        : { en: localizedUrl(route.path, "en"), bn: localizedUrl(route.path, "bn") };
 
     document.title = title;
     clearCreated();
 
-    for (const tag of buildPageMetaTags({ title, description, locale: language, canonical })) {
+    for (const tag of buildPageMetaTags({ title, description, locale: language, canonical, alternates })) {
       if (tag.kind === "meta") upsertMeta(tag);
       else upsertLink(tag);
     }

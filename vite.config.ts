@@ -105,7 +105,7 @@ function vitePluginManusDebugCollector(): Plugin {
           return next();
         }
 
-        const handlePayload = (payload: any) => {
+        const handlePayload = (payload: { consoleLogs?: unknown[]; networkRequests?: unknown[]; sessionEvents?: unknown[] }) => {
           // Write logs directly to files
           if (payload.consoleLogs?.length > 0) {
             writeToLogFile("browserConsole", payload.consoleLogs);

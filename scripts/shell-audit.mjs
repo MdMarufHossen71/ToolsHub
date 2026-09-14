@@ -41,8 +41,14 @@ for (const file of files) {
 
   if (!/<title>[^<]+<\/title>/.test(html)) fail(file, "missing or empty <title>");
   if (!/<html[^>]*\blang="[a-z-]+"/i.test(html)) fail(file, "missing lang on <html>");
+  // Bangla shells must declare `lang="bn"` so screen readers pick the right voice.
+  const expectedLang = relative === "bn/index.html" || relative.startsWith("bn/") ? "bn" : "en";
+  if (!new RegExp(`<html[^>]*\\blang="${expectedLang}"`, "i").test(html)) fail(file, `expected lang="${expectedLang}" on <html>`);
   if (!/<meta name="description" content="[^"]+"/.test(html)) fail(file, "missing meta description");
   if (!/<link rel="canonical" href="https:\/\/[^"]+"/.test(html)) fail(file, "missing canonical link");
+  if (!/<link rel="alternate" hreflang="en" href="https:\/\/[^"]+"/.test(html)) fail(file, "missing hreflang=en alternate");
+  if (!/<link rel="alternate" hreflang="bn" href="https:\/\/[^"]+"/.test(html)) fail(file, "missing hreflang=bn alternate");
+  if (!/<link rel="alternate" hreflang="x-default" href="https:\/\/[^"]+"/.test(html)) fail(file, "missing hreflang=x-default alternate");
   if (!/<meta property="og:url"/.test(html)) fail(file, "missing og:url");
   if (!/<meta name="twitter:card" content="summary_large_image"/.test(html)) fail(file, "missing twitter:card");
 
@@ -56,7 +62,8 @@ for (const file of files) {
   }
 
   // Tool and game shells must carry structured data; section shells intentionally do not.
-  const needsJsonLd = /^(tools|games)\/[^/]+\/index\.html$/.test(relative);
+  // Bangla shells live under `/bn` and carry the same block in Bangla.
+  const needsJsonLd = /^(bn\/)?(tools|games)\/[^/]+\/index\.html$/.test(relative) || relative === "bn/index.html";
   const scripts = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((match) => match[1]);
   if (needsJsonLd) {
     if (scripts.length !== 1) fail(file, `expected one JSON-LD block, found ${scripts.length}`);
@@ -78,7 +85,16 @@ if (!statSync(sitemapPath, { throwIfNoEntry: false })) {
 } else {
   const sitemap = readFileSync(sitemapPath, "utf8");
   const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
-  const expectedShells = locs.filter((url) => url !== "https://tools-hub-71.vercel.app/").length;
+  // The English home URL has no shell of its own — `index.html` serves it — so it
+  // is the only sitemap entry without a matching file. Anything else is a drift.
+  // Matched by pathname so preview origins (VITE_SITE_URL) audit the same way.
+  const expectedShells = locs.filter((url) => {
+    try {
+      return new URL(url).pathname !== "/";
+    } catch {
+      return true;
+    }
+  }).length;
   if (expectedShells !== files.length) fail(sitemapPath, `lists ${expectedShells} shell URLs but ${files.length} shells were written`);
 }
 

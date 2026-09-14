@@ -4,7 +4,10 @@
   "description": "Free browser tools and games that run entirely on your device. No accounts, no tracking, no uploads.",
   "start_url": "./",
   "scope": "./",
+  "id": "./",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "orientation": "any",
   "theme_color": "#0a1025",
   "background_color": "#f7f6f1",
   "lang": "en",
@@ -15,5 +18,27 @@
     { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "./icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
     { "src": "./icons/favicon-32.png", "sizes": "32x32", "type": "image/png", "purpose": "any" }
-  ]
+  ],
+  "shortcuts": [
+    {
+      "name": "Browse tools",
+      "short_name": "Tools",
+      "description": "Search all browser tools",
+      "url": "./#/tools",
+      "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Play games",
+      "short_name": "Games",
+      "description": "Play 32 local games",
+      "url": "./#/games",
+      "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "share_target": {
+    "action": "./",
+    "method": "GET",
+    "enctype": "application/x-www-form-urlencoded",
+    "params": { "title": "title", "text": "text", "url": "url" }
+  }
 }

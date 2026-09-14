@@ -27,6 +27,8 @@ export type ShellInput = {
   metaTags: MetaTag[];
   jsonLd: JsonLdNode | null;
   h1: string;
+  /** BCP-47 language of the shell copy (`en` default, `bn` for translated shells). */
+  lang?: "en" | "bn";
   intro: string[];
   sections: ShellSection[];
   /** In-app hash URL, e.g. `/#/tools/reverse-text`. */
@@ -49,7 +51,10 @@ export function escapeJsonForScript(value: unknown): string {
 }
 
 function metaTagHtml(tag: MetaTag): string {
-  if (tag.kind === "link") return `<link rel="${escapeHtml(tag.rel)}" href="${escapeHtml(tag.href)}" />`;
+  if (tag.kind === "link") {
+    const hreflang = tag.hreflang ? ` hreflang="${escapeHtml(tag.hreflang)}"` : "";
+    return `<link rel="${escapeHtml(tag.rel)}"${hreflang} href="${escapeHtml(tag.href)}" />`;
+  }
   return `<meta ${tag.attr}="${escapeHtml(tag.key)}" content="${escapeHtml(tag.content)}" />`;
 }
 
@@ -75,7 +80,7 @@ export function renderShellHtml(input: ShellInput): string {
     .join("\n");
 
   return `<!doctype html>
-<html lang="en">
+<html lang="${input.lang ?? "en"}">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

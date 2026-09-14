@@ -44,6 +44,24 @@ describe("renderShellHtml", () => {
     expect(html).toContain('<script>location.replace("/#/tools/reverse-text");</script>');
   });
 
+  it("renders the shell lang and hreflang alternates", () => {
+    const bn = renderShellHtml({
+      ...base,
+      lang: "bn",
+      metaTags: buildPageMetaTags({
+        title: "x",
+        description: "y",
+        locale: "bn",
+        canonical: `${SITE_URL}/bn/tools/x/`,
+        alternates: { en: `${SITE_URL}/tools/x/`, bn: `${SITE_URL}/bn/tools/x/` },
+      }),
+    });
+    expect(bn).toContain('<html lang="bn">');
+    expect(bn).toContain(`<link rel="alternate" hreflang="en" href="${SITE_URL}/tools/x/" />`);
+    expect(bn).toContain(`<link rel="alternate" hreflang="bn" href="${SITE_URL}/bn/tools/x/" />`);
+    expect(bn).toContain(`<link rel="alternate" hreflang="x-default" href="${SITE_URL}/tools/x/" />`);
+  });
+
   it("links the stylesheet with an absolute path and keeps a noscript fallback", () => {
     expect(html).toContain('<link rel="stylesheet" href="/assets/index-abc123.css" />');
     expect(html).toContain("<noscript>");

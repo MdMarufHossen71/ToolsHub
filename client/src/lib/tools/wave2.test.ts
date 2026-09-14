@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { runTool, type ToolTranslate } from "../toolOperations";
-import { parseRanges } from "./fileTools";
 
 const t = ((key: string) => key) as ToolTranslate;
 const run = (slug: string, fields: Record<string, string>, input = "", files: File[] = []) =>
@@ -94,7 +93,6 @@ describe("Wave 2 color tools", () => {
     const light = await run("lighten-darken-color", { color: "#000000", amount: "50" });
     expect(light.image).toContain("data:image/svg+xml");
     expect(JSON.parse(light.text).hex).not.toBe("#000000");
-    expect(JSON.parse((await run("color-scheme-generator", { color: "#ff0000", mode: "triadic" })).text.split("\n").length)).toBeDefined();
     const scheme = (await run("color-scheme-generator", { color: "#ff0000", mode: "triadic" })).text.split("\n");
     expect(scheme).toHaveLength(3);
     expect(JSON.parse((await run("contrast-checker", { a: "#000000", b: "#ffffff" })).text).ratio).toBe(21);

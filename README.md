@@ -10,7 +10,7 @@
 | Games | 32 playable games with keyboard + touch controls and local high-score persistence. |
 | Localization | **Default language is English; full Bangla UI is available via the language toggle.** Tool names remain in English for familiar search and SEO, while descriptions are supplied in both English and Bangla. |
 | Appearance | Light, Dark, and 10 developer-inspired presets, plus a six-token custom-theme builder with import, export, edit, and delete controls. |
-| Privacy | No account requirement, server-side tool processing, or user tracking logic is built into the app. Fonts load from Google Fonts (standard request data); everything else runs locally. |
+| Privacy | No account requirement, server-side tool processing, user tracking, or third-party font request — fonts are self-hosted and everything else runs locally. |
 
 ## Your data stays in your browser
 
