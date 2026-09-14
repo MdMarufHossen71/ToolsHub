@@ -1,14 +1,21 @@
 /* Cobalt Workshop refinement: dense instrument rails, crafted mark, and game-cartridge energy. */
-.brand small { display:block; font:8px var(--font-code); letter-spacing:.18em; margin-top:1px; color:var(--muted-foreground); }
-/* The mark is two paper wedges cut into a cobalt square. Both wedges now name a
-   paper token explicitly instead of `--secondary`, which since Phase 1 is derived
-   as a near-surface neutral and no longer means "the second brand colour". */
-.brand-mark { display:block; position:relative; overflow:hidden; background:var(--primary); }.brand-mark::before,.brand-mark::after { content:""; position:absolute; width:15px; height:15px; transform:rotate(45deg); }.brand-mark::before { left:-5px; top:7px; background:var(--surface); }.brand-mark::after { right:-4px; top:7px; background:var(--background); }
+/* The mark is two paper wedges cut into a cobalt square, drawn as an inline SVG in
+   `components/Logo.tsx` so the same art can also be rasterised for the favicon and
+   install icons. Both wedges name a paper token explicitly instead of `--secondary`,
+   which since Phase 1 is a near-surface neutral and no longer means "the second brand
+   colour". The glow stays on the element box so it reads the same as the old
+   `.brand-mark`, which this replaces. */
+.logo-mark { display:block; flex:none; width:29px; height:29px; border-radius:var(--radius-md); box-shadow:0 6px 18px color-mix(in srgb,var(--primary) 32%,transparent); }
+/* The footer lockup is the same wordmark one step down, so a tight rail still fits. */
+.brand-compact { gap:8px; font-size:13px; }.brand-compact .logo-mark { width:24px; height:24px; }
 .header-search { margin-left:auto; max-width:235px; flex:1; display:flex; align-items:center; gap:7px; padding:8px 10px; color:var(--muted-foreground); background:color-mix(in srgb,var(--card) 82%,transparent); border:1px solid var(--border-strong); border-radius:var(--radius-md); }.header-search input { min-width:0; width:100%; background:transparent; border:0; outline:0; color:var(--foreground); font-size:11px; }.mobile-drawer { display:none; }
 /* `--label-instrument-tray` is set from the translation dictionary by the language
    effect in AppSettingsContext, because a `content:` string cannot read it. The
    empty fallback means the label simply disappears rather than printing a key. */
-.directory-grid { background:linear-gradient(90deg,var(--border) 1px,transparent 1px); }.directory-grid .tool-card:nth-child(11n+1),.directory-grid .tool-card:nth-child(11n+6) { grid-column:span 2; background:linear-gradient(110deg,color-mix(in srgb,var(--primary) 8%,var(--card)),var(--card)); }.directory-grid .tool-card:nth-child(11n+1)::before,.directory-grid .tool-card:nth-child(11n+6)::before { content:var(--label-instrument-tray,""); position:absolute; right:14px; top:13px; color:var(--primary-text); font:9px var(--font-code); letter-spacing:.1em; }
+.directory-grid { background:linear-gradient(90deg,var(--border) 1px,transparent 1px); }.directory-grid .tool-card:nth-child(11n+1),.directory-grid .tool-card:nth-child(11n+6) { grid-column:span 2; background:linear-gradient(110deg,color-mix(in srgb,var(--primary) 8%,var(--card)),var(--card)); }/* The label used to sit in the card's top-right corner. The favorite star owns that
+   corner now (it has to be a sibling of the link, so it cannot live inside the card's
+   own top row), so the label steps left of the arrow instead of colliding with it. */
+.directory-grid .tool-card:nth-child(11n+1)::before,.directory-grid .tool-card:nth-child(11n+6)::before { content:var(--label-instrument-tray,""); position:absolute; right:72px; top:13px; color:var(--primary-text); font:9px var(--font-code); letter-spacing:.1em; }
 /* The wash behind a game card was overridden to an organic blob
    (`border-radius:38% 62% 60% 40%`), which read as a different design language from
    everything else. The override is gone, so the plain circle in index.css applies. */
@@ -25,3 +32,98 @@
   .mobile-drawer a { padding:11px; background:var(--card); border:1px solid var(--border-strong); border-radius:var(--radius-md); font-size:13px; }
 }
 @media (max-width:640px) { .mobile-drawer nav { grid-template-columns:1fr 1fr; }.directory-grid .tool-card:nth-child(11n+1),.directory-grid .tool-card:nth-child(11n+6),.game-card:nth-child(9n+1) { grid-column:span 1; } }
+
+/* --- Favorites ------------------------------------------------------------ */
+/* The card is a plain relative shell: the link fills it and the star floats over the
+   corner as a sibling, because a <button> nested in an <a> is invalid HTML and takes
+   the keyboard and screen-reader behaviour with it. Moving the padding onto the link
+   keeps every existing measurement while letting the focus ring trace the whole card. */
+.tool-card { padding:0; }
+.tool-card-link { display:flex; flex-direction:column; justify-content:space-between; flex:1; padding:20px; }
+.tool-card-link:focus-visible { outline-offset:-2px; }
+/* The star's 32px box sits above the card's top-right corner, so the top row reserves
+   that column and the arrow stays clear of it. */
+.tool-card-top { padding-right:30px; }
+.tool-favorite { position:absolute; top:10px; right:10px; z-index:2; display:grid; place-items:center; width:32px; height:32px; border:1px solid transparent; border-radius:var(--radius-md); background:color-mix(in srgb,var(--card) 88%,transparent); color:var(--muted-foreground); cursor:pointer; }
+.tool-favorite:hover { color:var(--foreground); border-color:var(--border-strong); }
+.tool-favorite[data-favorite="true"] { color:var(--primary); }
+
+/* Tool-page badge row: the privacy chip keeps its place and the star sits beside it. */
+.workbench-badges { display:flex; align-items:center; gap:8px; flex:none; align-self:start; }
+.workbench-badges .privacy-chip { align-self:center; }
+.workbench-favorite { display:grid; place-items:center; width:36px; height:36px; border:1px solid var(--border-strong); border-radius:var(--radius-md); background:var(--card); color:var(--muted-foreground); cursor:pointer; }
+.workbench-favorite:hover { color:var(--foreground); border-color:var(--primary); }
+.workbench-favorite[data-favorite="true"] { color:var(--primary); border-color:color-mix(in srgb,var(--primary) 45%,var(--border)); background:color-mix(in srgb,var(--primary) 8%,var(--card)); }
+
+/* --- Live search suggestions ---------------------------------------------- */
+/* The panel is absolutely positioned so opening it never moves the page. The hero
+   section clips its decorative wash horizontally; an absolutely positioned child would
+   be clipped with it if the clip ran on both axes, so it runs on x only. */
+.hero-section { overflow-x:clip; overflow-y:visible; }
+.search-combobox { position:relative; }
+.search-combobox[data-variant="hero"] { display:flex; align-items:center; gap:9px; width:100%; max-width:560px; margin-top:26px; padding:12px 14px; color:var(--on-ink-muted); background:color-mix(in srgb,var(--ink-raised) 74%,transparent); border:1px solid var(--ink-border); border-radius:var(--radius-md); }
+.search-combobox[data-variant="hero"] input { min-width:0; width:100%; background:transparent; border:0; outline:0; color:var(--on-ink); font-size:14px; }
+.search-combobox[data-variant="hero"] input::placeholder { color:var(--on-ink-muted); opacity:1; }
+.search-hint { flex:none; display:inline-flex; }
+.search-kbd { pointer-events:none; }
+.search-combobox[data-variant="hero"] .search-kbd { background:color-mix(in srgb,var(--on-ink) 14%,transparent); color:var(--on-ink-muted); }
+.search-suggestions { position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:30; margin:0; padding:6px; list-style:none; background:var(--popover); color:var(--popover-foreground); border:1px solid var(--border-strong); border-radius:var(--radius-md); box-shadow:var(--shadow-lg); }
+/* The header field sits at the right of the rail, so its panel grows leftwards to stay
+   inside the viewport instead of running off it. */
+.search-combobox[data-variant="header"] .search-suggestions { left:auto; right:0; min-width:270px; }
+.search-suggestion { display:flex; align-items:center; gap:10px; padding:8px 9px; border-radius:var(--radius-sm); cursor:pointer; }
+.search-suggestion[data-active="true"] { background:color-mix(in srgb,var(--primary) 12%,var(--popover)); }
+.search-suggestion-icon { display:grid; place-items:center; flex:none; width:26px; height:26px; border-radius:var(--radius-sm); background:color-mix(in srgb,var(--primary) 12%,var(--card)); color:var(--primary); }
+.search-suggestion-name { flex:1; min-width:0; overflow:hidden; font-size:13px; font-weight:600; text-overflow:ellipsis; white-space:nowrap; }
+.search-suggestion-tag { flex:none; color:var(--muted-foreground); font:10px var(--font-code); text-transform:uppercase; letter-spacing:.06em; }
+
+/* --- Compact header after scroll ------------------------------------------ */
+/* The height drop is offset by an equal bottom margin so the sticky header's flow
+   height never changes and the content below it does not move (no CLS). Nothing here
+   animates the height, which is also what keeps it correct under reduced motion, where
+   the global rule disables transitions. */
+.site-header-compact { height:56px; margin-bottom:18px; }
+.site-header-compact .header-inner { gap:16px; }
+.site-header-compact .header-inner .header-search { max-width:210px; padding:6px 9px; }
+/* Anchor targets and the skip-link target must clear the header at whichever height it
+   is currently painting. */
+html { scroll-padding-top:74px; }
+html.header-compact { scroll-padding-top:56px; }
+html.header-compact .filter-rail { top:56px; }
+
+/* --- Tool page content sections (Phase 3) --------------------------------- */
+/* The bench answers "do the thing"; these two panels answer "what is this and how do I
+   start", and they must be readable without any interaction. One bordered grid gives
+   them a shared frame so they read as a unit rather than as two loose paragraphs; it
+   stacks under 900px like the rest of the workbench. */
+.tool-content { display:grid; grid-template-columns:1.1fr .9fr; gap:1px; margin-top:20px; background:var(--border); border:1px solid var(--border); }
+.tool-content-panel { padding:26px; background:var(--card); }
+.tool-content-panel h2 { margin:0 0 14px; font-size:22px; letter-spacing:-.045em; }
+.tool-content-panel p { margin:0 0 12px; color:var(--muted-foreground); font-size:14px; line-height:1.7; }
+.tool-content-panel p:last-child { margin-bottom:0; }
+.tool-steps { display:grid; gap:10px; margin:0; padding-left:22px; color:var(--muted-foreground); font-size:14px; line-height:1.6; }
+.tool-steps li::marker { color:var(--primary); font:600 13px var(--font-code); }
+/* The related row reuses `.section-heading`, but its h2 has to stay below the page h1,
+   so the clamp is pulled in here instead of shrinking the shared class everywhere. */
+.tool-related { margin-top:36px; }
+.tool-related .section-heading h2 { font-size:clamp(24px,3vw,34px); }
+@media (max-width:900px) { .tool-content { grid-template-columns:1fr; } }
+
+/* --- Install prompt (PWA) -------------------------------------------------- */
+/* A fixed overlay anchored just below the header. It is deliberately out of flow:
+   as a normal-flow bar its mount pushed the whole page down (CLS 0.0468), while a
+   fixed element contributes nothing to layout. The entrance animates `transform`
+   and `opacity` only — transforms are ignored by the Layout Instability API — and
+   the global `prefers-reduced-motion` rule in index.css disables it outright, so no
+   separate media query is needed. `z-index:15` keeps it under the sticky header
+   (20) and the header's search suggestions (30), so neither is ever covered.
+   The top anchor is what keeps it clear of the bench's Run / Copy / Download
+   controls, which live in the lower half of a short viewport. */
+.install-prompt { position:fixed; top:calc(74px + 10px); left:50%; transform:translateX(-50%); z-index:15; display:flex; align-items:center; gap:12px; width:min(720px,calc(100% - 24px)); padding:10px 12px; background:color-mix(in srgb,var(--primary) 8%,var(--card)); border:1px solid color-mix(in srgb,var(--primary) 30%,var(--border)); border-radius:var(--radius-md); box-shadow:var(--shadow-lg); animation:install-prompt-in .22s ease-out; }
+@keyframes install-prompt-in { from { opacity:0; transform:translate(-50%,-8px); } to { opacity:1; transform:translate(-50%,0); } }
+.install-prompt-icon { display:grid; place-items:center; flex:none; width:30px; height:30px; border-radius:var(--radius-sm); background:color-mix(in srgb,var(--primary) 14%,var(--card)); color:var(--primary-text); }
+.install-prompt-text { flex:1; min-width:0; margin:0; color:var(--muted-foreground); font-size:13px; line-height:1.5; }
+.install-prompt-text strong { color:var(--foreground); }
+.install-prompt-dismiss { display:grid; place-items:center; flex:none; width:32px; height:32px; border:1px solid transparent; border-radius:var(--radius-md); background:transparent; color:var(--muted-foreground); cursor:pointer; }
+.install-prompt-dismiss:hover { color:var(--foreground); border-color:var(--border-strong); }
+@media (max-width:640px) { .install-prompt { top:calc(74px + 8px); width:min(100% - 20px,720px); flex-wrap:wrap; } .install-prompt-text { flex-basis:calc(100% - 42px); } }

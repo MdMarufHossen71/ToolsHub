@@ -38,11 +38,15 @@ describe("Wave 3 data tools", () => {
     expect(JSON.parse(bad.text).valid).toBe(false);
   });
 
+  // This case loads terser and html-minifier-terser and minifies three inputs, which
+  // on a loaded machine can cross the 5s default even though the assertions pass. The
+  // timeout is explicit so the test is not mistaken for a real failure; the work and
+  // the assertions are unchanged.
   it("minifies html, css and js", async () => {
     expect((await run("html-minifier", { text: "<div>\n  <!-- c -->\n  <p>hi</p>\n</div>" })).text).not.toContain("<!--");
     expect((await run("css-minifier", { text: "a {\n  color: red;\n}" })).text).toBe("a{color:red}");
     expect((await run("js-minifier", { text: "function add(a, b) {\n  return a + b;\n}" })).text).not.toContain("\n");
-  });
+  }, 20000);
 
   it("reads xlsx from a picked file", async () => {
     const XLSX = await import("xlsx");

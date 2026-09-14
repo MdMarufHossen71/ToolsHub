@@ -8,12 +8,56 @@
     <meta
       name="description"
       content="Free browser tools and games that run entirely on your device. No accounts, no tracking, no uploads." />
+    <!-- Pre-JavaScript defaults for the home page. `usePageMeta` updates these in
+         place per route (and the prerendered shells carry their own copies), so a
+         social crawler that never runs scripts still gets a complete card. -->
+    <link rel="canonical" href="https://tools-hub-71.vercel.app/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ToolsHub" />
+    <meta property="og:title" content="ToolsHub — Browser Workbench" />
+    <meta property="og:description" content="Free browser tools and games that run entirely on your device. No accounts, no tracking, no uploads." />
+    <meta property="og:url" content="https://tools-hub-71.vercel.app/" />
+    <meta property="og:image" content="https://tools-hub-71.vercel.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="ToolsHub — Browser Workbench" />
+    <meta name="twitter:description" content="Free browser tools and games that run entirely on your device. No accounts, no tracking, no uploads." />
+    <meta name="twitter:image" content="https://tools-hub-71.vercel.app/og-image.png" />
     <meta name="color-scheme" content="light dark" />
-    <!-- Fonts are requested in index.css. Preconnecting here starts the TLS
-         handshake before the stylesheet is parsed, which removes a round trip
-         from the point where Bengali text would otherwise render in a fallback. -->
+    <!-- Relative `./` paths, like every other asset: the build sets `base: "./"` so
+         the same files work at a domain root, on a preview URL and from a subpath. -->
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png" />
+    <!-- Installable app: relative href like every other asset, so the same build
+         installs from a domain root, a preview URL or a subpath. -->
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <!-- iOS ignores the manifest's display mode and needs these three explicitly.
+         `default` keeps the status bar legible on the paper-light surface. The
+         standard `mobile-web-app-capable` sits next to the Apple one because Chromium
+         logs a console deprecation warning when only the vendor-prefixed tag is
+         present, and a clean console is part of this project's checks. -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="ToolsHub" />
+    <!-- The browser chrome matches the active paper/ink field before any script runs. -->
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f7f6f1" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a1025" />
+    <!-- Fonts. Requested here rather than with an `@import` inside index.css: a CSS
+         `@import` cannot start until the bundled stylesheet has itself downloaded and
+         parsed, which put the fonts CSS — and then the font binaries — on a serial
+         chain behind the app's own CSS. A plain stylesheet link starts during the first
+         HTML parse, in parallel with it. Same families, weights and `display=swap` as
+         before: this is the same Google Fonts request the page already made, only
+         earlier, so the privacy disclosure stays accurate. The preconnects open the TLS
+         connections while this stylesheet is still on the wire. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" />
   </head>
 
   <body>

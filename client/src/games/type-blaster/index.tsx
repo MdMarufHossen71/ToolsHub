@@ -54,7 +54,9 @@ type BlastState = {
 const startState = (): BlastState => ({ words: [], lives: START_LIVES, score: 0, level: 1, kills: 0, sinceSpawn: 1 });
 
 export function pickWord(avoid: Set<string>, random: () => number = Math.random): string {
-  const pool = WORDS.filter((w) => !avoid.has(w));
+  // `avoid` holds initials (the caller maps `w.text[0]`), so filtering on the whole
+  // word never matched and the "avoid recently used initials" rule did nothing.
+  const pool = WORDS.filter((w) => !avoid.has(w[0]));
   return pool[Math.floor(random() * pool.length)] ?? "CODE";
 }
 

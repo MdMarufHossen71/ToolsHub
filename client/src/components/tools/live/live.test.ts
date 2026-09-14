@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { spinIndex } from "./WheelTool";
 import { formatClock } from "./useLive";
+import { getLiveTool, liveToolSlugs } from "./index";
+import { LIVE_TOOL_SLUGS } from "@/lib/liveSlugs";
 
 describe("live helpers", () => {
   it("spins fairly inside the option range", () => {
@@ -19,5 +21,10 @@ describe("live helpers", () => {
     expect(formatClock(65)).toBe("01:05");
     expect(formatClock(3661)).toBe("01:01:01");
     expect(formatClock(-5)).toBe("00:00");
+  });
+
+  it("keeps the live registry and the shared slug list identical", () => {
+    expect([...LIVE_TOOL_SLUGS].sort()).toEqual([...liveToolSlugs].sort());
+    for (const slug of LIVE_TOOL_SLUGS) expect(getLiveTool(slug), slug).not.toBeNull();
   });
 });

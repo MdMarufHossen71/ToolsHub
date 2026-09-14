@@ -6,7 +6,7 @@ import { useTranslation } from "@/contexts/AppSettingsContext";
 export function Wysiwyg() {
   const { t } = useTranslation();
   const editorRef = useRef<HTMLDivElement>(null);
-  const [html, setHtml] = useState("<p><strong>Hello</strong> — select text, then style it.</p>");
+  const [html, setHtml] = useState(() => `<p><strong>${t("tool.live.editor.sample")}</strong> — ${t("tool.live.editor.hint")}</p>`);
 
   const command = (name: string, value?: string) => {
     editorRef.current?.focus();

@@ -77,6 +77,17 @@ old path-style links.
   checksum only — never use hashes to store passwords.
 - File hashing caps at 50 MB per file; data backups cap at 2 MB / 2000 keys.
 
+## Keyboard shortcuts
+
+| Shortcut | Action |
+|---|---|
+| `/` | Focus search: the home hero field on the home page, the header field elsewhere. Ignored while typing in a field. |
+| `Ctrl`/`Cmd` + `K` | Focus search from anywhere, including while a field has focus. On viewports where the header field is collapsed into the menu, this opens the menu and focuses the field inside it. |
+
+Typing in either field shows live, ranked suggestions — arrow keys move the highlight,
+Enter opens the highlighted tool, and Enter with nothing highlighted opens the filtered
+tool list. Escape closes the suggestions and keeps focus in the field.
+
 ## Game controls
 
 All 32 playable games: keyboard-only and touch-only full rounds supported.

@@ -1,0 +1,7 @@
+# ToolsHub — https://tools-hub-71.vercel.app
+# Every tool and game has a crawlable static shell at its clean path; the sitemap
+# below lists them all. Nothing here is user-specific, so everything is allowed.
+User-agent: *
+Allow: /
+
+Sitemap: https://tools-hub-71.vercel.app/sitemap.xml

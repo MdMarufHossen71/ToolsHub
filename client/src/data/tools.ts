@@ -1,6 +1,6 @@
 import {
-  Binary, Braces, Calculator, Camera, ChartNoAxesCombined, Clock3, Code2, FileArchive,
-  FileText, Gamepad2, Image, KeyRound, Palette, QrCode, RefreshCw, ShieldCheck,
+  Braces, Calculator, ChartNoAxesCombined, Clock3, Code2,
+  FileText, Gamepad2, Image, Palette, ShieldCheck,
   Sparkles, TextCursorInput, WandSparkles,
 } from "lucide-react";
 
@@ -19,12 +19,6 @@ export type Tool = {
   description: { bn: string; en: string };
   keywords: string[];
   featured?: boolean;
-};
-
-const iconMap = {
-  text: TextCursorInput, crypto: ShieldCheck, data: Braces, image: Image, color: Palette,
-  math: Calculator, time: Clock3, random: Sparkles, file: FileArchive, seo: ChartNoAxesCombined,
-  misc: WandSparkles, ai: Sparkles,
 };
 
 export const groupMeta: Record<ToolGroup, { label: string; bn: string; icon: typeof Code2; tone: string }> = {
@@ -88,7 +82,10 @@ export const toolRegistry: Tool[] = seeds.flatMap((seed) => seed.names.split("|"
 })));
 
 export const findTool = (slug: string) => toolRegistry.find((tool) => tool.slug === slug);
-export const getToolIcon = (group: ToolGroup) => iconMap[group] ?? RefreshCw;
+// Re-exported so the lazy pages keep one import site; the map itself lives in a module
+// with no dependency on the tool descriptions (see `toolIcons.ts`). The `.ts` extension
+// keeps the chain resolvable by plain Node ESM for `scripts/i18n-parity.mjs`.
+export { getToolIcon } from "./toolIcons.ts";
 export const featuredTools = toolRegistry.filter((tool) => tool.featured).slice(0, 12);
 export const categories = Object.entries(groupMeta).map(([key, value]) => ({ id: key as ToolGroup, ...value, count: toolRegistry.filter((t) => t.group === key).length }));
 

@@ -1,10 +1,8 @@
 import { Suspense, lazy } from "react";
 import { Route, Router, Switch, useLocation } from "wouter";
 import { useHashPath, useHashSearch } from "@/lib/hashLocation";
-import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { SiteShell } from "@/components/SiteShell";
-import { AppSettingsProvider } from "@/contexts/AppSettingsContext";
+import { AppSettingsProvider, useTranslation } from "@/contexts/AppSettingsContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 
 // Route-level splitting: the home shell stays light — tool parsers and game
@@ -18,14 +16,35 @@ const GamePage = lazy(() => import("./pages/GamePage"));
 const Links = lazy(() => import("./pages/Links"));
 const AI = lazy(() => import("./pages/AI"));
 const Settings = lazy(() => import("./pages/Settings"));
+const Changelog = lazy(() => import("./pages/Changelog"));
 const InfoPage = lazy(() => import("./pages/InfoPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
+/**
+ * Route-level fallback.
+ *
+ * This is not a decorative spinner: its height is load-bearing. The previous
+ * one-line paragraph let the footer sit ~874px down, so swapping in a several-screen
+ * page dragged the footer while it was still visible — the home page measured a CLS
+ * of 0.126. Reserving the full header-to-fold height (`.route-skeleton`), plus a few
+ * neutral blocks in the Cobalt Workshop tokens, keeps the footer off-screen until the
+ * real page is in place. It is announced politely and carries no animation, so the
+ * global `prefers-reduced-motion` rule has nothing to suppress.
+ */
 function RouteFallback() {
+  const { t } = useTranslation();
   return (
-    <p className="page-space" role="status" aria-live="polite">
-      Loading… / লোড হচ্ছে…
-    </p>
+    <div className="site-frame page-space route-skeleton" role="status" aria-live="polite" aria-label={t("common.loading")}>
+      <span className="sr-only">{t("common.loading")}</span>
+      <div className="route-skeleton-bar" aria-hidden="true" />
+      <div className="route-skeleton-bar route-skeleton-title" aria-hidden="true" />
+      <div className="route-skeleton-bar route-skeleton-copy" aria-hidden="true" />
+      <div className="route-skeleton-grid" aria-hidden="true">
+        <div className="route-skeleton-block" />
+        <div className="route-skeleton-block" />
+        <div className="route-skeleton-block" />
+      </div>
+    </div>
   );
 }
 
@@ -40,6 +59,7 @@ function AppRoutes() {
       <Route path="/links" component={Links} />
       <Route path="/ai" component={AI} />
       <Route path="/settings" component={Settings} />
+      <Route path="/changelog" component={Changelog} />
       <Route path="/about" component={InfoPage} />
       <Route path="/how-to" component={InfoPage} />
       <Route path="/privacy" component={InfoPage} />
@@ -73,13 +93,14 @@ function App() {
     // Hash locations survive both, which is also what the README documents.
     <ErrorBoundary>
       <Router hook={useHashPath} searchHook={useHashSearch}>
+        {/* The sonner <Toaster /> and the Radix <TooltipProvider /> used to wrap the app,
+            but nothing ever called `toast()` or rendered a tooltip — the two of them
+            pulled sonner and @radix-ui/react-tooltip into the entry chunk for no
+            behaviour. Removed; their primitives stay in components/ui if needed later. */}
         <AppSettingsProvider>
-          <TooltipProvider>
-            <Toaster />
-            <SiteShell>
-              <RoutedContent />
-            </SiteShell>
-          </TooltipProvider>
+          <SiteShell>
+            <RoutedContent />
+          </SiteShell>
         </AppSettingsProvider>
       </Router>
     </ErrorBoundary>

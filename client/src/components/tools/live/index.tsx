@@ -38,6 +38,9 @@ function DecisionWheelView() {
   return <DecisionWheel onDone={() => undefined} />;
 }
 
+/** Exported so a test can prove this registry and `lib/liveSlugs` cannot drift apart. */
+export const liveToolSlugs = Object.keys(liveTools);
+
 export function getLiveTool(slug: string): ComponentType | null {
   return liveTools[slug] ?? null;
 }

@@ -3,5 +3,15 @@
   "framework": null,
   "installCommand": "corepack pnpm install",
   "buildCommand": "corepack pnpm run build",
-  "outputDirectory": "dist/public"
+  "outputDirectory": "dist/public",
+  "headers": [
+    {
+      "source": "/sw.js",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+    },
+    {
+      "source": "/manifest.webmanifest",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+    }
+  ]
 }

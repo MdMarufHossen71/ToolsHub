@@ -2,17 +2,18 @@
 import { useEffect, useRef, useState } from "react";
 import { Check, Clipboard, Download, FileUp, History, Play, RotateCcw, ShieldCheck, Trash2, TriangleAlert, Wrench, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FavoriteButton } from "@/components/FavoriteButton";
 import { type Tool } from "@/data/tools";
 import { useToolInputMemory } from "@/hooks/useToolInputMemory";
 import { isToolImplemented, runHashFile, runTool, toolPlaceholder, type ToolResult } from "@/lib/toolOperations";
 import { defaultFieldValues, getToolSchema, type Field } from "@/lib/toolSchemas";
+import { resolveInputMode } from "@/lib/toolInputMode";
+import { MODE_TOOL_SLUGS } from "@/lib/toolGuide";
 import { getLiveTool } from "@/components/tools/live";
 import { isSensitiveTool } from "@/lib/sensitiveTools";
 import { useTranslation } from "@/contexts/AppSettingsContext";
 import type { TranslationKey } from "@/i18n/translations";
 import { Input } from "@/components/ui/input";
-
-const needsMode = new Set(["reverse-text", "sort-list", "base64-text", "url-encode-decode", "html-entities", "yaml-json-toml-xml-converter", "random-number-generator", "uuid-generator"]);
 
 /** Only the modes that make sense for each tool — never the full generic list. */
 const MODES_FOR_SLUG: Record<string, string[]> = {
@@ -112,15 +113,22 @@ export function ToolWorkspace({ tool }: { tool: Tool }) {
   const placeholder = toolPlaceholder(tool.slug);
   const memory = useToolInputMemory(tool.slug, placeholder);
   const [option, setOption] = useState("default");
-  const isFileHash = tool.slug === "file-hash-calculator";
   const schema = getToolSchema(tool.slug);
-  const formMode = (schema?.fields.length ?? 0) > 0;
+  // One predicate decides the input UI; the "How to use" guide reads the same one.
+  const inputMode = resolveInputMode(tool.slug, schema);
+  const isFileHash = inputMode === "file-hash";
+  const formMode = inputMode === "form";
   // Keyed by slug at the call site, so defaults are fresh per tool.
   const [fields, setFields] = useState<Record<string, string>>(() => defaultFieldValues(tool.slug));
   const [output, setOutput] = useState<ToolResult>(() => ({ text: t("tool.result.needsInput") }));
   const [copied, setCopied] = useState(false);
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
+  // `busy` flips for a microtask on instant tools; showing a spinner for that long is
+  // a flash, not feedback. The overlay is only mounted once the work has actually
+  // taken a moment, and it is announced then too so a screen reader is not told
+  // "loading" on every keystroke.
+  const [slowBusy, setSlowBusy] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   // Generic multi-file picker for schema tools (ZIP, PDF, batch…).
@@ -198,6 +206,16 @@ export function ToolWorkspace({ tool }: { tool: Tool }) {
     return () => clearTimeout(timer);
   }, [copied]);
 
+  // Delay the busy overlay so instant results never flash it.
+  useEffect(() => {
+    if (!busy) {
+      setSlowBusy(false);
+      return;
+    }
+    const timer = setTimeout(() => setSlowBusy(true), 180);
+    return () => clearTimeout(timer);
+  }, [busy]);
+
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(output.text);
@@ -233,9 +251,12 @@ export function ToolWorkspace({ tool }: { tool: Tool }) {
         <h1 id="workbench-title">{tool.name}</h1>
         <p>{description}</p>
       </div>
-      <div className="privacy-chip">
-        <ShieldCheck className="size-4" aria-hidden="true" />
-        {t("tool.browserOnly")}
+      <div className="workbench-badges">
+        <div className="privacy-chip">
+          <ShieldCheck className="size-4" aria-hidden="true" />
+          {t("tool.browserOnly")}
+        </div>
+        <FavoriteButton slug={tool.slug} name={tool.name} className="workbench-favorite" />
       </div>
     </div>
   );
@@ -251,9 +272,12 @@ export function ToolWorkspace({ tool }: { tool: Tool }) {
             <h1 id="workbench-title">{tool.name}</h1>
             <p>{description}</p>
           </div>
-          <div className="privacy-chip privacy-chip-muted">
-            <Wrench className="size-4" aria-hidden="true" />
-            {t("tool.unavailable.badge")}
+          <div className="workbench-badges">
+            <div className="privacy-chip privacy-chip-muted">
+              <Wrench className="size-4" aria-hidden="true" />
+              {t("tool.unavailable.badge")}
+            </div>
+            <FavoriteButton slug={tool.slug} name={tool.name} className="workbench-favorite" />
           </div>
         </div>
         <div className="bench-panel bench-unavailable" role="note">
@@ -293,7 +317,7 @@ export function ToolWorkspace({ tool }: { tool: Tool }) {
         <div className="bench-panel">
           <div className="bench-label">
             <span id="tool-input-label">{t("tool.input")}</span>
-            {needsMode.has(tool.slug) && (
+            {MODE_TOOL_SLUGS.has(tool.slug) && (
               <select value={option} onChange={(event) => setOption(event.target.value)} aria-label={t("tool.mode.label")}>
                 {MODE_OPTIONS.filter((item) => (MODES_FOR_SLUG[tool.slug] ?? [item.value]).includes(item.value)).map((item) => (
                   <option key={item.value} value={item.value}>
@@ -333,6 +357,10 @@ export function ToolWorkspace({ tool }: { tool: Tool }) {
                   {t("tool.file.selected", { name: file.name, size: formatSize(file.size) })}
                   {busy ? ` — ${t("common.loading")}` : ""}
                 </p>
+              ) : (
+                <p className="tool-note" role="status">{t("tool.file.noFile")}</p>
+              )}
+            </>
           ) : formMode && schema ? (
             <>
               <div className="tool-form">
@@ -415,10 +443,6 @@ export function ToolWorkspace({ tool }: { tool: Tool }) {
                   {t("common.reset")}
                 </Button>
               </div>
-            </>
-          ) : (
-                <p className="tool-note" role="status">{t("tool.file.noFile")}</p>
-              )}
             </>
           ) : (
             <>
@@ -533,6 +557,17 @@ export function ToolWorkspace({ tool }: { tool: Tool }) {
                   {item.name}
                 </Button>
               ))}
+            </div>
+          )}
+          {slowBusy && (
+            // Overlay, not a swap: the panel keeps its height while a parser chunk
+            // downloads, so the layout never jumps. `role="status"` announces the wait
+            // once; the moving parts are hidden from assistive tech.
+            <div className="bench-busy" role="status" aria-live="polite">
+              <span className="sr-only">{t("common.loading")}</span>
+              <span className="bench-busy-spinner" aria-hidden="true" />
+              <span className="bench-busy-line" aria-hidden="true" />
+              <span className="bench-busy-line bench-busy-line-short" aria-hidden="true" />
             </div>
           )}
           <div className="bench-actions">

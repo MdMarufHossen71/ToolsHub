@@ -24,3 +24,13 @@ declare module "csso" {
 declare module "html-minifier-terser" {
   export function minify(source: string, options?: Record<string, unknown>): Promise<string>;
 }
+
+/**
+ * Chromium's install prompt event. Not part of `lib.dom` yet, so the shape the
+ * install banner relies on is declared here.
+ */
+interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: string[];
+  readonly userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
+  prompt(): Promise<void>;
+}

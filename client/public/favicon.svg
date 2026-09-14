@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 29 29">
+  <!-- The ToolsHub mark, self-contained: a cobalt plate with two paper wedges. No
+       fonts and no external references, so it renders as soon as the tab loads. -->
+  <defs><clipPath id="toolshub-mark"><rect x="0" y="0" width="29" height="29" rx="8" /></clipPath></defs>
+  <rect x="0" y="0" width="29" height="29" rx="8" fill="#3264ff" />
+  <g clip-path="url(#toolshub-mark)">
+    <path d="M2.5 3.893 13.107 14.5 2.5 25.107 -8.107 14.5Z" fill="#fffefb" />
+    <path d="M25.5 3.893 36.107 14.5 25.5 25.107 14.893 14.5Z" fill="#f7f6f1" />
+  </g>
+</svg>

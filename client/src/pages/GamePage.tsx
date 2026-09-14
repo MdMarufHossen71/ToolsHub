@@ -54,9 +54,19 @@ function GameArena({ game }: { game: Game }) {
           </span>
         </div>
         {Game ? (
-          // The chunk is small and local, so the fallback is a line of text rather than
-          // a skeleton that would flash for less time than it takes to read.
-          <Suspense fallback={<p className="game-loading">{t("common.loading")}</p>}>
+          // A game chunk is small and local, but on a cold or slow connection it is
+          // still a network wait, so the fallback reserves the board's shape instead of
+          // printing one line of text that reads like a caption.
+          <Suspense
+            fallback={
+              <div className="game-loading" role="status" aria-live="polite">
+                <span className="sr-only">{t("common.loading")}</span>
+                <div className="game-loading-arena" aria-hidden="true" />
+                <div className="game-loading-bar" aria-hidden="true" />
+                <div className="game-loading-bar game-loading-bar-short" aria-hidden="true" />
+              </div>
+            }
+          >
             <Game slug={game.slug} title={game.name} />
           </Suspense>
         ) : (

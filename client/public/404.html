@@ -5,12 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex" />
     <title>Not found · ToolsHub</title>
+    <!--
+      Served by the static host for a clean path that has no generated file (Vercel
+      does this automatically; `vite preview` is taught to by the `toolshub-static-404`
+      plugin in vite.config.ts). It stands alone on purpose: this is a dead-end page, so
+      it makes no stylesheet, script or font request that could fail in the situation it
+      is shown in. The colours below are the Cobalt Workshop light tokens, copied rather
+      than imported, and the type stacks mirror index.css so the page reads as the same
+      product whether or not the webfont arrived. Offline navigations are handled by
+      sw.js, which falls back to the cached index.html, not this file.
+    -->
     <style>
       :root {
         --paper: #f7f6f1;
+        --surface: #fffefb;
         --ink: #0a1025;
+        --muted: #6c6f7b;
         --cobalt: #3264ff;
-        --line: rgba(10, 16, 37, 0.12);
+        --line: #dcd8cc;
+        --font-ui: "Noto Sans Bengali", "Space Grotesk", "Nirmala UI", "Segoe UI", system-ui, sans-serif;
+        --font-display: "Space Grotesk", "Noto Sans Bengali", "Nirmala UI", system-ui, sans-serif;
+        --font-code: "DM Mono", ui-monospace, "Cascadia Mono", Menlo, monospace;
       }
       * {
         box-sizing: border-box;
@@ -23,45 +38,67 @@
         padding: 24px;
         background: var(--paper);
         color: var(--ink);
-        font: 400 16px/1.6 "Inter", "Segoe UI", system-ui, sans-serif;
+        font: 400 16px/1.6 var(--font-ui);
       }
       main {
+        width: 100%;
         max-width: 34rem;
         border: 1px solid var(--line);
-        border-radius: 8px;
-        background: #fff;
+        border-radius: 12px;
+        background: var(--surface);
         padding: 32px;
+      }
+      /* The lockup from Logo.tsx: the cobalt plate with its two paper wedges, then
+         TOOLS in ink and HUB in cobalt. It is decoration; the heading carries meaning. */
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        margin-bottom: 20px;
+        color: inherit;
+        text-decoration: none;
+        font: 700 19px/1 var(--font-display);
+        letter-spacing: -0.04em;
+      }
+      .brand .hub {
+        color: var(--cobalt);
+      }
+      .brand:focus-visible {
+        outline: 2px solid var(--cobalt);
+        outline-offset: 3px;
+        border-radius: 6px;
       }
       p.eyebrow {
         margin: 0 0 12px;
-        font-size: 12px;
-        font-weight: 600;
+        font: 600 12px var(--font-code);
         letter-spacing: 0.16em;
         text-transform: uppercase;
         color: var(--cobalt);
       }
       h1 {
         margin: 0 0 12px;
-        font-size: 1.5rem;
-        line-height: 1.25;
+        font-family: var(--font-display);
+        font-size: 1.6rem;
+        line-height: 1.2;
+        letter-spacing: -0.04em;
       }
       p {
         margin: 0 0 12px;
       }
-      p:lang(bn) {
-        font-family: "Noto Sans Bengali", "Nirmala UI", sans-serif;
+      p.bn {
+        font-family: var(--font-ui);
       }
-      a {
+      .cta {
         display: inline-block;
-        margin-top: 8px;
+        margin-top: 10px;
         padding: 10px 16px;
         border-radius: 8px;
         background: var(--cobalt);
         color: #fff;
-        font-weight: 600;
+        font-weight: 700;
         text-decoration: none;
       }
-      a:focus-visible {
+      .cta:focus-visible {
         outline: 2px solid var(--ink);
         outline-offset: 2px;
       }
@@ -69,11 +106,24 @@
   </head>
   <body>
     <main>
+      <a class="brand" href="./" aria-label="ToolsHub — home">
+        <svg width="26" height="26" viewBox="0 0 29 29" aria-hidden="true" focusable="false">
+          <defs>
+            <clipPath id="logo-clip-404"><rect x="0" y="0" width="29" height="29" rx="8" /></clipPath>
+          </defs>
+          <rect x="0" y="0" width="29" height="29" rx="8" fill="#3264ff" />
+          <g clip-path="url(#logo-clip-404)">
+            <path d="M2.5 3.893 13.107 14.5 2.5 25.107 -8.107 14.5Z" fill="#fffefb" />
+            <path d="M25.5 3.893 36.107 14.5 25.5 25.107 14.893 14.5Z" fill="#f7f6f1" />
+          </g>
+        </svg>
+        <span>TOOLS<span class="hub">HUB</span></span>
+      </a>
       <p class="eyebrow">404 — NOT FOUND</p>
       <h1>This workbench drawer is empty.</h1>
       <p>The address you opened is not a page on this site. Everything here runs in your browser, so nothing was sent anywhere.</p>
-      <p lang="bn">আপনি যে ঠিকানাটি খুলেছেন, তা এই সাইটের কোনো পেজ নয়। সবকিছু আপনার browser-এই চলে, তাই কিছুই কোথাও পাঠানো হয়নি।</p>
-      <a id="home" href="./">Go to the home workbench</a>
+      <p class="bn" lang="bn">আপনি যে ঠিকানাটি খুলেছেন, তা এই সাইটের কোনো পেজ নয়। সবকিছু আপনার browser-এই চলে, তাই কিছুই কোথাও পাঠানো হয়নি।</p>
+      <a class="cta" id="home" href="./">Go to the home workbench</a>
     </main>
     <script>
       /*
@@ -86,7 +136,7 @@
        * than by hardcoding a segment count.
        */
       (function () {
-        var ROUTES = ["tools", "games", "links", "ai", "settings", "about", "how-to", "privacy"];
+        var ROUTES = ["tools", "games", "links", "ai", "settings", "about", "how-to", "privacy", "changelog"];
         var segments = window.location.pathname.split("/").filter(Boolean);
         var link = document.getElementById("home");
         var index = -1;

@@ -3,6 +3,8 @@ import { useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Link, useRoute } from "wouter";
 import { ToolWorkspace } from "@/components/ToolWorkspace";
+import { ToolGuide } from "@/components/ToolGuide";
+import { RelatedTools } from "@/components/RelatedTools";
 import { findTool } from "@/data/tools";
 import NotFound from "@/pages/NotFound";
 import { useTranslation } from "@/contexts/AppSettingsContext";
@@ -33,6 +35,10 @@ export default function ToolPage() {
       {/* Keyed on the slug: `Switch` reuses the element when only the param changes,
           so without this the previous tool's mode and output would carry over. */}
       <ToolWorkspace key={tool.slug} tool={tool} />
+      {/* Both are plain rendered text, so the page's "what is this / how do I start"
+          content is present for first-time visitors and crawlers without a click. */}
+      <ToolGuide key={`guide-${tool.slug}`} tool={tool} />
+      <RelatedTools key={`related-${tool.slug}`} tool={tool} />
     </div>
   );
 }

@@ -15,6 +15,8 @@ import { runColorTools } from "@/lib/tools/colorTools";
 import { runRandomTools } from "@/lib/tools/randomTools";
 import { runFileTools } from "@/lib/tools/fileTools";
 import { runImageTools } from "@/lib/tools/imageTools";
+import { isLiveTool } from "@/lib/liveSlugs";
+import { IMPLEMENTED_TOOLS } from "@/lib/implementedTools";
 
 /**
  * Heavy parsers load on demand, not with the tool catalogue. Each dynamic
@@ -110,6 +112,10 @@ const englishFallback: Record<string, string> = {
   "tool.result.stats": "Live statistics",
   "tool.result.preview": "Sanitized preview HTML",
   "tool.result.needsInput": "Add an input to see an immediate, browser-only result.",
+  "tool.result.interactive": "This tool is interactive—use the controls on this page to see it work.",
+  "tool.result.empty": "That input produced nothing to show. Check it and try again.",
+  "tool.result.imageReady": "Image ready. Use Download to save it.",
+  "tool.result.filesReady": "File ready. Use Download to save it.",
   "tool.result.notesHint": "Your notes stay in this browser on this device.",
   "tool.result.signaturePresent": "Present — not verified locally",
   "tool.result.signatureMissing": "Missing",
@@ -236,101 +242,11 @@ export async function runHashFile(file: File, t: ToolTranslate = identity): Prom
 }
 
 /**
- * Slugs that `runTool` genuinely implements. Everything else in the registry is
- * metadata only: rather than echoing the input back — which made a stub look
- * identical to a working tool — the workspace renders an explicit "not available
- * yet" state for anything missing from this set.
+ * The implemented-tool set now lives in `@/lib/implementedTools`, a dependency-free
+ * module the build-time shell generator can import under `--experimental-strip-types`.
+ * Re-exported here so every existing importer keeps working unchanged.
  */
-export const IMPLEMENTED_TOOLS: ReadonlySet<string> = new Set([
-  // Text & string
-  "word-counter", "case-converter", "reverse-text", "remove-extra-whitespaces", "remove-empty-lines",
-  "remove-line-breaks", "remove-duplicate-lines", "sort-list", "list-randomizer", "string-shuffler",
-  "slug-generator", "text-to-nato-alphabet", "text-to-ascii", "text-to-binary", "text-to-hex",
-  "morse-code", "rot13-caesar-cipher", "base64-text", "url-encode-decode", "html-entities",
-  "email-normalizer", "html-to-plain-text", "markdown-to-html",
-  "text-repeater", "find-replace", "filter-lines", "add-text-to-each-line", "tabs-to-spaces",
-  "comma-inserter", "text-splitter", "space-remover", "character-remover", "string-obfuscator",
-  "text-censor", "text-to-unicode", "zalgo-text-generator", "numeronym-generator",
-  "lorem-ipsum-generator", "random-sentence-generator", "regex-replacer",
-  "emoji-kaomoji-picker", "unicode-character-finder",
-  "ascii-art-text-generator", "text-diff-checker",
-  // Crypto & security
-  "hash-generator", "uuid-generator", "ulid-generator", "nanoid-generator", "secure-token-generator",
-  "jwt-decoder-debugger",
-  "hmac-generator", "bcrypt-hash-compare", "encrypt-decrypt-text", "rsa-key-pair-generator",
-  "password-generator", "password-strength-analyzer", "passphrase-generator", "totp-otp-generator",
-  "basic-auth-header", "file-to-base64", "outlook-safelink-decoder", "bip39-mnemonic-generator",
-  "pdf-signature-checker",
-  // Developer & data
-  "markdown-editor", "json-formatter-validator", "json-minifier", "yaml-formatter", "toml-formatter",
-  "xml-formatter", "yaml-json-toml-xml-converter", "sql-formatter", "url-parser",
-  "keyword-density-analyzer", "chmod-calculator", "math-evaluator",
-  "json-to-csv-tsv", "csv-converter", "csv-sorter", "json-diff", "compare-files",
-  "regex-tester", "url-builder", "open-graph-generator", "twitter-card-generator",
-  "meta-tags-generator", "robots-txt-generator", "xml-sitemap-generator",
-  "device-information", "user-agent-parser", "http-status-codes", "mime-types-lookup",
-  "git-cheatsheet", "random-port-generator", "mac-address-generator",
-  "ipv4-subnet-calculator", "ipv4-address-converter", "ipv4-range-expander",
-  "ipv6-ula-generator", "eta-calculator", "svg-placeholder-generator",
-  "docker-run-converter", "crontab-generator",
-  "html-beautifier", "css-beautifier-minifier", "javascript-beautifier-minifier",
-  "code-syntax-highlighter", "json-schema-validator", "html-minifier", "css-minifier",
-  "js-minifier", "xlsx-json-converter",
-  "keycode-info", "benchmark-builder", "favicon-generator", "html-wysiwyg-editor",
-  "camera-recorder", "screen-audio-recorder",
-  // Colour
-  "hex-rgb-hsl-hsv-converter", "color-picker",
-  "css-named-colors", "lighten-darken-color", "saturation-shift", "greyscale-color",
-  "invert-color", "hue-shift-color", "random-color-generator", "color-scheme-generator",
-  "color-blender", "gradient-generator", "gradient-palette", "contrast-checker",
-  "color-blindness-simulator", "shades-tints-generator",
-  // Calculators
-  "basic-calculator", "scientific-calculator", "percentage-calculator", "bmi-calculator",
-  "area-calculator", "rule-of-three", "trigonometry-calculator", "radians-degrees-converter",
-  "age-calculator", "date-difference-calculator", "tip-calculator", "ratio-calculator",
-  "unit-converter", "temperature-converter", "fibonacci-generator", "prime-checker-generator",
-  "number-base-converter", "binary-hex-octal-converter", "roman-numeral-converter",
-  "average-min-max", "number-list-generator", "number-to-words", "percentage-fraction-decimal",
-  "gpa-calculator", "discount-calculator", "loan-emi-calculator", "bangla-calendar-converter",
-  // Date & time
-  "add-subtract-date", "unix-timestamp-converter", "date-formatter", "julian-date",
-  "days-between-dates", "working-days-calculator", "timezone-converter",
-  "countdown-timer", "stopwatch", "world-clock", "timer-with-alarm",
-  // Random & generators
-  "random-number-generator", "random-string-generator", "email-validator",
-  "gaussian-generator", "coin-flipper", "dice-roller", "random-team-generator",
-  "random-name-generator", "mock-data-generator", "random-file-generator",
-  "qr-code-generator", "barcode-generator", "iban-validator", "credit-card-validator",
-  "phone-number-parser", "vin-checker", "isbn-validator", "list-wheel-picker",
-  // File
-  "file-hash-calculator",
-  "split-file", "join-files", "file-type-detector", "file-size-converter",
-  "batch-file-rename", "text-to-file-download", "zip-creator-extractor",
-  "pdf-merge", "pdf-split", "pdf-rotate", "pdf-page-reorder", "pdf-watermark",
-  "images-to-pdf", "svg-optimizer", "exif-viewer", "pdf-to-images", "compress-pdf",
-  // Image Studio
-  "image-resize", "image-crop", "image-rotate", "image-flip", "image-format-converter",
-  "image-compressor", "brightness-contrast", "saturation-vibrance", "exposure-gamma",
-  "hue-hsl-adjust", "rgb-channels", "grayscale-sepia-invert", "colorize-duotone",
-  "blur-sharpen", "noise-pixelate", "posterize-solarize-threshold", "vignette-glow",
-  "emboss-clip-effect", "equalize", "edge-detection", "tilt-shift", "vintage-instant-lomo",
-  "blend-colors-into-image", "merge-images", "overlay-images", "split-image",
-  "round-corners", "add-border-frame", "text-watermark-image", "image-color-picker",
-  "image-gradient-generator", "random-bitmap-generator", "svg-png-converter",
-  "blurred-background-frame", "image-censor", "gif-toolkit", "video-thumbnail-extractor",
-  "background-remover", "batch-image-processing", "screenshot-capture", "meme-generator",
-  "favicon-multi-size", "image-base64", "palette-extractor",
-  // Misc
-  "notes-pad",
-  "age-in-seconds", "dog-cat-years-converter", "love-calculator",
-  "aspect-ratio-calculator", "aspect-ratio-cropper", "event-countdown",
-  "screen-resolution-detector",
-  "typing-speed-test", "reaction-time-test", "decision-wheel",
-  "screen-ruler", "fullscreen-dead-pixel-test", "whiteboard", "pomodoro-timer",
-  // SEO & web
-  "htaccess-redirect-generator", "html-entity-table", "seo-word-counter",
-  "twitter-card-info", "website-text-extractor",
-]);
+export { IMPLEMENTED_TOOLS };
 
 export function isToolImplemented(slug: string) {
   return IMPLEMENTED_TOOLS.has(slug);
@@ -348,7 +264,12 @@ export function toolPlaceholder(slug: string) {
   return "Paste or type something here…";
 }
 
-export async function runTool(slug: string, input: string, option = "default", t: ToolTranslate = identity, extra?: ToolExtra): Promise<ToolResult> {
+/**
+ * The single tool dispatcher. Kept separate from the exported `runTool` so the
+ * exported entry point can post-process every result in one place (see
+ * `ensureUsable`) without changing any branch's logic.
+ */
+async function dispatchTool(slug: string, input: string, option = "default", t: ToolTranslate = identity, extra?: ToolExtra): Promise<ToolResult> {
   const clean = input.trim();
 
   if (!isToolImplemented(slug)) return { text: "", unavailable: true };
@@ -438,9 +359,69 @@ export async function runTool(slug: string, input: string, option = "default", t
       const result = await runner(slug, input, option, t, extra);
       if (result) return result;
     }
-    return { text: "", unavailable: true };
+    // A live instrument has no request/response result — it renders its own UI in the
+    // workspace. Return a real sentence rather than an empty string so `runTool` never
+    // yields blank output for a slug the registry reports as implemented.
+    if (isLiveTool(slug)) return { text: t("tool.result.interactive") };
+    return { text: t("tool.error.generic"), error: true };
   } catch (error) {
     if (error instanceof ToolError) return { text: t(error.key), error: true };
+    return { text: t("tool.error.generic"), error: true };
+  }
+}
+
+/** Strip tags and entities so an HTML-only result can still offer readable text. */
+function htmlToText(html: string): string {
+  return html
+    .replace(/<(script|style)[\s\S]*?<\/\1>/gi, " ")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&[a-z#0-9]+;/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** A table's rows flattened to text, used only when a tool returned no text of its own. */
+function tableToText(table: NonNullable<ToolResult["table"]>): string {
+  const lines = [table.head.join(" | "), ...table.rows.map((row) => row.join(" | "))];
+  return lines.join("\n").trim();
+}
+
+/**
+ * Guarantees a non-blank output panel for every implemented tool.
+ *
+ * A transform on empty input legitimately returns an empty string, and a few tools
+ * build only a table, image or HTML fragment. Rendered raw that is either a blank box
+ * or, for HTML, an empty element — both read as "broken". This turns each case into a
+ * localized message or derives copy-ready text from the content that is already there.
+ * It is the single reason the empty/error sweep can assert a non-empty string result.
+ */
+function ensureUsable(result: ToolResult, input: string, t: ToolTranslate): ToolResult {
+  if (result.unavailable) return result;
+  // Defensive: a runner that breaks its own type contract must not crash the panel.
+  const text = typeof result.text === "string" ? result.text : "";
+  if (text.trim().length > 0) return result;
+
+  if (result.image) return { ...result, text: t("tool.result.imageReady") };
+  if (result.artifacts && result.artifacts.length > 0) return { ...result, text: t("tool.result.filesReady") };
+
+  // An empty input is not an error, so it gets the "add an input" nudge. A populated
+  // input that still yields nothing falls through to the table/HTML summaries below.
+  if (input.trim().length === 0) return { text: t("tool.result.needsInput"), label: result.label, error: result.error };
+
+  if (result.table && result.table.rows.length > 0) return { ...result, text: tableToText(result.table) };
+  if (result.html) {
+    const readable = htmlToText(result.html);
+    if (readable.length > 0) return { ...result, text: readable };
+  }
+  return { text: t("tool.result.empty"), label: result.label, error: result.error };
+}
+
+export async function runTool(slug: string, input: string, option = "default", t: ToolTranslate = identity, extra?: ToolExtra): Promise<ToolResult> {
+  try {
+    return ensureUsable(await dispatchTool(slug, input, option, t, extra), input, t);
+  } catch {
+    // `dispatchTool` already catches its own failures; this is a backstop for the
+    // post-processing step, so the workspace's `.then()` can never see a rejection.
     return { text: t("tool.error.generic"), error: true };
   }
 }

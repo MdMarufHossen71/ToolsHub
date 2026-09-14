@@ -37,6 +37,7 @@ const ALLOWED = new Set([
   // Wordmark. The visible letters are `aria-hidden`; the link's accessible name comes
   // from `a11y.home`, so this is decoration and stays Latin in both locales.
   "TOOLS",
+  "HUB",
   "GAMES",
   "BANGLADESH",
   "BD",
@@ -44,6 +45,9 @@ const ALLOWED = new Set([
   // language, which is what a reader needs to see on the button.
   "বাংলা",
   "English",
+  // A download link's visible file-type suffix. It is a WebM container extension, not
+  // prose, and the link's accessible name already comes from `common.download`.
+  ".webm",
 ]);
 
 /** Text with no prose in it: punctuation, separators, digits, single letters. */
@@ -55,7 +59,70 @@ function isProse(text) {
   // TypeScript, so `saved.length > 0 && saved.length < 64` reads as a text node. Any
   // of these means the match came from an expression rather than from JSX.
   if (/&&|\|\||===|!==|=>|\?\?|\.length|\(\)/.test(text)) return false;
+  // A generic type argument list reads the same way: `{ dots: Set<number>; pellets:
+  // Set<number> }` yields the "text" `; pellets: Set`. No JSX text node starts with a
+  // statement separator or an assignment, so those matches are always type syntax.
+  if (/^[;=]/.test(text)) return false;
   return true;
+}
+
+/**
+ * Blanks every comment out of `source` while leaving string and template literals
+ * intact. This is what keeps the text-node scan from reporting prose it reads out of a
+ * doc comment (`a `<button>` inside an `<a>`` was the first false positive) or an
+ * `aria-label="…"` written inside an example. Offsets and newlines are preserved, so
+ * `lineAt` and the tag-position test still work against the original.
+ *
+ * Quotes are tracked so that a `//` inside a URL string is not mistaken for a comment.
+ * A straight apostrophe inside JSX text would look like a string start; the codebase
+ * writes those as `’`, so this stays a comment masker rather than a full parser.
+ */
+function maskComments(source) {
+  const out = source.split("");
+  let i = 0;
+  let quote = null;
+  while (i < source.length) {
+    const char = source[i];
+    const next = source[i + 1];
+    if (quote) {
+      if (char === "\\") {
+        i += 2;
+        continue;
+      }
+      if (char === quote) quote = null;
+      i += 1;
+      continue;
+    }
+    if (char === '"' || char === "'" || char === "`") {
+      quote = char;
+      i += 1;
+      continue;
+    }
+    if (char === "/" && next === "/") {
+      while (i < source.length && source[i] !== "\n") {
+        out[i] = " ";
+        i += 1;
+      }
+      continue;
+    }
+    if (char === "/" && next === "*") {
+      out[i] = " ";
+      out[i + 1] = " ";
+      i += 2;
+      while (i < source.length && !(source[i] === "*" && source[i + 1] === "/")) {
+        if (source[i] !== "\n") out[i] = " ";
+        i += 1;
+      }
+      if (i < source.length) {
+        out[i] = " ";
+        out[i + 1] = " ";
+        i += 2;
+      }
+      continue;
+    }
+    i += 1;
+  }
+  return out.join("");
 }
 
 /** Resolves an import specifier to a file inside `client/src`, or null. */
@@ -111,26 +178,33 @@ function lineAt(source, index) {
   return source.slice(0, index).split("\n").length;
 }
 
-const TAG_END = new RegExp("[A-Za-z0-9_\"'}\]/]");
+// A regex literal, not `new RegExp(...)`: the string-built version lost the escape on
+// the `]`, so the class closed early and the whole pattern became `<class-char>/]` —
+// three characters that never appear where one is tested, which silently disabled the
+// JSX text-node branch below while the run still printed success.
+const TAG_END = /[A-Za-z0-9_"'}\]\/]/;
 
 const findings = [];
 
 for (const file of reachableModules()) {
   if (!file.endsWith(".tsx")) continue;
   const source = readFileSync(file, "utf8");
+  // Match against the comment-free copy so doc comments are never read as JSX; line
+  // numbers still come from `source`, whose offsets this preserves exactly.
+  const masked = maskComments(source);
   const relative = path.relative(ROOT, file).replace(/\\/g, "/");
 
   // Text between two tags, with no braces in it — an expression would mean the value
   // comes from somewhere else, and `t(...)` is the expected somewhere.
-  for (const match of source.matchAll(/>([^<>{}\n]+)</g)) {
+  for (const match of masked.matchAll(/>([^<>{}\n]+)</g)) {
     const text = match[1].trim();
-    if (!text || !closesTag(source, match.index) || !isProse(text) || ALLOWED.has(text)) continue;
+    if (!text || !closesTag(masked, match.index) || !isProse(text) || ALLOWED.has(text)) continue;
     findings.push({ relative, line: lineAt(source, match.index), kind: "text", text });
   }
 
   for (const attribute of LOCALIZABLE_ATTRIBUTES) {
     const pattern = new RegExp(`${attribute}=(?:"([^"]*)"|'([^']*)')`, "g");
-    for (const match of source.matchAll(pattern)) {
+    for (const match of masked.matchAll(pattern)) {
       const text = (match[1] ?? match[2] ?? "").trim();
       if (!text || !isProse(text) || ALLOWED.has(text)) continue;
       findings.push({ relative, line: lineAt(source, match.index), kind: attribute, text });
