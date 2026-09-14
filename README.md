@@ -1,5 +1,7 @@
 # ToolsHub
 
+**Live:** https://tools-hub-71.vercel.app/
+
 **ToolsHub** is a privacy-first browser workbench for everyday utilities, developer helpers, image and file tasks, and quick local games. It is built as a static React and TypeScript application: ordinary inputs, preferences, saved game states, and themes remain in the visitor's browser.
 
 ## Highlights
@@ -11,6 +13,8 @@
 | Localization | **Default language is English; full Bangla UI is available via the language toggle.** Tool names remain in English for familiar search and SEO, while descriptions are supplied in both English and Bangla. |
 | Appearance | Light, Dark, and 10 developer-inspired presets, plus a six-token custom-theme builder with import, export, edit, and delete controls. |
 | Privacy | No account requirement, server-side tool processing, user tracking, or third-party font request — fonts are self-hosted and everything else runs locally. |
+| PWA | Installable (shortcuts, share target), offline-capable via a precached app shell + same-origin cache-first service worker. |
+| SEO | 647 prerendered shells (EN + BN under `/bn`, hreflang paired) + sitemap + robots, generated at build time; per-route meta/OG/Twitter/JSON-LD in the app too. |
 
 ## Your data stays in your browser
 
@@ -37,19 +41,20 @@ exported, and show a “never remembered” note.
 
 ## Run locally
 
-Requires `corepack pnpm` (pnpm 10.4.1, Node 24 observed):
+Requires `corepack pnpm` (pnpm 10.4.1, Node 24 — see `.nvmrc`):
 
 ```bash
 corepack pnpm install
 corepack pnpm dev
 ```
 
-Checks, tests, and build:
+Checks, tests (with coverage gate), and build:
 
 ```bash
 corepack pnpm run check
-corepack pnpm run test
+corepack pnpm run test:coverage
 corepack pnpm run build
+corepack pnpm run budget
 ```
 
 Extra audits (plain Node, no runner):
@@ -59,14 +64,27 @@ node scripts/i18n-parity.mjs
 node scripts/hardcoded-strings.mjs
 node scripts/class-audit.mjs
 node scripts/theme-contrast.mjs
+node scripts/shell-audit.mjs   # after a build
 ```
 
 ## Deployment
+
+Live at https://tools-hub-71.vercel.app/ (static `dist/public` on Vercel).
 
 The site is designed for static hosting, including GitHub Pages. It uses
 hash-based routes (`#/tools/word-counter`) so direct visits, refreshes, and
 deep links work without server rewrite rules; `client/public/404.html` covers
 old path-style links.
+
+- Canonical/OG/sitemap URLs default to the production origin; override per
+  deploy with `VITE_SITE_URL=https://<preview>.vercel.app` (Vercel URLs are
+  also picked up automatically). `robots.txt` + `sitemap.xml` are generated.
+- `vercel.json` ships security headers (CSP without any third-party origin,
+  `nosniff`, `DENY` framing, minimal `Permissions-Policy`) and `no-cache`
+  for the worker/manifest.
+- Self-host option: `corepack pnpm run build && corepack pnpm start` serves
+  `dist/public` with immutable caching for hashed assets and a `/healthz`
+  endpoint (see `server/index.ts`).
 
 ## Browser support and limitations
 
@@ -137,8 +155,10 @@ restart, and persist best score locally.
 - React 19 + TypeScript + Vite
 - Wouter with hash routing
 - Tailwind CSS v4 with CSS custom-property theme tokens
+- Self-hosted fonts (Fontsource: Noto Sans Bengali, Space Grotesk, DM Mono)
+- Service worker (precache + cache-first, no third-party requests)
 - Browser-native storage, file, and Web Crypto APIs
-- Vitest for unit tests
+- Vitest: 50 files / 274 tests (logic + jsdom component + axe a11y) with a v8 coverage gate; CI also runs shell/SEO, i18n, contrast, and bundle-budget audits
 
 ## License
 
