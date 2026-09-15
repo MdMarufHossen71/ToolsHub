@@ -97,32 +97,42 @@ function useRecorder() {
   return { t, videoRef, live, recording, url, denied, startCamera, startScreen, toggleRecord };
 }
 
-export function CameraRecorder() {
-  const { t, videoRef, live, recording, url, denied, startCamera, toggleRecord } = useRecorder();
+function RecorderPanel({
+  fileName,
+  onAllow,
+  recorder,
+}: {
+  fileName: string;
+  onAllow: () => void;
+  recorder: Omit<ReturnType<typeof useRecorder>, "t" | "startCamera" | "startScreen">;
+}) {
+  const { t } = useTranslation();
+  const { videoRef, live, recording, url, denied, toggleRecord } = recorder;
   return (
-    <div style={{ display: "grid", gap: 12, justifyItems: "center" }}>
-      <video ref={videoRef} muted playsInline style={{ width: "100%", maxWidth: 480, borderRadius: 8, background: "var(--surface-sunken)" }} aria-label={t("tool.live.preview")} />
+    <div className="live-stage">
+      <video ref={videoRef} muted playsInline className="recorder-video" aria-label={t("tool.live.preview")} />
       {!live && (
-        <div className="bench-actions">
-          <Button size="sm" onClick={() => void startCamera()}>
+        <div className="bench-actions bench-actions-center">
+          {/* Names the permission, not a game: nothing records until access is allowed. */}
+          <Button size="sm" onClick={onAllow}>
             <Video className="mr-2 size-3.5" aria-hidden="true" />
-            {t("game.start")}
+            {t("tool.live.allow")}
           </Button>
         </div>
       )}
       {denied && (
-        <p className="game-turn" role="alert">
+        <p className="form-error" role="alert">
           {t("tool.live.allow")}
         </p>
       )}
       {live && (
-        <div className="bench-actions">
+        <div className="bench-actions bench-actions-center">
           <Button size="sm" variant={recording ? "destructive" : "default"} onClick={toggleRecord}>
             {recording ? <Square className="mr-2 size-3.5" aria-hidden="true" /> : <Video className="mr-2 size-3.5" aria-hidden="true" />}
             {recording ? t("tool.live.stop") : t("game.start")}
           </Button>
           {url && (
-            <a href={url} download="recording.webm" rel="noopener" className="tool-file-remove" style={{ width: "auto", padding: "0 12px", fontSize: 12 }} aria-label={`${t("common.download")} recording.webm`}>
+            <a href={url} download={fileName} rel="noopener" className="file-download" aria-label={`${t("common.download")} ${fileName}`}>
               <Download className="size-3.5" aria-hidden="true" />
               <span aria-hidden="true">.webm</span>
             </a>
@@ -133,38 +143,12 @@ export function CameraRecorder() {
   );
 }
 
+export function CameraRecorder() {
+  const { startCamera, ...rest } = useRecorder();
+  return <RecorderPanel fileName="recording.webm" onAllow={() => void startCamera()} recorder={rest} />;
+}
+
 export function ScreenRecorder() {
-  const { t, videoRef, live, recording, url, denied, startScreen, toggleRecord } = useRecorder();
-  return (
-    <div style={{ display: "grid", gap: 12, justifyItems: "center" }}>
-      <video ref={videoRef} muted playsInline style={{ width: "100%", maxWidth: 480, borderRadius: 8, background: "var(--surface-sunken)" }} aria-label={t("tool.live.preview")} />
-      {!live && (
-        <div className="bench-actions">
-          <Button size="sm" onClick={() => void startScreen()}>
-            <Video className="mr-2 size-3.5" aria-hidden="true" />
-            {t("game.start")}
-          </Button>
-        </div>
-      )}
-      {denied && (
-        <p className="game-turn" role="alert">
-          {t("tool.live.allow")}
-        </p>
-      )}
-      {live && (
-        <div className="bench-actions">
-          <Button size="sm" variant={recording ? "destructive" : "default"} onClick={toggleRecord}>
-            {recording ? <Square className="mr-2 size-3.5" aria-hidden="true" /> : <Video className="mr-2 size-3.5" aria-hidden="true" />}
-            {recording ? t("tool.live.stop") : t("game.start")}
-          </Button>
-          {url && (
-            <a href={url} download="screen.webm" rel="noopener" className="tool-file-remove" style={{ width: "auto", padding: "0 12px", fontSize: 12 }} aria-label={`${t("common.download")} screen.webm`}>
-              <Download className="size-3.5" aria-hidden="true" />
-              <span aria-hidden="true">.webm</span>
-            </a>
-          )}
-        </div>
-      )}
-    </div>
-  );
+  const { startScreen, ...rest } = useRecorder();
+  return <RecorderPanel fileName="screen.webm" onAllow={() => void startScreen()} recorder={rest} />;
 }

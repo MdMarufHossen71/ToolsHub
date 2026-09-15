@@ -140,7 +140,7 @@ export default function MathSprint({ slug, title }: GameModuleProps) {
 
   return (
     <GameShell session={session} spec={SPEC} title={title} readouts={readouts} onEvent={onEvent}>
-      <div style={{ display: "grid", gap: 12, justifyItems: "center", width: "100%", maxWidth: 560 }}>
+      <div className="game-narrow">
         <p className="game-quiz-question" aria-live="off">
           {quiz.problem.text} = ?
         </p>
@@ -154,7 +154,7 @@ export default function MathSprint({ slug, title }: GameModuleProps) {
           {quiz.entry === "" ? "–" : quiz.entry}
         </div>
         <div className="game-mode-row">
-          <button type="button" className="game-column-pick" style={{ padding: "0 22px" }} onClick={() => typeDigit("0")}>
+          <button type="button" className="game-column-pick game-pick-wide" onClick={() => typeDigit("0")}>
             0
           </button>
           <button type="button" className="game-column-pick" style={{ padding: "0 22px" }} onClick={eraseOne} aria-label={t("control.erase")}>

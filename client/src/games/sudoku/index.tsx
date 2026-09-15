@@ -189,14 +189,16 @@ export default function Sudoku({ slug, title }: GameModuleProps) {
   const readouts = useMemo(
     () => [
       { labelKey: "game.moves" as const, value: puzzle.filled },
-      { labelKey: "control.digits" as const, value: puzzle.notesMode ? "✎" : "1–9" },
+      // A real count, not a mode glyph: notes mode itself is toggled from the
+      // secondary control and announced there; the stat stays a stat.
+      { labelKey: "game.notes" as const, value: puzzle.notes.filter((n) => n !== "").length },
     ],
-    [puzzle.filled, puzzle.notesMode],
+    [puzzle.filled, puzzle.notes],
   );
 
   return (
     <GameShell session={session} spec={SPEC} title={title} readouts={readouts} onEvent={onEvent}>
-      <div style={{ display: "grid", gap: 10, justifyItems: "center", width: "100%", maxWidth: 480 }}>
+      <div className="board-stage">
         <div className="game-board-dense" style={{ ["--cols" as string]: SIZE }} aria-label={title}>
           {puzzle.values.map((value, i) => {
             const given = puzzle.givens[i] !== 0;
@@ -213,7 +215,7 @@ export default function Sudoku({ slug, title }: GameModuleProps) {
                 aria-label={value !== 0 ? `${i + 1}, ${value}` : note !== "" ? `${i + 1}, ${note.split("").join(" ")}` : `${i + 1}`}
                 {...nav.cellProps(i)}
               >
-                {value !== 0 ? value : note !== "" ? <small style={{ fontSize: 8 }}>{note}</small> : ""}
+                {value !== 0 ? value : note !== "" ? <small className="game-notes">{note}</small> : ""}
               </button>
             );
           })}

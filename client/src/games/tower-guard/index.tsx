@@ -470,15 +470,14 @@ export default function TowerGuard({ slug, title }: GameModuleProps) {
 
   return (
     <GameShell session={session} spec={SPEC} title={title} readouts={readouts} onEvent={onEvent}>
-      <div style={{ display: "grid", gap: 12, justifyItems: "center", width: "100%" }}>
+      <div className="game-full">
         <canvas ref={canvasRef} className="game-canvas" />
         <div className="game-mode-row" role="group" aria-label={title}>
           {kinds.map((kind) => (
             <button
               key={kind}
               type="button"
-              className="game-column-pick"
-              style={{ padding: "0 14px" }}
+              className="game-column-pick game-pick-pad"
               data-active={state.current.shopKind === kind}
               aria-pressed={state.current.shopKind === kind}
               onClick={() => {

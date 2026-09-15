@@ -41,11 +41,13 @@ export function ReactionTest() {
     phase === "idle" ? t("game.start") : phase === "waiting" ? t("tool.live.wait") : phase === "ready" ? t("tool.live.tapNow") : message;
 
   return (
-    <div style={{ display: "grid", gap: 12, justifyItems: "center" }}>
+    <div className="live-stage">
+      <p className="form-hint">{phase === "idle" || phase === "done" ? t("game.start") : phase === "waiting" ? t("tool.live.wait") : t("tool.live.tapNow")}</p>
       <button
         type="button"
         onClick={press}
         aria-live="polite"
+        aria-label={phase === "ready" ? t("tool.live.tapNow") : t("tool.live.wait")}
         style={{
           width: "100%",
           maxWidth: 420,

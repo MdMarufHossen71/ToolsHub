@@ -91,15 +91,15 @@ export default function Hangman({ slug, title }: GameModuleProps) {
 
   return (
     <GameShell session={session} spec={SPEC} title={title} readouts={readouts} onEvent={onEvent}>
-      <div style={{ display: "grid", gap: 14, justifyItems: "center", width: "100%", maxWidth: 560 }}>
-        <p className="game-turn">{status}</p>
+      <div className="game-narrow">
+        <p className="game-turn" role="status">{status}</p>
         <Gallows misses={round.misses} />
         <div className="game-hangman-word" aria-label={title}>
           {round.word.split("").map((c, i) => (
             <span key={i}>{round.guessed.includes(c) || round.over ? c : ""}</span>
           ))}
         </div>
-        <p className="game-turn" aria-label={t("game.wrong")}>
+        <p className="game-turn" role="status" aria-label={t("game.wrong")}>
           {wrong.join(" ")}
         </p>
       </div>

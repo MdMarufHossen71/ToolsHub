@@ -160,8 +160,8 @@ export default function GeoQuiz({ slug, title }: GameModuleProps) {
 
   return (
     <GameShell session={session} spec={SPEC} title={title} readouts={readouts} onEvent={() => undefined}>
-      <div style={{ display: "grid", gap: 12, width: "100%", maxWidth: 560 }}>
-        <p className="game-turn">
+      <div className="game-narrow game-narrow-stretch">
+        <p className="game-turn" role="status">
           {t("game.question")} {Math.min(quiz.index + 1, QUESTIONS_PER_ROUND)}/{QUESTIONS_PER_ROUND}
         </p>
         <p className="game-quiz-question">{question.country}?</p>

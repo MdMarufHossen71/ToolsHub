@@ -77,16 +77,29 @@ export function BenchmarkBuilder() {
   };
 
   return (
-    <div style={{ display: "grid", gap: 12 }}>
-      <div className="bench-actions">
-        <Button size="sm" disabled={running} onClick={() => void run()}>
-          <Play className="mr-2 size-3.5" aria-hidden="true" />
-          {running ? t("common.loading") : t("tool.run")}
-        </Button>
+    <div className="live-stage">
+      <div className="bench-actions bench-actions-center">
+        {running ? (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              cancelled.current = true;
+            }}
+          >
+            {t("tool.live.stop")}
+          </Button>
+        ) : (
+          <Button size="sm" onClick={() => void run()}>
+            <Play className="mr-2 size-3.5" aria-hidden="true" />
+            {t("tool.run")}
+          </Button>
+        )}
       </div>
-      {results.length > 0 && (
+      {results.length > 0 ? (
         <div className="tool-table-wrap">
           <table className="tool-table">
+            <caption className="sr-only">{t("tool.live.workload")}</caption>
             <thead>
               <tr>
                 <th scope="col">{t("tool.live.workload")}</th>
@@ -105,6 +118,8 @@ export function BenchmarkBuilder() {
             </tbody>
           </table>
         </div>
+      ) : (
+        !running && <p className="form-hint">{t("tool.result.needsInput")}</p>
       )}
     </div>
   );

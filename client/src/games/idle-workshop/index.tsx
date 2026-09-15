@@ -150,7 +150,7 @@ export default function IdleWorkshop({ slug, title }: GameModuleProps) {
 
   return (
     <GameShell session={session} spec={SPEC} title={title} readouts={readouts} announcement={announcement} onEvent={() => undefined}>
-      <div style={{ display: "grid", gap: 12, width: "100%", maxWidth: 560 }}>
+      <div className="game-narrow game-narrow-stretch">
         <p className="game-quiz-question" aria-live="off">
           {Math.floor(shop.coins)} {t("game.coins")}
         </p>

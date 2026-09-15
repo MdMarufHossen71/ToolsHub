@@ -10,6 +10,8 @@ export function Whiteboard() {
   const drawing = useRef(false);
   const [strokes, setStrokes] = useState(0);
 
+  // Sized once on mount: re-fitting on resize would wipe the sketch, so the
+  // canvas keeps its pixels and the page scrolls around it instead.
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -46,10 +48,11 @@ export function Whiteboard() {
   };
 
   return (
-    <div style={{ display: "grid", gap: 12, justifyItems: "center" }}>
+    <div className="live-stage">
       <canvas
         ref={canvasRef}
         aria-label={t("tool.live.board")}
+        role="img"
         onPointerDown={(event) => {
           const canvas = canvasRef.current;
           const context = canvas?.getContext("2d");
@@ -79,9 +82,10 @@ export function Whiteboard() {
         onPointerCancel={() => {
           drawing.current = false;
         }}
-        style={{ width: "100%", maxWidth: 560, border: "1px solid var(--border)", borderRadius: 8, background: "var(--card)", touchAction: "none", cursor: "crosshair" }}
+        className="whiteboard-canvas"
       />
-      <div className="bench-actions">
+      {strokes === 0 && <p className="form-hint">{t("tool.live.drawHint")}</p>}
+      <div className="bench-actions bench-actions-center">
         <Button variant="ghost" size="sm" onClick={clear}>
           <RotateCcw className="mr-2 size-3.5" aria-hidden="true" />
           {t("common.clear")}

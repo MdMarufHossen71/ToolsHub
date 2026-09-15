@@ -46,6 +46,8 @@ const INTENTIONALLY_SHARED = new Set([
   // Unit acronyms used identically in Bangla technical writing.
   "tool.live.wpm",
   "tool.live.opsSec",
+  // An ISO date format mask: digits and separators, identical in both locales.
+  "tool.field.dateHint",
 ]);
 
 /**

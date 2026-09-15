@@ -171,7 +171,7 @@ export default function ConnectFour({ slug, title }: GameModuleProps) {
   return (
     <GameShell session={session} spec={SPEC} title={title} readouts={readouts} onEvent={onEvent}>
       <div style={{ display: "grid", gap: 12, width: "100%", maxWidth: 560 }}>
-        <p className="game-turn">{status}</p>
+        <p className="game-turn" role="status">{status}</p>
         <div className="game-column-row" aria-label={title}>
           {Array.from({ length: COLS }, (_, c) => (
             <button

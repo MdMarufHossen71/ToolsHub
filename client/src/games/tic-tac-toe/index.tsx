@@ -177,7 +177,7 @@ export default function TicTacToe({ slug, title }: GameModuleProps) {
             </button>
           ))}
         </div>
-        <p className="game-turn">{status}</p>
+        <p className="game-turn" role="status">{status}</p>
         <div className="game-board" style={{ ["--cols" as string]: 3 }} aria-label={title}>
           {board.cells.map((mark, i) => (
             <button

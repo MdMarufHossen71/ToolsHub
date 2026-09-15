@@ -38,30 +38,30 @@ export function FaviconGen() {
   };
 
   return (
-    <div style={{ display: "grid", gap: 12, justifyItems: "center" }}>
-      <div style={{ display: "flex", gap: 18, alignItems: "center", flexWrap: "wrap", justifyContent: "center" }}>
+    <div className="live-stage">
+      <div className="favicon-row">
         {urls.length > 0 ? (
-          urls.map((url, i) => <img key={i} src={url} alt="" width={SIZES[i] <= 48 ? SIZES[i] : 64} height={SIZES[i] <= 48 ? SIZES[i] : 64} />)
+          urls.map((url, i) => <img key={url} src={url} alt={`${SIZES[i]}px`} width={SIZES[i] <= 48 ? SIZES[i] : 64} height={SIZES[i] <= 48 ? SIZES[i] : 64} />)
         ) : (
-          <p className="game-turn">{t("tool.live.emoji")}</p>
+          <p className="form-hint">{t("tool.live.emoji")}</p>
         )}
       </div>
-      <div className="tool-form" style={{ width: "100%", maxWidth: 420 }}>
+      <div className="tool-form favicon-form">
         <label className="tool-field">
           <span>{t("tool.live.emoji")}</span>
           <Input value={text} maxLength={4} onChange={(event) => setText(event.target.value)} aria-label={t("tool.live.emoji")} />
         </label>
         <label className="tool-field">
-          <span>{t("tool.live.text")}</span>
-          <input type="color" value={background} onChange={(event) => setBackground(event.target.value)} aria-label={t("tool.live.text")} />
+          <span>{t("appearance.tokenBackground")}</span>
+          <input type="color" value={background} onChange={(event) => setBackground(event.target.value)} aria-label={t("appearance.tokenBackground")} />
         </label>
       </div>
-      <div className="bench-actions">
+      <div className="bench-actions bench-actions-center">
         <Button size="sm" onClick={render}>
           {t("tool.run")}
         </Button>
         {urls.map((url, i) => (
-          <a key={i} href={url} download={`favicon-${SIZES[i]}.png`} rel="noopener" className="tool-file-remove" style={{ width: "auto", padding: "0 12px", fontSize: 12 }} aria-label={`${t("common.download")} ${SIZES[i]}`}>
+          <a key={url} href={url} download={`favicon-${SIZES[i]}.png`} rel="noopener" className="favicon-download" aria-label={`${t("common.download")} ${SIZES[i]}`}>
             <Download className="size-3.5" aria-hidden="true" />
             <span aria-hidden="true">{SIZES[i]}</span>
           </a>

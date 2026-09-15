@@ -6,14 +6,33 @@ import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/contexts/AppSettingsContext";
 import { beep, formatClock, useNow } from "./useLive";
 
-function Controls({ running, onToggle, onReset, paused }: { running: boolean; onToggle: () => void; onReset: () => void; paused: boolean }) {
+function Controls({
+  running,
+  onToggle,
+  onReset,
+  paused,
+  onLap,
+  lapDisabled,
+}: {
+  running: boolean;
+  onToggle: () => void;
+  onReset: () => void;
+  paused: boolean;
+  onLap?: () => void;
+  lapDisabled?: boolean;
+}) {
   const { t } = useTranslation();
   return (
-    <div className="bench-actions">
+    <div className="bench-actions bench-actions-center">
       <Button size="sm" onClick={onToggle}>
         {running ? <Pause className="mr-2 size-3.5" aria-hidden="true" /> : <Play className="mr-2 size-3.5" aria-hidden="true" />}
         {running ? t("game.pause") : paused ? t("game.resume") : t("game.start")}
       </Button>
+      {onLap && (
+        <Button variant="outline" size="sm" disabled={lapDisabled} onClick={onLap}>
+          {t("tool.live.lap")}
+        </Button>
+      )}
       <Button variant="ghost" size="sm" onClick={onReset}>
         <RotateCcw className="mr-2 size-3.5" aria-hidden="true" />
         {t("common.reset")}
@@ -39,13 +58,12 @@ export function Stopwatch() {
   const [running, setRunning] = useState(false);
   const [laps, setLaps] = useState<number[]>([]);
   const startedAt = useRef(0);
-  const { t } = useTranslation();
   useNow(running, 47);
   const shown = running ? elapsed + (Date.now() - startedAt.current) / 1000 : elapsed;
 
   return (
-    <div style={{ display: "grid", gap: 12, justifyItems: "center" }}>
-      <p className="game-quiz-question" role="timer" aria-live="off">
+    <div className="live-stage">
+      <p className="live-readout" role="timer" aria-live="off">
         {formatClock(shown)}
       </p>
       <Controls
@@ -65,21 +83,13 @@ export function Stopwatch() {
           setElapsed(0);
           setLaps([]);
         }}
+        onLap={() => {
+          setLaps((current) => [...current, shown].slice(-20));
+        }}
+        lapDisabled={!running}
       />
-      <div className="bench-actions">
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={!running}
-          onClick={() => {
-            setLaps((current) => [...current, shown].slice(-20));
-          }}
-        >
-          {t("tool.live.lap")}
-        </Button>
-      </div>
       {laps.length > 0 && (
-        <ol className="game-found-list" style={{ listStyle: "decimal" }}>
+        <ol className="game-found-list laps-list">
           {laps.map((lap, i) => (
             <li key={i}>
               {i + 1}. {formatClock(lap)}
@@ -113,9 +123,11 @@ function useCountdown(initialSeconds: number) {
       setRunning(true);
     }
   };
-  const reset = () => {
+  const reset = (to?: number) => {
     setRunning(false);
-    setLeft(total);
+    // Reset to the minutes currently in the field, not the mount value, so an
+    // edited duration is what comes back.
+    setLeft(to ?? total);
   };
   return { shown, running, left, start, toggle, reset };
 }
@@ -126,25 +138,26 @@ export function CountdownTimer() {
   const [minutes, setMinutes] = useState("5");
   const expired = !countdown.running && countdown.left <= 0;
   useDoneBeep(expired);
+  const seconds = Math.min(86400, Math.max(1, Math.round(Number(minutes) * 60 || 300)));
 
   return (
-    <div style={{ display: "grid", gap: 12, justifyItems: "center" }}>
-      <p className="game-quiz-question" role="timer" aria-live="off">
+    <div className="live-stage">
+      <p className="live-readout" role="timer" aria-live="off">
         {formatClock(countdown.shown)}
       </p>
-      <div className="bench-actions">
-        <Input type="number" min="1" max="1440" value={minutes} onChange={(event) => setMinutes(event.target.value)} aria-label={t("tool.live.minutes")} style={{ maxWidth: 110 }} />
+      <div className="bench-actions bench-actions-center">
+        <Input type="number" min="1" max="1440" value={minutes} onChange={(event) => setMinutes(event.target.value)} aria-label={t("tool.live.minutes")} className="live-minutes" />
         <Button
           size="sm"
           onClick={() => {
-            countdown.start(Math.min(86400, Math.max(1, Math.round(Number(minutes) * 60 || 300))));
+            countdown.start(seconds);
           }}
         >
           <Play className="mr-2 size-3.5" aria-hidden="true" />
           {t("game.start")}
         </Button>
       </div>
-      <Controls running={countdown.running} paused={countdown.left > 0} onToggle={countdown.toggle} onReset={countdown.reset} />
+      <Controls running={countdown.running} paused={countdown.left > 0} onToggle={countdown.toggle} onReset={() => countdown.reset(seconds)} />
     </div>
   );
 }
@@ -155,25 +168,26 @@ export function AlarmTimer() {
   const [minutes, setMinutes] = useState("1");
   const done = !countdown.running && countdown.left <= 0;
   useDoneBeep(done, 2);
+  const seconds = Math.min(86400, Math.max(1, Math.round(Number(minutes) * 60 || 60)));
 
   return (
-    <div style={{ display: "grid", gap: 12, justifyItems: "center" }}>
-      <p className="game-quiz-question" role={done ? "alert" : "timer"} aria-live="off">
+    <div className="live-stage">
+      <p className="live-readout" role={done ? "alert" : "timer"} aria-live="off">
         {done ? "⏰" : formatClock(countdown.shown)}
       </p>
-      <div className="bench-actions">
-        <Input type="number" min="1" max="1440" value={minutes} onChange={(event) => setMinutes(event.target.value)} aria-label={t("tool.live.minutes")} style={{ maxWidth: 110 }} />
+      <div className="bench-actions bench-actions-center">
+        <Input type="number" min="1" max="1440" value={minutes} onChange={(event) => setMinutes(event.target.value)} aria-label={t("tool.live.minutes")} className="live-minutes" />
         <Button
           size="sm"
           onClick={() => {
-            countdown.start(Math.min(86400, Math.max(1, Math.round(Number(minutes) * 60 || 60))));
+            countdown.start(seconds);
           }}
         >
           <Play className="mr-2 size-3.5" aria-hidden="true" />
           {t("game.start")}
         </Button>
       </div>
-      <Controls running={countdown.running} paused={countdown.left > 0} onToggle={countdown.toggle} onReset={countdown.reset} />
+      <Controls running={countdown.running} paused={countdown.left > 0} onToggle={countdown.toggle} onReset={() => countdown.reset(seconds)} />
     </div>
   );
 }
@@ -185,14 +199,16 @@ export function PomodoroTimer() {
   const countdown = useCountdown(25 * 60);
 
   return (
-    <div style={{ display: "grid", gap: 12, justifyItems: "center" }}>
-      <p className="game-turn">
-        {phase === "work" ? t("tool.live.work") : t("game.pause")} · ×{rounds}
+    <div className="live-stage">
+      {/* Phase indicator names the current block; the button below names the action
+          that ends it, so "Pause" never appears on a button that starts a break. */}
+      <p className="live-subreadout" role="status">
+        {phase === "work" ? t("tool.live.work") : t("tool.live.break")} · ×{rounds}
       </p>
-      <p className="game-quiz-question" role="timer" aria-live="off">
+      <p className="live-readout" role="timer" aria-live="off">
         {formatClock(countdown.shown)}
       </p>
-      <div className="bench-actions">
+      <div className="bench-actions bench-actions-center">
         <Button
           size="sm"
           onClick={() => {
@@ -208,7 +224,7 @@ export function PomodoroTimer() {
           }}
         >
           <Play className="mr-2 size-3.5" aria-hidden="true" />
-          {phase === "work" ? t("game.pause") : t("tool.live.work")}
+          {phase === "work" ? t("tool.live.break") : t("tool.live.work")}
         </Button>
       </div>
       <Controls running={countdown.running} paused={countdown.left > 0} onToggle={countdown.toggle} onReset={countdown.reset} />

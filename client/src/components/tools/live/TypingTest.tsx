@@ -41,17 +41,17 @@ export function TypingTest() {
   };
 
   return (
-    <div style={{ display: "grid", gap: 12 }}>
+    <div className="live-stage">
+      {/* Reset advances to the next passage, so the counter says which one this is. */}
+      <p className="form-hint">
+        {t("tool.live.text")} {(index % PASSAGES.length) + 1} / {PASSAGES.length}
+      </p>
       <p className="tool-output" aria-label={target}>
         {target.split("").map((char, i) => (
           <span
             key={i}
-            style={
-              i >= typed.length
-                ? undefined
-                : typed[i] === char
-                  ? { color: "var(--primary)" }
-                  : { color: "var(--danger)", textDecoration: "underline" }
+            className={
+              i >= typed.length ? undefined : typed[i] === char ? "typing-correct" : "typing-wrong"
             }
           >
             {char}
@@ -67,8 +67,7 @@ export function TypingTest() {
           setTyped(value);
           if (value === target) setFinishedAt(Date.now());
         }}
-        className="tool-textarea"
-        style={{ minHeight: 90 }}
+        className="tool-textarea tool-textarea-short"
         spellCheck={false}
         autoCapitalize="off"
         autoCorrect="off"

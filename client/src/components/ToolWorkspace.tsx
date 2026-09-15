@@ -45,11 +45,13 @@ function FieldInput({
   field,
   value,
   language,
+  dateHint,
   onChange,
 }: {
   field: Field;
   value: string;
   language: "en" | "bn";
+  dateHint: string;
   onChange: (value: string) => void;
 }) {
   const label = field.label[language] || field.label.en;
@@ -84,10 +86,48 @@ function FieldInput({
     );
   }
   if (field.type === "color") {
+    const resolved = /^#[0-9a-f]{6}$/i.test(value) ? value.toUpperCase() : "#3264FF";
     return (
       <label className="tool-field">
         <span>{label}</span>
-        <input type="color" value={/^#[0-9a-f]{6}$/i.test(value) ? value : "#3264ff"} onChange={(event) => onChange(event.target.value)} aria-label={label} />
+        <input type="color" value={resolved} onChange={(event) => onChange(event.target.value)} aria-label={label} />
+        {/* Language-neutral hex readout: screen-reader and keyboard users get the
+            exact value the swatch resolves to, including the fallback. */}
+        <span className="form-hint" aria-hidden="true">{resolved}</span>
+      </label>
+    );
+  }
+  if (field.type === "date") {
+    return (
+      <label className="tool-field">
+        <span>{label}</span>
+        <Input
+          type="date"
+          value={value}
+          min={field.min}
+          max={field.max}
+          onChange={(event) => onChange(event.target.value)}
+          aria-label={label}
+        />
+        <span className="form-hint" aria-hidden="true">{dateHint}</span>
+      </label>
+    );
+  }
+  if (field.type === "number" && (field.min !== undefined || field.max !== undefined)) {
+    return (
+      <label className="tool-field">
+        <span>{label}</span>
+        <Input
+          type="number"
+          value={value}
+          min={field.min}
+          max={field.max}
+          step={field.step}
+          placeholder={field.placeholder}
+          onChange={(event) => onChange(event.target.value)}
+          aria-label={label}
+        />
+        <span className="form-hint" aria-hidden="true">{`${field.min ?? "…"} – ${field.max ?? "…"}`}</span>
       </label>
     );
   }
@@ -263,10 +303,17 @@ export function ToolWorkspace({ tool }: { tool: Tool }) {
         <p>{description}</p>
       </div>
       <div className="workbench-badges">
-        <div className="privacy-chip">
-          <ShieldCheck className="size-4" aria-hidden="true" />
-          {t("tool.browserOnly")}
-        </div>
+        {built ? (
+          <div className="privacy-chip">
+            <ShieldCheck className="size-4" aria-hidden="true" />
+            {t("tool.browserOnly")}
+          </div>
+        ) : (
+          <div className="privacy-chip privacy-chip-muted">
+            <Wrench className="size-4" aria-hidden="true" />
+            {t("tool.unavailable.badge")}
+          </div>
+        )}
         <FavoriteButton slug={tool.slug} name={tool.name} className="workbench-favorite" />
       </div>
     </div>
@@ -277,20 +324,7 @@ export function ToolWorkspace({ tool }: { tool: Tool }) {
   if (!built) {
     return (
       <section className="workbench" aria-labelledby="workbench-title">
-        <div className="workbench-header">
-          <div>
-            <p className="eyebrow">{language === "bn" ? tool.categoryBn : tool.category}</p>
-            <h1 id="workbench-title">{tool.name}</h1>
-            <p>{description}</p>
-          </div>
-          <div className="workbench-badges">
-            <div className="privacy-chip privacy-chip-muted">
-              <Wrench className="size-4" aria-hidden="true" />
-              {t("tool.unavailable.badge")}
-            </div>
-            <FavoriteButton slug={tool.slug} name={tool.name} className="workbench-favorite" />
-          </div>
-        </div>
+        {header}
         <div className="bench-panel bench-unavailable" role="note">
           <h2>{t("tool.unavailable.title")}</h2>
           <p>{t("tool.unavailable.copy")}</p>
@@ -306,7 +340,7 @@ export function ToolWorkspace({ tool }: { tool: Tool }) {
     return (
       <section className="workbench" aria-labelledby="workbench-title">
         {header}
-        <div className="bench-grid" style={{ gridTemplateColumns: "1fr" }}>
+        <div className="bench-grid bench-grid-single">
           <div className="bench-panel">
             <LiveTool />
           </div>
@@ -381,6 +415,7 @@ export function ToolWorkspace({ tool }: { tool: Tool }) {
                     field={item}
                     value={fields[item.key] ?? ""}
                     language={language}
+                    dateHint={t("tool.field.dateHint")}
                     onChange={(value) => setFields((current) => ({ ...current, [item.key]: value }))}
                   />
                 ))}
@@ -519,15 +554,19 @@ export function ToolWorkspace({ tool }: { tool: Tool }) {
             </pre>
           )}
           {output.image && (
-            <img src={output.image} alt="" className="tool-image-preview" />
+            <figure className="tool-image-figure">
+              <img src={output.image} alt="" className="tool-image-preview" />
+              <figcaption>{output.label ?? t("tool.output")}</figcaption>
+            </figure>
           )}
           {output.table && output.table.rows.length > 0 && (
             <div className="tool-table-wrap">
               <table className="tool-table">
+                <caption className="sr-only">{output.label ?? t("tool.output")}</caption>
                 <thead>
                   <tr>
-                    {output.table.head.map((cell) => (
-                      <th key={cell} scope="col">
+                    {output.table.head.map((cell, j) => (
+                      <th key={`${j}-${cell}`} scope="col">
                         {cell}
                       </th>
                     ))}
@@ -537,7 +576,7 @@ export function ToolWorkspace({ tool }: { tool: Tool }) {
                   {output.table.rows.map((row, i) => (
                     <tr key={i}>
                       {row.map((cell, j) => (
-                        <td key={j}>{cell}</td>
+                        <td key={`${i}-${j}`}>{cell}</td>
                       ))}
                     </tr>
                   ))}

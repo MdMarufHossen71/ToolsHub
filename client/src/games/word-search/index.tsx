@@ -251,7 +251,7 @@ export default function WordSearch({ slug, title }: GameModuleProps) {
 
   return (
     <GameShell session={session} spec={SPEC} title={title} readouts={readouts} announcement={announcement} onEvent={onEvent}>
-      <div style={{ display: "grid", gap: 12, justifyItems: "center", width: "100%", maxWidth: 560 }}>
+      <div className="game-narrow">
         <ul className="game-found-list" aria-label={t("game.words")}>
           {puzzle.placements.map((p) => (
             <li key={p.word} data-found={puzzle.found.includes(p.word)}>

@@ -1,5 +1,6 @@
 /** Minimal WYSIWYG: contentEditable plus a tiny toolbar, HTML out. */
 import { useRef, useState } from "react";
+import { Check, Clipboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/contexts/AppSettingsContext";
 
@@ -7,6 +8,7 @@ export function Wysiwyg() {
   const { t } = useTranslation();
   const editorRef = useRef<HTMLDivElement>(null);
   const [html, setHtml] = useState(() => `<p><strong>${t("tool.live.editor.sample")}</strong> — ${t("tool.live.editor.hint")}</p>`);
+  const [copied, setCopied] = useState(false);
 
   const command = (name: string, value?: string) => {
     editorRef.current?.focus();
@@ -14,8 +16,18 @@ export function Wysiwyg() {
     setHtml(editorRef.current?.innerHTML ?? "");
   };
 
+  const copyHtml = async () => {
+    try {
+      await navigator.clipboard.writeText(html);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1500);
+    } catch {
+      setCopied(false);
+    }
+  };
+
   return (
-    <div style={{ display: "grid", gap: 12 }}>
+    <div className="live-stage live-stage-stretch">
       <div className="bench-actions" role="toolbar" aria-label={t("tool.live.format")}>
         <Button variant="outline" size="sm" onClick={() => command("bold")} aria-label={t("tool.live.bold")}>
           <strong aria-hidden="true">B</strong>
@@ -50,9 +62,15 @@ export function Wysiwyg() {
         suppressContentEditableWarning
         onInput={() => setHtml(editorRef.current?.innerHTML ?? "")}
         dangerouslySetInnerHTML={{ __html: html }}
-        style={{ minHeight: 140, padding: 12, border: "1px solid var(--border)", borderRadius: 8, background: "var(--card)" }}
+        className="wysiwyg-editor"
       />
-      <pre className="tool-output" style={{ minHeight: 90 }} aria-label={t("tool.output")}>
+      <div className="bench-actions">
+        <Button variant="outline" size="sm" onClick={() => void copyHtml()}>
+          {copied ? <Check className="mr-2 size-3.5" aria-hidden="true" /> : <Clipboard className="mr-2 size-3.5" aria-hidden="true" />}
+          {t("common.copy")}
+        </Button>
+      </div>
+      <pre className="tool-output wysiwyg-output" aria-label={t("tool.output")}>
         {html}
       </pre>
     </div>

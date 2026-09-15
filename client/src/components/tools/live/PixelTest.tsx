@@ -30,26 +30,32 @@ export function PixelTest() {
 
   if (index < 0) {
     return (
-      <div className="bench-actions">
-        <Button
-          size="sm"
-          onClick={() => {
-            setIndex(0);
-            void document.documentElement.requestFullscreen?.().catch(() => undefined);
-          }}
-        >
-          {t("game.fullscreen")}
-        </Button>
+      <div className="live-stage">
+        <p className="form-hint">{t("tool.live.fullscreenNote")}</p>
+        <div className="bench-actions bench-actions-center">
+          <Button
+            size="sm"
+            onClick={() => {
+              setIndex(0);
+              void document.documentElement.requestFullscreen?.().catch(() => undefined);
+            }}
+          >
+            {t("game.fullscreen")}
+          </Button>
+        </div>
       </div>
     );
   }
 
+  // The label names the live action (which colour is showing, tap advances);
+  // leaving is always Esc, announced in the idle hint above.
   return (
     <button
       type="button"
       onClick={() => setIndex((i) => (i + 1) % FIELDS.length)}
-      aria-label={t("tool.live.fullscreenNote")}
-      style={{ position: "fixed", inset: 0, zIndex: 60, border: 0, background: FIELDS[index], cursor: "pointer", touchAction: "manipulation" }}
+      aria-label={`${FIELDS[index]} — ${t("tool.live.tapNow")}`}
+      style={{ background: FIELDS[index] }}
+      className="pixel-field"
     />
   );
 }

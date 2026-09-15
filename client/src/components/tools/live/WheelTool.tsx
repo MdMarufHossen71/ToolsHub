@@ -58,16 +58,16 @@ function Wheel({ options, onDone }: { options: string[]; onDone: (winner: string
   };
 
   return (
-    <div style={{ display: "grid", gap: 12, justifyItems: "center" }}>
-      <svg width="240" height="240" viewBox="0 0 240 240" role="img" aria-label={t("tool.live.spin")}>
+    <div className="live-stage">
+      <svg width="240" height="240" viewBox="0 0 240 240" role="img" aria-label={t("tool.live.spin")} style={{ maxWidth: "100%", height: "auto" }}>
         <g transform={`rotate(${(angle * 180) / Math.PI} 120 120)`}>
-          {slices.map((slice) => {
+          {slices.map((slice, i) => {
             const large = slice.end - slice.start > Math.PI ? 1 : 0;
             const x1 = 120 + 110 * Math.cos(slice.start);
             const y1 = 120 + 110 * Math.sin(slice.start);
             const x2 = 120 + 110 * Math.cos(slice.end);
             const y2 = 120 + 110 * Math.sin(slice.end);
-            return <path key={slice.label} d={`M120 120 L${x1} ${y1} A110 110 0 ${large} 1 ${x2} ${y2} Z`} fill={slice.color} stroke="var(--background)" strokeWidth="2" />;
+            return <path key={`${i}-${slice.label}`} d={`M120 120 L${x1} ${y1} A110 110 0 ${large} 1 ${x2} ${y2} Z`} fill={slice.color} stroke="var(--background)" strokeWidth="2" />;
           })}
         </g>
         <polygon points="120,2 112,18 128,18" fill="var(--foreground)" />
@@ -104,11 +104,12 @@ export function ListWheelPicker() {
     .filter(Boolean)
     .slice(0, 12);
   return (
-    <div style={{ display: "grid", gap: 12 }}>
+    <div className="live-stage">
       <label className="tool-field tool-field-wide">
         <span>{t("tool.live.options")}</span>
-        <textarea value={text} onChange={(event) => setText(event.target.value)} className="tool-textarea" style={{ minHeight: 90 }} spellCheck={false} aria-label={t("tool.live.options")} />
+        <textarea value={text} onChange={(event) => setText(event.target.value)} className="tool-textarea tool-textarea-short" spellCheck={false} aria-label={t("tool.live.options")} />
       </label>
+      {text.split("\n").filter((s) => s.trim()).length > 12 && <p className="form-hint">12 / 12</p>}
       <Wheel
         key={round}
         options={options.length > 0 ? options : ["—"]}

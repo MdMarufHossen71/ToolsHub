@@ -17,13 +17,14 @@ export function KeycodeInfo() {
   }, []);
 
   return (
-    <div style={{ display: "grid", gap: 12, justifyItems: "center" }}>
-      <p className="game-quiz-question" role="status">
+    <div className="live-stage">
+      <p className="live-readout" role="status">
         {info ? info.key === " " ? "Space" : info.key : "—"}
       </p>
       {info ? (
-        <div className="tool-table-wrap" style={{ width: "100%", maxWidth: 420 }}>
+        <div className="tool-table-wrap keycode-table">
           <table className="tool-table">
+            <caption className="sr-only">{t("tool.live.pressKey")}</caption>
             <tbody>
               {[
                 ["code", info.code],

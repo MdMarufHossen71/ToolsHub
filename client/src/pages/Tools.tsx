@@ -94,7 +94,7 @@ export default function Tools() {
       ) : (
         <div className="empty-state" role="status">
           <p>{t("tools.empty")}</p>
-          <div className="bench-actions" style={{ justifyContent: "center", border: 0, background: "transparent" }}>
+          <div className="bench-actions bench-actions-center">
             <button
               type="button"
               className="filter-chip"
