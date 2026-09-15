@@ -9,6 +9,9 @@ const map: Record<string, readonly [TranslationKey, TranslationKey]> = {
   about: ["static.about.title", "static.about.copy"],
   "how-to": ["static.how.title", "static.how.copy"],
   privacy: ["static.privacy.title", "static.privacy.copy"],
+  terms: ["static.terms.title", "static.terms.copy"],
+  "acceptable-use": ["static.acceptable.title", "static.acceptable.copy"],
+  cookies: ["static.cookies.title", "static.cookies.copy"],
 };
 
 // The about pair, written out so the lookup below never needs a double fallback.

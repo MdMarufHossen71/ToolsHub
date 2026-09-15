@@ -1657,6 +1657,60 @@ const schemas: Record<string, ToolSchema> = {
   "image-base64": {
     fields: [], accept: "image/*", multiple: false, example: {},
   },
+  // -- Server-side parity: browser-local utilities with honest limits --------
+  "line-numberer": {
+    fields: [
+      { key: "text", type: "textarea", label: t("Text", "টেক্সট"), default: "first\nsecond" },
+      { key: "start", type: "number", label: t("Start at", "শুরু"), default: "1", min: "1", max: "100000" },
+    ],
+    example: { fields: { text: "first\nsecond", start: "1" } },
+  },
+  "fancy-text": {
+    fields: [
+      { key: "text", type: "textarea", label: t("Text", "টেক্সট"), default: "Hello 123" },
+      MODE_FIELD(
+        [
+          { value: "bold", en: "Bold", bn: "বোল্ড" },
+          { value: "italic", en: "Italic", bn: "ইটালিক" },
+          { value: "monospace", en: "Monospace", bn: "মনোস্পেস" },
+        ],
+        "bold",
+      ),
+    ],
+    example: { fields: { text: "Hello 123", mode: "bold" } },
+  },
+  "email-pattern-builder": {
+    fields: [
+      { key: "first", type: "text", label: t("First name", "নামের প্রথম অংশ"), default: "arifa" },
+      { key: "last", type: "text", label: t("Last name", "নামের শেষ অংশ"), default: "rahman" },
+      { key: "domain", type: "text", label: t("Domain", "ডোমেইন"), default: "example.com" },
+    ],
+    example: { fields: { first: "arifa", last: "rahman", domain: "example.com" } },
+  },
+  "mailto-link-builder": {
+    fields: [
+      { key: "to", type: "text", label: t("To", "প্রাপক"), default: "hello@example.com" },
+      { key: "subject", type: "text", label: t("Subject", "বিষয়"), default: "Hello" },
+      { key: "body", type: "textarea", label: t("Body", "বডি"), default: "Hi there" },
+    ],
+    example: { fields: { to: "hello@example.com", subject: "Hello", body: "Hi there" } },
+  },
+  "email-signature-builder": {
+    fields: [
+      { key: "name", type: "text", label: t("Name", "নাম"), default: "Arifa Rahman" },
+      { key: "title", type: "text", label: t("Title", "পদবি"), default: "Support Officer" },
+      { key: "company", type: "text", label: t("Company", "প্রতিষ্ঠান"), default: "Example Ltd" },
+      { key: "phone", type: "text", label: t("Phone", "ফোন"), default: "+880 1XXX-XXXXXX" },
+      { key: "website", type: "text", label: t("Website", "ওয়েবসাইট"), default: "https://example.com" },
+    ],
+    example: { fields: { name: "Arifa Rahman" } },
+  },
+  "subject-line-advisor": {
+    fields: [
+      { key: "subject", type: "text", label: t("Subject", "বিষয়"), default: "Monthly update is here" },
+    ],
+    example: { fields: { subject: "Monthly update is here" } },
+  },
 };
 
 export function getToolSchema(slug: string): ToolSchema | null {

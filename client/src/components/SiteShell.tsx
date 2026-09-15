@@ -146,7 +146,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
             main content has no h2 of its own — an info page or a tool page goes
             straight from its h1 to the footer heading in document order. */}
         <nav className="footer-column" aria-labelledby="footer-browse"><h2 id="footer-browse">{t("footer.browse")}</h2><Link href="/tools">{t("footer.allTools")}</Link><Link href="/games">{t("footer.games")}</Link><Link href="/links">{t("footer.links")}</Link></nav>
-        <nav className="footer-column" aria-labelledby="footer-settings"><h2 id="footer-settings">{t("footer.settings")}</h2><Link href="/settings">{t("footer.settings")}</Link><Link href="/privacy">{t("footer.privacyLink")}</Link><Link href="/how-to">{t("footer.howTo")}</Link><Link href="/changelog">{t("footer.changelog")}</Link></nav>
+        <nav className="footer-column" aria-labelledby="footer-settings"><h2 id="footer-settings">{t("footer.settings")}</h2><Link href="/settings">{t("footer.settings")}</Link><Link href="/privacy">{t("footer.privacyLink")}</Link><Link href="/terms">{t("footer.terms")}</Link><Link href="/cookies">{t("footer.cookies")}</Link><Link href="/how-to">{t("footer.howTo")}</Link><Link href="/changelog">{t("footer.changelog")}</Link></nav>
       </div>
       <div className="site-frame footer-bottom"><span>{t("footer.copyright", { year: new Date().getFullYear() })}</span><span>{t("footer.open")} · {t("footer.updated", { date: formatSiteDate(SITE_LAST_UPDATED, language) })}</span></div>
     </footer>

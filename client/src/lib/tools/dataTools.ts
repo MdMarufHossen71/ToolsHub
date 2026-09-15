@@ -574,5 +574,27 @@ export const runDataTools: ToolRunner = async (slug, input, _option, _t, extra) 
     }
     return { text: JSON.stringify(XLSX.utils.sheet_to_json(sheet), null, 2) };
   }
+  if (slug === "query-string-parser") {
+    const raw = F("text", input).trim();
+    if (!raw) throw new ToolError("tool.error.generic");
+    let source = raw.startsWith("?") ? raw.slice(1) : raw;
+    if (raw.includes("://")) {
+      try {
+        source = new URL(raw).search.slice(1);
+      } catch {
+        throw new ToolError("tool.error.generic");
+      }
+    }
+    let parsed: Record<string, string>;
+    try {
+      parsed = Object.fromEntries(new URLSearchParams(source));
+    } catch {
+      throw new ToolError("tool.error.generic");
+    }
+    return { text: JSON.stringify(parsed, null, 2) };
+  }
+  if (slug === "json-escape") {
+    return { text: JSON.stringify(F("text", input)) };
+  }
   return null;
 };

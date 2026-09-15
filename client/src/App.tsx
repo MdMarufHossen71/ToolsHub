@@ -63,6 +63,9 @@ function AppRoutes() {
       <Route path="/about" component={InfoPage} />
       <Route path="/how-to" component={InfoPage} />
       <Route path="/privacy" component={InfoPage} />
+      <Route path="/terms" component={InfoPage} />
+      <Route path="/acceptable-use" component={InfoPage} />
+      <Route path="/cookies" component={InfoPage} />
       <Route path="/404">{() => <NotFound />}</Route>
       {/* Final fallback route */}
       <Route>{() => <NotFound />}</Route>

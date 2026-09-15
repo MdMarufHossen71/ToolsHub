@@ -249,5 +249,195 @@ export const runTextTools: ToolRunner = async (slug, input, _option, t, extra) =
       table: { head: ["Metric", "Lines"], rows: [["Added", String(added)], ["Removed", String(removed)]] },
     };
   }
+  if (slug === "line-numberer") {
+    const text = F("text", input);
+    const start = Math.max(1, Math.floor(Number(F("start", "1")) || 1));
+    return { text: text.split("\n").map((line, index) => `${start + index}. ${line}`).join("\n") };
+  }
+  if (slug === "sentence-counter") {
+    const text = F("text", input);
+    const count = (text.trim().match(/[^.!?]+[.!?]+|[^.!?]+$/g) ?? []).filter((s) => s.trim().length > 0).length;
+    return { text: JSON.stringify({ sentences: text.trim() ? count : 0 }, null, 2) };
+  }
+  if (slug === "reading-time") {
+    const text = F("text", input);
+    const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+    const minutes = Math.max(1, Math.ceil(words / 200));
+    return { text: JSON.stringify({ words, characters: text.length, minutes }, null, 2) };
+  }
+  if (slug === "url-extractor") {
+    const text = F("text", input);
+    const found = Array.from(new Set(text.match(/https?:\/\/[^\s<>"']+/g) ?? []));
+    return { text: found.join("\n") };
+  }
+  if (slug === "fancy-text") {
+    const text = F("text", input);
+    const mode = F("mode", "bold");
+    const styled = Array.from(text).map((char) => {
+      const code = char.codePointAt(0) ?? 0;
+      if (mode === "monospace") {
+        if (code >= 65 && code <= 90) return String.fromCodePoint(0x1d670 + (code - 65));
+        if (code >= 97 && code <= 122) return String.fromCodePoint(0x1d68a + (code - 97));
+        if (code >= 48 && code <= 57) return String.fromCodePoint(0x1d7f6 + (code - 48));
+        return char;
+      }
+      if (mode === "italic") {
+        if (code >= 65 && code <= 90) return String.fromCodePoint(0x1d434 + (code - 65));
+        if (code >= 97 && code <= 122) return String.fromCodePoint(0x1d44e + (code - 97));
+        return char;
+      }
+      // Default bold: A-Z, a-z, 0-9 in the Mathematical Alphanumeric block.
+      if (code >= 65 && code <= 90) return String.fromCodePoint(0x1d400 + (code - 65));
+      if (code >= 97 && code <= 122) return String.fromCodePoint(0x1d41a + (code - 97));
+      if (code >= 48 && code <= 57) return String.fromCodePoint(0x1d7ce + (code - 48));
+      return char;
+    });
+    return { text: styled.join("") };
+  }
+  if (slug === "gmail-alias-variations") {
+    const value = F("text", input).trim().toLowerCase();
+    const [local, domain] = value.split("@");
+    if (!local || !/^(gmail\.com|googlemail\.com)$/i.test(domain ?? "") || !/^[a-z0-9.]+$/.test(local)) throw new ToolError("tool.error.generic");
+    const clean = local.replace(/\./g, "");
+    if (clean.length < 2) throw new ToolError("tool.error.generic");
+    const variants = Array.from(new Set([
+      `${clean}@${domain}`,
+      `${clean.slice(0, 1)}.${clean.slice(1)}@${domain}`,
+      `${clean.slice(0, 2)}.${clean.slice(2)}@${domain}`,
+      `${clean}+personal@${domain}`,
+      `${clean}+newsletters@${domain}`,
+      `${clean}+receipts@${domain}`,
+      `${clean}+shopping@${domain}`,
+    ]));
+    return { text: `Aliases only — these are not new email accounts.\n${variants.slice(0, 7).join("\n")}` };
+  }
+  if (slug === "email-syntax-advisor") {
+    const value = F("text", input).trim().toLowerCase();
+    const [local = "", domain = ""] = value.split("@");
+    const warnings = [
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) && "Use a standard local@domain.tld format",
+      local.length > 64 && "Local part is longer than 64 characters",
+      domain.length > 253 && "Domain is longer than 253 characters",
+      /\.\./.test(value) && "Avoid consecutive dots",
+      /@gmail\.con$/.test(value) && "Did you mean gmail.com?",
+    ].filter(Boolean);
+    return {
+      text: JSON.stringify(
+        {
+          syntax: warnings.length ? "needs review" : "format looks valid",
+          localPart: local || null,
+          domain: domain || null,
+          warnings,
+          limitation: "Local format checks only; this does not verify that a mailbox exists or can receive mail.",
+        },
+        null,
+        2,
+      ),
+    };
+  }
+  if (slug === "email-extractor") {
+    const text = F("text", input);
+    const found = Array.from(new Set(text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi) ?? [])).slice(0, 100);
+    return { text: found.join("\n") };
+  }
+  if (slug === "email-pattern-builder") {
+    const cleanPart = (value: string) => value.trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
+    const first = cleanPart(F("first", ""));
+    const last = cleanPart(F("last", ""));
+    const domain = F("domain", "").trim().toLowerCase().replace(/^@/, "");
+    const fallback = F("text", input);
+    let f = first;
+    let l = last;
+    let d = domain;
+    if ((!f || !l || !/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(d)) && fallback) {
+      const [fr = "", lr = "", dr = ""] = fallback.split(/[\n,]/);
+      f = f || cleanPart(fr);
+      l = l || cleanPart(lr);
+      d = d || dr.trim().toLowerCase().replace(/^@/, "");
+    }
+    if (!f || !l || !/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(d)) throw new ToolError("tool.error.generic");
+    const candidates = [
+      `${f}`, `${l}`, `${f}${l}`, `${f}.${l}`, `${f[0]}${l}`, `${f[0]}.${l}`,
+      `${f}${l[0]}`, `${f}.${l[0]}`, `${l}${f}`, `${l}.${f}`, `${l}${f[0]}`, `${l}.${f[0]}`,
+    ].map((name) => `${name}@${d}`);
+    return { text: `Unverified naming patterns — do not treat these as confirmed contact addresses.\n${Array.from(new Set(candidates)).join("\n")}` };
+  }
+  if (slug === "mailto-link-builder") {
+    const toRaw = F("to", F("text", input));
+    const subject = F("subject", "");
+    const body = F("body", "");
+    const recipients = toRaw.split(/[;,\s]+/).filter(Boolean);
+    if (recipients.length === 0 || !recipients.every((value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))) throw new ToolError("tool.error.generic");
+    const params = new URLSearchParams();
+    if (subject) params.set("subject", subject);
+    if (body) params.set("body", body);
+    const query = params.size ? `?${params.toString()}` : "";
+    return { text: `mailto:${recipients.join(",")}${query}` };
+  }
+  if (slug === "email-size-estimator") {
+    const text = F("text", input);
+    const bytes = new TextEncoder().encode(text).length;
+    return {
+      text: JSON.stringify(
+        {
+          characters: text.length,
+          utf8Bytes: bytes,
+          estimatedBase64Bytes: Math.ceil(bytes / 3) * 4,
+          limitation: "Text-body estimate only; transport and attachment overhead can vary.",
+        },
+        null,
+        2,
+      ),
+    };
+  }
+  if (slug === "email-signature-builder") {
+    const name = F("name", "").trim() || F("text", input).split("\n")[0]?.trim() || "";
+    if (!name) throw new ToolError("tool.error.generic");
+    const title = F("title", "").trim();
+    const company = F("company", "").trim();
+    const phone = F("phone", "").trim();
+    const website = F("website", "").trim();
+    const esc = (value: string) => value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const middle = [title, company].filter(Boolean).join(" · ");
+    const lines = [name, middle, phone, website].filter(Boolean);
+    const html = lines.map((line) => esc(line)).join("<br>");
+    return { text: `${lines.join("\n")}\n\nHTML:\n${html}` };
+  }
+  if (slug === "spam-wording-advisor") {
+    const triggers = ["act now", "click here", "free", "guarantee", "urgent", "winner", "100%", "risk-free", "limited time", "buy now"];
+    const lower = F("text", input).toLowerCase();
+    const flagged = triggers.filter((word) => lower.includes(word));
+    return {
+      text: JSON.stringify(
+        {
+          flaggedPhrases: flagged,
+          advisory: flagged.length ? "Review the flagged wording and make claims specific and supportable." : "No phrases from this small local advisory list were found.",
+          limitation: "This local heuristic cannot predict spam-folder placement, reputation, or deliverability.",
+        },
+        null,
+        2,
+      ),
+    };
+  }
+  if (slug === "subject-line-advisor") {
+    const subject = F("subject", F("text", input)).trim();
+    const guidance = [
+      subject.length === 0 && "Add a subject line",
+      subject.length > 60 && "Consider a shorter mobile-friendly subject",
+      /^[A-Z\s\d!?.]+$/.test(subject) && subject.length > 2 && "Avoid all-capital wording",
+      (subject.match(/!/g) ?? []).length > 1 && "Limit repeated exclamation marks",
+    ].filter(Boolean);
+    return {
+      text: JSON.stringify(
+        {
+          characters: subject.length,
+          guidance: guidance.length ? guidance : ["Length and punctuation look balanced."],
+          limitation: "Editorial guidance only; this cannot predict open rates or inbox placement.",
+        },
+        null,
+        2,
+      ),
+    };
+  }
   return null;
 };
