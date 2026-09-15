@@ -35,6 +35,7 @@ if (files.length === 0) {
 }
 
 let jsonLdChecked = 0;
+const descriptions = new Map();
 for (const file of files) {
   const html = readFileSync(file, "utf8");
   const relative = path.relative(DIST, file).replace(/\\/g, "/");
@@ -44,7 +45,17 @@ for (const file of files) {
   // Bangla shells must declare `lang="bn"` so screen readers pick the right voice.
   const expectedLang = relative === "bn/index.html" || relative.startsWith("bn/") ? "bn" : "en";
   if (!new RegExp(`<html[^>]*\\blang="${expectedLang}"`, "i").test(html)) fail(file, `expected lang="${expectedLang}" on <html>`);
-  if (!/<meta name="description" content="[^"]+"/.test(html)) fail(file, "missing meta description");
+  const descMatch = html.match(/<meta name="description" content="([^"]+)"/);
+  if (!descMatch) fail(file, "missing meta description");
+  else {
+    // Generic fallback descriptions would duplicate across tools; every tool shell
+    // must carry its own hand-written sentence from `toolDescriptions.ts`.
+    const desc = descMatch[1];
+    if (/in a focused browser workbench/.test(desc)) fail(file, "generic fallback description (missing toolDescriptions entry)");
+    const key = `${expectedLang}\u0000${desc}`;
+    if (descriptions.has(key)) fail(file, `duplicate meta description with ${descriptions.get(key)}`);
+    else descriptions.set(key, relative);
+  }
   if (!/<link rel="canonical" href="https:\/\/[^"]+"/.test(html)) fail(file, "missing canonical link");
   if (!/<link rel="alternate" hreflang="en" href="https:\/\/[^"]+"/.test(html)) fail(file, "missing hreflang=en alternate");
   if (!/<link rel="alternate" hreflang="bn" href="https:\/\/[^"]+"/.test(html)) fail(file, "missing hreflang=bn alternate");

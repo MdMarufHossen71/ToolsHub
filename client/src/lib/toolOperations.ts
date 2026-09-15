@@ -281,9 +281,10 @@ async function dispatchTool(slug: string, input: string, option = "default", t: 
     }
     if (slug === "case-converter") {
       const title = input.toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase());
-      return { text: JSON.stringify({ UPPERCASE: input.toUpperCase(), lowercase: input.toLowerCase(), "Title Case": title, camelCase: toCamel(input), snake_case: textToSlug(input).replace(/-/g, "_"), "kebab-case": textToSlug(input), "Alternating cAsE": input.split("").map((char, index) => index % 2 ? char.toLowerCase() : char.toUpperCase()).join("") }, null, 2) };
+      return { text: JSON.stringify({ UPPERCASE: input.toUpperCase(), lowercase: input.toLowerCase(), "Title Case": title, camelCase: toCamel(input), snake_case: textToSlug(input).replace(/-/g, "_"), "kebab-case": textToSlug(input), "Alternating cAsE": Array.from(input).map((char, index) => index % 2 ? char.toLowerCase() : char.toUpperCase()).join("") }, null, 2) };
     }
-    if (slug === "reverse-text") return { text: option === "words" ? input.split(/(\s+)/).reverse().join("") : option === "lines" ? input.split("\n").reverse().join("\n") : input.split("").reverse().join("") };
+    // `Array.from` (not `split("")`) keeps surrogate pairs / emoji intact when reversing.
+    if (slug === "reverse-text") return { text: option === "words" ? input.split(/(\s+)/).reverse().join("") : option === "lines" ? input.split(/\r?\n/).reverse().join("\n") : Array.from(input).reverse().join("") };
     if (slug === "remove-extra-whitespaces") return { text: input.replace(/[ \t]+/g, " ").replace(/ *\n */g, "\n").trim() };
     if (slug === "remove-empty-lines") return { text: input.split("\n").filter((line) => line.trim()).join("\n") };
     if (slug === "remove-line-breaks") return { text: input.replace(/\s*\n\s*/g, " ") };
@@ -291,10 +292,12 @@ async function dispatchTool(slug: string, input: string, option = "default", t: 
     if (slug === "sort-list") return { text: input.split("\n").filter(Boolean).sort((a, b) => option === "desc" ? b.localeCompare(a) : a.localeCompare(b, undefined, { numeric: true })).join("\n") };
     if (slug === "list-randomizer" || slug === "string-shuffler") return { text: shuffle(input.split("\n")).join("\n") };
     if (slug === "slug-generator") return { text: textToSlug(input) };
-    if (slug === "text-to-nato-alphabet") return { text: input.split("").map((char) => nato[char.toLowerCase()] ?? char).join(" ") };
-    if (slug === "text-to-ascii") return { text: input.split("").map((char) => char.charCodeAt(0)).join(" ") };
-    if (slug === "text-to-binary") return { text: input.split("").map((char) => char.charCodeAt(0).toString(2).padStart(8, "0")).join(" ") };
-    if (slug === "text-to-hex") return { text: input.split("").map((char) => char.charCodeAt(0).toString(16).padStart(2, "0")).join(" ") };
+    if (slug === "text-to-nato-alphabet") return { text: Array.from(input).map((char) => nato[char.toLowerCase()] ?? char).join(" ") };
+    // Code-point aware: `Array.from` + `codePointAt` keep emoji as one unit instead of
+    // splitting surrogate halves into two garbage numbers.
+    if (slug === "text-to-ascii") return { text: Array.from(input).map((char) => char.codePointAt(0) ?? 0).join(" ") };
+    if (slug === "text-to-binary") return { text: Array.from(input).map((char) => (char.codePointAt(0) ?? 0).toString(2).padStart(8, "0")).join(" ") };
+    if (slug === "text-to-hex") return { text: Array.from(input).map((char) => (char.codePointAt(0) ?? 0).toString(16).padStart(2, "0")).join(" ") };
     if (slug === "morse-code") {
       const isMorse = /^[.\-/\s]+$/.test(clean);
       return { text: isMorse ? input.split(" / ").map((word) => word.split(" ").map((code) => reverseMorse[code] ?? "?").join("")).join(" ") : input.toLowerCase().split(" ").map((word) => word.split("").map((char) => morse[char] ?? char).join(" ")).join(" / ") };

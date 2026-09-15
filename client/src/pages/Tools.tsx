@@ -3,7 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { useSearch } from "wouter";
 import { ToolCard } from "@/components/ToolCard";
-import { categories, fuzzyMatch, toolRegistry, type ToolGroup } from "@/data/tools";
+import { categories, toolRegistry, type ToolGroup } from "@/data/tools";
+import { searchTools } from "@/lib/toolSearch";
 import { useTranslation } from "@/contexts/AppSettingsContext";
 import { usePageMeta } from "@/hooks/usePageMeta";
 
@@ -33,7 +34,12 @@ export default function Tools() {
     setGroup(groupIds.has(categoryParam) ? (categoryParam as ToolGroup) : "all");
   }, [categoryParam]);
 
-  const results = useMemo(() => toolRegistry.filter((tool) => (group === "all" || tool.group === group) && fuzzyMatch(tool, query)), [group, query]);
+  const results = useMemo(() => {
+    // Ranked search keeps "json csv" → JSON to CSV TSV first; the group chip
+    // then filters that ranked list so ordering survives category selection.
+    if (!query.trim()) return toolRegistry.filter((tool) => group === "all" || tool.group === group);
+    return searchTools(query, toolRegistry.length).filter((tool) => group === "all" || tool.group === group);
+  }, [group, query]);
 
   return (
     <div className="site-frame page-space">

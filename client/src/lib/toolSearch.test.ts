@@ -33,4 +33,25 @@ describe("tool search ranking", () => {
     expect(results.length).toBeGreaterThan(0);
     expect(results.some((tool) => `${tool.description.bn} ${tool.categoryBn}`.includes("লেখা"))).toBe(true);
   });
+
+  it("ranks multi-word queries with all tokens first (json csv)", () => {
+    const results = searchTools("json csv", 10);
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0]?.slug).toBe("json-to-csv-tsv");
+  });
+
+  it("tolerates extra spaces and case", () => {
+    const a = searchTools("  JSON   csv  ", 10);
+    const b = searchTools("json csv", 10);
+    expect(a.map((t) => t.slug)).toEqual(b.map((t) => t.slug));
+    expect(a[0]?.slug).toBe("json-to-csv-tsv");
+  });
+
+  it("returns no duplicates and is deterministic", () => {
+    const results = searchTools("json csv", 20);
+    const slugs = results.map((t) => t.slug);
+    expect(new Set(slugs).size).toBe(slugs.length);
+    const again = searchTools("json csv", 20);
+    expect(again.map((t) => t.slug)).toEqual(slugs);
+  });
 });

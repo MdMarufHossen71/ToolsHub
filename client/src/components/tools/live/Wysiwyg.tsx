@@ -31,7 +31,13 @@ export function Wysiwyg() {
           size="sm"
           onClick={() => {
             const url = window.prompt(t("tool.live.linkUrl"));
-            if (url) command("createLink", url);
+            if (!url) return;
+            // Allowlist: block `javascript:` / `data:` / other active schemes from a
+            // pasted prompt value. Local-only self-XSS, but reject loudly by inserting
+            // disallowed input as plain text instead of a link.
+            const trimmed = url.trim();
+            if (/^(https?:\/\/|mailto:)/i.test(trimmed)) command("createLink", trimmed);
+            else document.execCommand("insertText", false, trimmed);
           }}
           aria-label={t("tool.live.link")}
         >

@@ -9,6 +9,11 @@
  *     for the Fontsource self-hosting — no third-party font request allowed);
  *   - no bundled font asset (woff2) is emitted.
  *
+ * Worker bundles (`*.mjs`, currently only the pdf.js worker loaded via `?url`
+ * for PDF-to-images) are reported separately: they are on-demand assets, never
+ * part of the initial paint, so they do not count toward the chunk/total gates —
+ * but they must stay visible here instead of silently bypassing the audit.
+ *
  * Run with:  node scripts/bundle-budget.mjs
  * In CI:     corepack pnpm run budget
  */
@@ -26,6 +31,14 @@ if (!existsSync(ASSETS)) throw new Error(`[budget] ${ASSETS} is missing — run 
 
 const jsFiles = readdirSync(ASSETS).filter((f) => f.endsWith(".js"));
 if (jsFiles.length === 0) throw new Error("[budget] no JS chunks found in dist/public/assets");
+
+// On-demand worker bundles (pdf.js via `?url`). Never initial paint, so gated
+// separately by visibility, not by the chunk/total limits.
+const workerFiles = readdirSync(ASSETS).filter((f) => f.endsWith(".mjs"));
+for (const file of workerFiles) {
+  const bytes = statSync(path.join(ASSETS, file)).size;
+  console.log(`[budget] worker ${file} ${(bytes / 1024).toFixed(0)} KB (on-demand, excluded from chunk/total gates)`);
+}
 
 let total = 0;
 let biggest = { name: "", bytes: 0 };

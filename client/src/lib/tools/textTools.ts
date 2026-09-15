@@ -7,8 +7,9 @@ const ZALGO_DOWN = ["̰", "̱", "̲", "̳", "̴", "̵", "̶", "̷", "̸", "̹", 
 
 function zalgo(input: string, level: string): string {
   const count = level === "mini" ? 1 : level === "maxi" ? 6 : 3;
-  return input
-    .split("")
+  // `Array.from` keeps emoji / surrogate pairs intact; `split("")` would insert
+  // combining marks between the halves and corrupt the character.
+  return Array.from(input)
     .map((char) => {
       if (char === "\n") return char;
       let out = char;
@@ -147,9 +148,9 @@ export const runTextTools: ToolRunner = async (slug, input, _option, t, extra) =
   }
   if (slug === "string-obfuscator") {
     const visible = Math.min(Math.max(Number(F("visible", "2")) || 0, 0), 20);
-    const text = F("text", input);
-    if (text.length <= visible * 2) return { text: "•".repeat(text.length) };
-    return { text: text.slice(0, visible) + "•".repeat(text.length - visible * 2) + text.slice(-visible) };
+    const chars = Array.from(F("text", input));
+    if (chars.length <= visible * 2) return { text: "•".repeat(chars.length) };
+    return { text: chars.slice(0, visible).join("") + "•".repeat(chars.length - visible * 2) + chars.slice(-visible).join("") };
   }
   if (slug === "text-censor") {
     const banned = F("words").split(",").map((w) => w.trim().toLowerCase()).filter(Boolean);
@@ -160,14 +161,19 @@ export const runTextTools: ToolRunner = async (slug, input, _option, t, extra) =
     return { text: out };
   }
   if (slug === "text-to-unicode") {
-    return { text: F("text", input).split("").map((char) => codePointOf(char)).join(" ") };
+    // `Array.from` keeps astral characters (emoji) as one unit so `U+1F600` is
+    // reported, not two surrogate halves.
+    return { text: Array.from(F("text", input)).map((char) => codePointOf(char)).join(" ") };
   }
   if (slug === "zalgo-text-generator") return { text: zalgo(F("text", input), F("mode", "normal")) };
   if (slug === "numeronym-generator") {
     const out = F("text", input)
       .split(/\s+/)
       .filter(Boolean)
-      .map((word) => (word.length <= 3 ? word : `${word[0]}${word.length - 2}${word[word.length - 1]}`));
+      .map((word) => {
+        const chars = Array.from(word);
+        return chars.length <= 3 ? word : `${chars[0]}${chars.length - 2}${chars[chars.length - 1]}`;
+      });
     return { text: out.join(" ") };
   }
   if (slug === "lorem-ipsum-generator") {

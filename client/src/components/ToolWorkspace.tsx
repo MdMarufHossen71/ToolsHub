@@ -134,6 +134,10 @@ export function ToolWorkspace({ tool }: { tool: Tool }) {
   // Generic multi-file picker for schema tools (ZIP, PDF, batch…).
   const [pickedFiles, setPickedFiles] = useState<File[]>([]);
   const pickerRef = useRef<HTMLInputElement>(null);
+  // Monotonic run id: an older async result must never overwrite a newer one when
+  // the user types A → AB → ABC while a heavy parser chunk is still downloading,
+  // or when a manual Run overlaps the auto-run effect.
+  const runIdRef = useRef(0);
 
   const sensitive = isSensitiveTool(tool.slug);
   const built = isToolImplemented(tool.slug);
@@ -141,11 +145,14 @@ export function ToolWorkspace({ tool }: { tool: Tool }) {
 
   // One async path for every tool. `runTool` resolves immediately for light
   // tools and downloads a parser chunk first for the heavy ones (SQL, YAML,
-  // Markdown…); the cancelled guard keeps fast typing from showing stale
-  // results either way. Form tools pass their named fields along.
+  // Markdown…); the version guard keeps fast typing (and manual Run clicks)
+  // from showing stale results either way. Form tools pass their named fields along.
   const runNow = () => {
+    const id = runIdRef.current + 1;
+    runIdRef.current = id;
     setBusy(true);
     runTool(tool.slug, formMode ? "" : memory.input, formMode ? "default" : option, t, { fields, files: pickedFiles }).then((result) => {
+      if (runIdRef.current !== id) return;
       setOutput(result);
       setBusy(false);
     });
@@ -154,9 +161,11 @@ export function ToolWorkspace({ tool }: { tool: Tool }) {
   useEffect(() => {
     if (isFileHash) return;
     let cancelled = false;
+    const id = runIdRef.current + 1;
+    runIdRef.current = id;
     setBusy(true);
     runTool(tool.slug, formMode ? "" : memory.input, formMode ? "default" : option, t, { fields: { ...fields }, files: pickedFiles }).then((result) => {
-      if (cancelled) return;
+      if (cancelled || runIdRef.current !== id) return;
       setOutput(result);
       setBusy(false);
     });
@@ -176,9 +185,11 @@ export function ToolWorkspace({ tool }: { tool: Tool }) {
       return;
     }
     let cancelled = false;
+    const id = runIdRef.current + 1;
+    runIdRef.current = id;
     setBusy(true);
     runHashFile(file, t).then((result) => {
-      if (cancelled) return;
+      if (cancelled || runIdRef.current !== id) return;
       setOutput(result);
       setBusy(false);
     });
@@ -575,10 +586,15 @@ export function ToolWorkspace({ tool }: { tool: Tool }) {
               {copied ? <Check className="mr-2 size-3.5" aria-hidden="true" /> : <Clipboard className="mr-2 size-3.5" aria-hidden="true" />}
               {t("common.copy")}
             </Button>
-            <Button variant="outline" size="sm" onClick={download}>
-              <Download className="mr-2 size-3.5" aria-hidden="true" />
-              {t("common.download")}
-            </Button>
+            {/* When per-file artifact buttons exist above they are the correct
+                downloads (PDF/ZIP/image bytes). A generic .txt of the summary
+                text would be mistaken for the file itself, so hide it there. */}
+            {!output.artifacts || output.artifacts.length === 0 ? (
+              <Button variant="outline" size="sm" onClick={download}>
+                <Download className="mr-2 size-3.5" aria-hidden="true" />
+                {t("common.download")}
+              </Button>
+            ) : null}
           </div>
         </div>
       </div>

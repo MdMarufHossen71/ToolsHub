@@ -97,34 +97,44 @@ for (const file of htmlFiles) {
 }
 
 // --- Route table vs. emitted shells ------------------------------------------
+// English shells at the clean path plus Bangla twins under `/bn` (and the bn
+// home shell) — mirrors `scripts/generate-seo.mjs`, which writes both locales.
 const expectedShells = [
   ...SECTION_ROUTES.map((route) => route.path),
   ...toolRegistry.map((tool) => `/tools/${tool.slug}/`),
   ...gameRegistry.map((game) => `/games/${game.slug}/`),
 ];
+const expectedAllShells = [
+  ...expectedShells,
+  ...expectedShells.map((p) => `/bn${p}`),
+  "/bn/",
+];
 let shellsChecked = 0;
-for (const urlPath of expectedShells) {
+for (const urlPath of expectedAllShells) {
   const file = path.join(DIST, urlPath.replace(/^\/+|\/+$/g, ""), "index.html");
   if (!existsSync(file)) fail("route table", `no shell emitted for ${urlPath}`);
   else shellsChecked += 1;
 }
 
 // --- Sitemap must list exactly the emitted shells plus the home page ----------
+// `generate-seo.mjs` writes EN paths + BN twins + bn home: total URLs =
+// expectedShells (EN) + expectedShells (BN twins) + bn home + EN home.
+const expectedSitemapShells = expectedShells.length * 2 + 1;
 const sitemapPath = path.join(DIST, "sitemap.xml");
 if (existsSync(sitemapPath)) {
   const locs = [...readFileSync(sitemapPath, "utf8").matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
   const locPaths = locs.map((url) => new URL(url).pathname);
   const homeLocs = locPaths.filter((item) => item === "/").length;
   if (homeLocs !== 1) fail("sitemap.xml", `expected exactly one home URL, found ${homeLocs}`);
-  if (locPaths.length - 1 !== expectedShells.length) {
-    fail("sitemap.xml", `lists ${locPaths.length - 1} shell URLs but ${expectedShells.length} were expected`);
+  if (locPaths.length - 1 !== expectedSitemapShells) {
+    fail("sitemap.xml", `lists ${locPaths.length - 1} shell URLs but ${expectedSitemapShells} were expected`);
   }
 } else {
   fail("sitemap.xml", "missing");
 }
 
 console.log(`Checked ${checkedLinks} internal link target(s) in ${htmlFiles.length} built HTML file(s).`);
-console.log(`Checked ${shellsChecked}/${expectedShells.length} route-table shells against the emitted output.`);
+console.log(`Checked ${shellsChecked}/${expectedAllShells.length} route-table shells against the emitted output.`);
 if (problems.length) {
   console.log(`\n${problems.length} problem(s):\n`);
   for (const problem of problems) console.log(`  ${problem}`);
