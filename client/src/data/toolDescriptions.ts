@@ -283,6 +283,7 @@ export const toolDescriptions: Record<string, { en: string; bn: string }> = {
   "XLSX JSON Converter": { en: "Read a spreadsheet into JSON, or write JSON back out as a sheet.", bn: "স্প্রেডশিট থেকে JSON পড়ুন, বা JSON থেকে শিট বানান।" },
   "ZIP Creator Extractor": { en: "Pack files into a ZIP archive, or unpack one to look inside.", bn: "ফাইল ZIP আর্কাইভে বাঁধুন, বা খুলে ভেতরে কী আছে দেখুন।" },
   "Text to File Download": { en: "Save a block of text as a file with the name and extension you pick.", bn: "লেখাকে নিজের দেওয়া নাম ও এক্সটেনশনে ফাইল হিসেবে সেভ করুন।" },
+  "QR File Transfer": { en: "Split a small file into animated QR frames for offline screen-to-camera transfer.", bn: "ছোট ফাইলকে QR ফ্রেমে ভেঙে অফলাইনে স্ক্রিন থেকে ক্যামেরায় পাঠান।" },
 
   // SEO & Web
   "Htaccess Redirect Generator": { en: "Write Apache redirect and rewrite rules from plain from-and-to pairs.", bn: "সাধারণ কোথা-থেকে-কোথায় জোড়া থেকে Apache রিডাইরেক্ট ও রিরাইট নিয়ম লিখুন।" },

@@ -69,7 +69,7 @@ export const IMPLEMENTED_TOOLS: ReadonlySet<string> = new Set([
   "phone-number-parser", "vin-checker", "isbn-validator", "list-wheel-picker",
   // File
   "file-hash-calculator",
-  "split-file", "join-files", "file-type-detector", "file-size-converter",
+  "split-file", "join-files", "qr-file-transfer", "file-type-detector", "file-size-converter",
   "batch-file-rename", "text-to-file-download", "zip-creator-extractor",
   "pdf-merge", "pdf-split", "pdf-rotate", "pdf-page-reorder", "pdf-watermark",
   "images-to-pdf", "svg-optimizer", "exif-viewer", "pdf-to-images", "compress-pdf",

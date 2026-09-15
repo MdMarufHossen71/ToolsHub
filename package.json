@@ -56,6 +56,8 @@
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^6.3.289",
     "qr-code-styling": "^1.9.2",
+    "qrcode-generator": "1.5.2",
+    "@zxing/browser": "^0.1.5",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "sql-formatter": "^15.8.2",

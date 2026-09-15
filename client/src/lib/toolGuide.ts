@@ -79,6 +79,7 @@ const LIVE_STEPS: Record<string, GuideStep[]> = {
   "html-wysiwyg-editor": [say("s.editor"), say("watch"), step("tool.guide.step.copy")],
   "camera-recorder": [say("allow"), say("s.recorder"), say("stop"), step("tool.guide.step.copyDownload")],
   "screen-audio-recorder": [say("allow"), say("s.recorder"), say("stop"), step("tool.guide.step.copyDownload")],
+  "qr-file-transfer": [say("allow"), say("start"), say("watch"), say("stop")],
 };
 
 /** Join localized field labels into one readable list for the "fill in the fields" step. */
