@@ -38,7 +38,7 @@ function stepDirs(piece: Piece): Array<[number, number]> {
 
 /** All capture chains from one piece. Pure. */
 export function capturesFrom(board: Piece[], from: number): Move[] {
-  const piece = board[from];
+  const piece = board[from] ?? 0;
   const results: Move[] = [];
   const walk = (cells: Piece[], pos: number, path: number[], captured: number[]) => {
     let extended = false;
@@ -47,8 +47,10 @@ export function capturesFrom(board: Piece[], from: number): Move[] {
       const c = colOf(pos);
       const mid = at(r + dr, c + dc);
       const land = at(r + dr * 2, c + dc * 2);
-      if (mid < 0 || land < 0 || cells[land] !== 0) continue;
-      const victim = cells[mid];
+      if (mid < 0 || land < 0) continue;
+      const landing = cells[land];
+      if (landing === undefined || landing !== 0) continue;
+      const victim = cells[mid] ?? 0;
       const enemy = isPlayer(piece) ? isComputer(victim) : isPlayer(victim);
       if (!enemy || captured.includes(mid)) continue;
       extended = true;
@@ -66,7 +68,7 @@ export function capturesFrom(board: Piece[], from: number): Move[] {
 
 /** Quiet steps for one piece. Pure. */
 export function quietsFrom(board: Piece[], from: number): Move[] {
-  const piece = board[from];
+  const piece = board[from] ?? 0;
   const out: Move[] = [];
   for (const [dc, dr] of stepDirs(piece)) {
     const land = at(rowOf(from) + dr, colOf(from) + dc);
@@ -78,7 +80,7 @@ export function quietsFrom(board: Piece[], from: number): Move[] {
 function sidePieces(board: Piece[], computer: boolean): number[] {
   const out: number[] = [];
   for (let i = 0; i < CELLS; i += 1) {
-    if (computer ? isComputer(board[i]) : isPlayer(board[i])) out.push(i);
+    if (computer ? isComputer(board[i] ?? 0) : isPlayer(board[i] ?? 0)) out.push(i);
   }
   return out;
 }
@@ -107,24 +109,29 @@ export function aiMove(board: Piece[], random: () => number = Math.random): Move
   const takes = moves.filter((m) => m.captured.length > 0);
   if (takes.length > 0) {
     takes.sort((a, b) => b.captured.length - a.captured.length || (promotes(board, b) ? -1 : 0));
-    const longest = takes[0].captured.length;
+    const head = takes[0];
+    if (!head) return null;
+    const longest = head.captured.length;
     const best = takes.filter((m) => m.captured.length === longest);
-    return best[Math.floor(random() * best.length)];
+    return best[Math.floor(random() * best.length)] ?? null;
   }
   // Prefer steps the player cannot answer by capturing, then steps forward.
   const scored = moves.map((move) => {
     const next = applyMove(board, move, true);
     const reply = legalMoves(next, false).some((m) => m.captured.length > 0);
-    const forward = rowOf(move.path[move.path.length - 1]) - rowOf(move.from);
+    const last = move.path[move.path.length - 1] ?? move.from;
+    const forward = rowOf(last) - rowOf(move.from);
     return { move, score: (reply ? 0 : 2) + forward * 0.1 + random() };
   });
   scored.sort((a, b) => b.score - a.score);
-  return scored[0].move;
+  const winner = scored[0];
+  if (!winner) return null;
+  return winner.move;
 }
 
 function promotes(board: Piece[], move: Move): boolean {
-  const piece = board[move.from];
-  const land = move.path[move.path.length - 1];
+  const piece = board[move.from] ?? 0;
+  const land = move.path[move.path.length - 1] ?? move.from;
   if (isKing(piece)) return false;
   return rowOf(land) === (isPlayer(piece) ? 0 : SIZE - 1);
 }
@@ -132,10 +139,10 @@ function promotes(board: Piece[], move: Move): boolean {
 /** Execute a move with promotion. Pure. */
 export function applyMove(board: Piece[], move: Move, computer: boolean): Piece[] {
   const next = board.slice();
-  const piece = next[move.from];
+  const piece = next[move.from] ?? 0;
   next[move.from] = 0;
   for (const victim of move.captured) next[victim] = 0;
-  const land = move.path[move.path.length - 1];
+  const land = move.path[move.path.length - 1] ?? move.from;
   const crowned = !isKing(piece) && rowOf(land) === (computer ? SIZE - 1 : 0);
   next[land] = (crowned ? (computer ? 4 : 2) : piece) as Piece;
   return next;
@@ -197,7 +204,7 @@ export default function Checkers({ slug, title }: GameModuleProps) {
 
   const activate = (index: number) => {
     if (session.phase !== "playing" || game.over || !dark(index)) return;
-    const piece = game.board[index];
+    const piece = game.board[index] ?? 0;
     // A chained capture must continue with the same piece: only its own
     // landings are offered, never the whole forced-capture list.
     if (game.selected !== null) {
@@ -206,6 +213,12 @@ export default function Checkers({ slug, title }: GameModuleProps) {
         const board = applyMove(game.board, continuation, false);
         const captured = game.captured + continuation.captured.length;
         const land = continuation.path[continuation.path.length - 1];
+        // Paths from `capturesFrom` always end in a landing; this bail is
+        // type-level only and simply drops a broken selection.
+        if (land === undefined) {
+          setGame({ ...game, selected: null });
+          return;
+        }
         if (capturesFrom(board, land).length > 0) {
           setGame({ ...game, board, selected: land });
           session.commit({ score: 0, level: 1, resources: captured });
@@ -233,6 +246,10 @@ export default function Checkers({ slug, title }: GameModuleProps) {
         const board = applyMove(game.board, move, false);
         const captured = game.captured + move.captured.length;
         const land = move.path[move.path.length - 1];
+        if (land === undefined) {
+          setGame({ ...game, selected: null });
+          return;
+        }
         const more = move.captured.length > 0 ? capturesFrom(board, land) : [];
         if (more.length > 0) {
           setGame({ ...game, board, selected: land });
@@ -263,7 +280,7 @@ export default function Checkers({ slug, title }: GameModuleProps) {
     // Immediate next landings only: a chain's later landings are not offered
     // until the piece actually gets there.
     const moves = legalMoves(game.board, false).filter((m) => m.from === game.selected);
-    return new Set(moves.map((m) => m.path[0]));
+    return new Set(moves.map((m) => m.path[0] ?? -1));
   }, [game.board, game.selected]);
 
   const glyph = (piece: Piece): string => {

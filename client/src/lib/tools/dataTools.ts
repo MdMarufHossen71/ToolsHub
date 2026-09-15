@@ -306,8 +306,9 @@ export const runDataTools: ToolRunner = async (slug, input, _option, _t, extra) 
     const out: string[] = [];
     for (let i = 0; i < count; i += 1) {
       const parts: string[] = [];
-      for (let j = 0; j < 6; j += 1) parts.push(bytes[i * 6 + j].toString(16).padStart(2, "0").toUpperCase());
-      parts[0] = (parseInt(parts[0], 16) & 0xfe).toString(16).padStart(2, "0").toUpperCase();
+      // Six bytes per address by loop construction; `?? 0` is type-level only.
+      for (let j = 0; j < 6; j += 1) parts.push((bytes[i * 6 + j] ?? 0).toString(16).padStart(2, "0").toUpperCase());
+      parts[0] = (parseInt(parts[0] ?? "", 16) & 0xfe).toString(16).padStart(2, "0").toUpperCase();
       out.push(parts.join(separator));
     }
     return { text: out.join("\n") };
@@ -315,8 +316,9 @@ export const runDataTools: ToolRunner = async (slug, input, _option, _t, extra) 
   if (slug === "ipv4-subnet-calculator") {
     const match = F("cidr").trim().match(/^(\d+\.\d+\.\d+\.\d+)\/(\d{1,2})$/);
     if (!match) throw new ToolError("tool.error.generic");
-    const base = ipv4ToInt(match[1]);
-    const prefix = Number(match[2]);
+    // Both groups always participate on a match; `?? ""` keeps the throw path below.
+    const base = ipv4ToInt(match[1] ?? "");
+    const prefix = Number(match[2] ?? "");
     if (base === null || prefix > 32) throw new ToolError("tool.error.generic");
     const mask = prefix === 0 ? 0 : (0xffffffff << (32 - prefix)) >>> 0;
     const network = (base & mask) >>> 0;
@@ -344,8 +346,9 @@ export const runDataTools: ToolRunner = async (slug, input, _option, _t, extra) 
   if (slug === "ipv4-range-expander") {
     const match = F("cidr").trim().match(/^(\d+\.\d+\.\d+\.\d+)\/(\d{1,2})$/);
     if (!match) throw new ToolError("tool.error.generic");
-    const base = ipv4ToInt(match[1]);
-    const prefix = Number(match[2]);
+    // Both groups always participate on a match; `?? ""` keeps the throw path below.
+    const base = ipv4ToInt(match[1] ?? "");
+    const prefix = Number(match[2] ?? "");
     if (base === null || prefix < 24 || prefix > 32) throw new ToolError("tool.error.generic");
     const mask = (0xffffffff << (32 - prefix)) >>> 0;
     const network = (base & mask) >>> 0;
@@ -397,9 +400,11 @@ export const runDataTools: ToolRunner = async (slug, input, _option, _t, extra) 
     let i = 2;
     for (; i < tokens.length; i += 1) {
       const token = tokens[i];
+      // Loop-bounded; the guard is type-level only.
+      if (token === undefined) continue;
       if (token === "-d" || token === "--detach" || token === "--rm" || token === "-it" || token === "-t") continue;
       else if ((token === "--name" || token === "-p" || token === "-v" || token === "-e" || token === "--net" || token === "--network") && i + 1 < tokens.length) {
-        const value = tokens[++i].replace(/^["']|["']$/g, "");
+        const value = (tokens[++i] ?? "").replace(/^["']|["']$/g, "");
         if (token === "--name") service.container_name = value;
         else if (token === "-p") (service.ports as string[]).push(value.includes(":") ? `"${value}"` : `"${value}:${value}"`);
         else if (token === "-v") (service.volumes as string[]).push(value);
@@ -413,6 +418,8 @@ export const runDataTools: ToolRunner = async (slug, input, _option, _t, extra) 
         }
       } else if (token.startsWith("--") && token.includes("=")) {
         const [key, ...rest] = token.slice(2).split("=");
+        // `split` always yields at least one element; type-level only.
+        if (key === undefined) continue;
         (service[key.replace(/-/g, "_")] as unknown) = rest.join("=");
       } else if (!token.startsWith("-")) {
         service.image = token;
@@ -560,7 +567,7 @@ export const runDataTools: ToolRunner = async (slug, input, _option, _t, extra) 
     const XLSX = await import("xlsx");
     const buffer = await file.arrayBuffer();
     const workbook = XLSX.read(buffer, { type: "array" });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const sheet = workbook.Sheets[workbook.SheetNames[0] ?? ""];
     if (!sheet) throw new ToolError("tool.error.generic");
     if (F("mode", "to-json") === "to-csv") {
       return { text: XLSX.utils.sheet_to_csv(sheet) };

@@ -41,7 +41,12 @@ export function FaviconGen() {
     <div className="live-stage">
       <div className="favicon-row">
         {urls.length > 0 ? (
-          urls.map((url, i) => <img key={url} src={url} alt={`${SIZES[i]}px`} width={SIZES[i] <= 48 ? SIZES[i] : 64} height={SIZES[i] <= 48 ? SIZES[i] : 64} />)
+          urls.map((url, i) => {
+            // Parallel to SIZES by construction; type-level only.
+            const size = SIZES[i] ?? 0;
+            const shown = size <= 48 ? size : 64;
+            return <img key={url} src={url} alt={`${size}px`} width={shown} height={shown} />;
+          })
         ) : (
           <p className="form-hint">{t("tool.live.emoji")}</p>
         )}

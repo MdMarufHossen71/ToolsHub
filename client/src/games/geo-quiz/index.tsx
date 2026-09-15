@@ -52,7 +52,12 @@ function shuffle<T>(items: T[], random: () => number = Math.random): T[] {
   const out = items.slice();
   for (let i = out.length - 1; i > 0; i -= 1) {
     const j = Math.floor(random() * (i + 1));
-    [out[i], out[j]] = [out[j], out[i]];
+    const a = out[i];
+    const b = out[j];
+    // Loop-bounded on both sides; the guard is type-level only.
+    if (a === undefined || b === undefined) continue;
+    out[i] = b;
+    out[j] = a;
   }
   return out;
 }
@@ -128,6 +133,8 @@ export default function GeoQuiz({ slug, title }: GameModuleProps) {
   const answer = (option: string) => {
     if (session.phase !== "playing" || quiz.over || quiz.lock !== "") return;
     const current = quiz.questions[quiz.index];
+    // The index is always a live question while playing; type-level only.
+    if (!current) return;
     const right = option === current.capital;
     const correct = quiz.correct + (right ? 1 : 0);
     const streak = right ? quiz.streak + 1 : 0;
@@ -148,7 +155,10 @@ export default function GeoQuiz({ slug, title }: GameModuleProps) {
     }, FLASH_MS);
   };
 
-  const question = quiz.questions[Math.min(quiz.index, quiz.questions.length - 1)];
+  // Questions are always dealt (non-empty bank); the fallback renders an empty
+  // card instead of crashing if that ever stopped holding.
+  const emptyQuestion: Question = { country: "", capital: "", options: [] };
+  const question = quiz.questions[Math.min(quiz.index, quiz.questions.length - 1)] ?? emptyQuestion;
 
   const readouts = useMemo(
     () => [

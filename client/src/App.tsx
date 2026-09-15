@@ -92,6 +92,7 @@ function App() {
     // rule, so a path-based deep link or refresh returns the host's own 404.
     // Hash locations survive both, which is also what the README documents.
     <ErrorBoundary>
+      {/* eslint-disable-next-line react-compiler/react-compiler -- wouter's Router takes the location hooks themselves as values; calling them here would break routing, so the compiler must leave this element alone. */}
       <Router hook={useHashPath} searchHook={useHashSearch}>
         {/* The sonner <Toaster /> and the Radix <TooltipProvider /> used to wrap the app,
             but nothing ever called `toast()` or rendered a tooltip — the two of them

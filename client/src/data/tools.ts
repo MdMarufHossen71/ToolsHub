@@ -18,7 +18,7 @@ export type Tool = {
   group: ToolGroup;
   description: { bn: string; en: string };
   keywords: string[];
-  featured?: boolean;
+  featured?: boolean | undefined;
 };
 
 export const groupMeta: Record<ToolGroup, { label: string; bn: string; icon: typeof Code2; tone: string }> = {

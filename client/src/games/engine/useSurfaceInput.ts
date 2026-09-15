@@ -139,7 +139,8 @@ export function useSurfaceInput(options: UseSurfaceInputOptions) {
         const digit = /^(?:Digit|Numpad)([0-9])$/.exec(event.code);
         if (digit) {
           event.preventDefault();
-          eventRef.current({ kind: "text", value: digit[1], source: "keyboard" });
+          // The group always participates on a match; `?? ""` is type-level only.
+          eventRef.current({ kind: "text", value: digit[1] ?? "", source: "keyboard" });
           return;
         }
       }
@@ -166,12 +167,15 @@ export function useSurfaceInput(options: UseSurfaceInputOptions) {
     surface.addEventListener("keyup", onKeyUp);
     surface.addEventListener("blur", onBlur);
     window.addEventListener("blur", onBlur);
+    // Copied up front: the cleanup runs after unmount, when the ref object may
+    // already point elsewhere, so it must not read `.current` late.
+    const held = heldRef.current;
     return () => {
       surface.removeEventListener("keydown", onKeyDown);
       surface.removeEventListener("keyup", onKeyUp);
       surface.removeEventListener("blur", onBlur);
       window.removeEventListener("blur", onBlur);
-      heldRef.current.clear();
+      held.clear();
     };
   }, [surfaceRef, bindings, heldActions, spec.letters, spec.keypad, enabled, heldRef]);
 

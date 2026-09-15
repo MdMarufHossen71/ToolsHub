@@ -20,7 +20,7 @@
  * remembered in the `tgb:` storage namespace, and the banner never appears when the
  * app already runs standalone or the user has just installed it.
  */
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Download, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSettings } from "@/contexts/AppSettingsContext";
@@ -61,10 +61,12 @@ export function InstallPrompt() {
   // Escape is the expected way out of an unprompted overlay. The handler is registered
   // before the early return below, so the hook order never depends on whether the
   // banner is currently showing.
-  const dismiss = () => {
+  // Stable so the Escape-listener effect below does not re-register every render:
+  // it only calls a state setter and a storage helper.
+  const dismiss = useCallback(() => {
     setDismissed(true);
     dismissInstallPrompt();
-  };
+  }, []);
   useEffect(() => {
     if (dismissed || installed || !deferred) return;
     const onKey = (event: KeyboardEvent) => {
@@ -72,10 +74,7 @@ export function InstallPrompt() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-    // `dismiss` only calls state setters and a storage helper, so re-registering on
-    // these three values is equivalent to depending on it.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dismissed, installed, deferred]);
+  }, [dismissed, installed, deferred, dismiss]);
 
   if (dismissed || installed || !deferred) return null;
 

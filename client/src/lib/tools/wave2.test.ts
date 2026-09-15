@@ -66,7 +66,7 @@ describe("Wave 2 data tools", () => {
   });
 
   it("looks up references and computes nets", async () => {
-    expect((await run("http-status-codes", { query: "404" })).table?.rows[0][1]).toBe("Not Found");
+    expect((await run("http-status-codes", { query: "404" })).table?.rows[0]?.[1]).toBe("Not Found");
     expect((await run("mime-types-lookup", { query: "png" })).text).toContain("image/png");
     expect((await run("git-cheatsheet", { query: "" })).table?.rows.length).toBeGreaterThan(10);
     expect(JSON.parse((await run("ipv4-subnet-calculator", { cidr: "192.168.1.0/24" })).text).network).toBe("192.168.1.0");
@@ -83,7 +83,7 @@ describe("Wave 2 data tools", () => {
     expect((await run("crontab-generator", { minute: "xx", hour: "*", dom: "*", month: "*", dow: "*", cmd: "x" })).error).toBe(true);
     expect((await run("docker-run-converter", { text: "docker run -d --name web -p 8080:80 nginx:alpine" })).text).toContain("image: nginx:alpine");
     const svg = await run("svg-placeholder-generator", { w: "100", h: "50", label: "Hi", bg: "#ffffff", fg: "#000000" });
-    expect(svg.artifacts?.[0].name).toBe("placeholder-100x50.svg");
+    expect(svg.artifacts?.[0]?.name).toBe("placeholder-100x50.svg");
   });
 });
 
@@ -119,7 +119,7 @@ describe("Wave 2 random tools", () => {
     expect(JSON.parse((await run("vin-checker", { text: "1HGCM82633A004352" })).text).valid).toBe(true);
     expect(JSON.parse((await run("isbn-validator", { text: "9783161484100" })).text).valid).toBe(true);
     const rf = await run("random-file-generator", { size: "1", name: "r.bin" });
-    expect(rf.artifacts?.[0].name).toBe("r.bin");
+    expect(rf.artifacts?.[0]?.name).toBe("r.bin");
   });
 
   it("fails DOM renderers gracefully in node", async () => {
@@ -147,12 +147,12 @@ describe("Wave 2 file tools", () => {
     expect(JSON.parse((await run("file-type-detector", {}, "", [png])).text).kind).toBe("PNG image");
     expect((await run("file-size-converter", { value: "1", unit: "MB" })).table?.rows.find((r) => r[0] === "KB")?.[1]).toBe("1024");
     const txt = await run("text-to-file-download", { text: "hi", name: "n.txt" });
-    expect(txt.artifacts?.[0].name).toBe("n.txt");
+    expect(txt.artifacts?.[0]?.name).toBe("n.txt");
   });
 
   it("zips roundtrip", async () => {
     const created = await run("zip-creator-extractor", { mode: "create", name: "z.zip" }, "", [file("a.txt", "hello", "text/plain")]);
-    expect(created.artifacts?.[0].name).toBe("z.zip");
+    expect(created.artifacts?.[0]?.name).toBe("z.zip");
     const listed = await runTool("zip-creator-extractor", "", "default", t, {
       fields: { mode: "extract", name: "z.zip" },
       files: [file("z.zip", "x", "application/zip")],
@@ -171,15 +171,15 @@ describe("Wave 2 file tools", () => {
     const one = await make(1);
     const merged = await run("pdf-merge", {}, "", [two, one]);
     expect(JSON.parse(merged.text).pages).toBe(3);
-    expect(merged.artifacts?.[0].name).toBe("merged.pdf");
+    expect(merged.artifacts?.[0]?.name).toBe("merged.pdf");
     const split = await run("pdf-split", { ranges: "1" }, "", [two]);
     expect(JSON.parse(split.text).pages).toBe(1);
     const rotated = await run("pdf-rotate", { degrees: "90" }, "", [one]);
-    expect(rotated.artifacts?.[0].name).toBe("rotated.pdf");
+    expect(rotated.artifacts?.[0]?.name).toBe("rotated.pdf");
     const reordered = await run("pdf-page-reorder", { order: "2,1" }, "", [two]);
     expect(JSON.parse(reordered.text).pages).toBe(2);
     const marked = await run("pdf-watermark", { text: "DRAFT" }, "", [one]);
-    expect(marked.artifacts?.[0].name).toBe("watermarked.pdf");
+    expect(marked.artifacts?.[0]?.name).toBe("watermarked.pdf");
   });
 
   it("embeds images into a PDF", async () => {

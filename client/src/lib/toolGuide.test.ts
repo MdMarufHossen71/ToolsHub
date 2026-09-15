@@ -27,11 +27,11 @@ describe("toolGuideSteps", () => {
   it("names the real schema fields for a form tool", () => {
     const tool = bySlug.get("find-replace")!;
     const steps = toolGuideSteps(tool, "en", "form");
-    expect(steps[0].key).toBe("tool.guide.step.form.fields");
+    expect(steps[0]?.key).toBe("tool.guide.step.form.fields");
     // The labels come from the schema, not a generic sentence.
-    expect(steps[0].values?.fields).toBe("Text, Find, Replace with");
+    expect(steps[0]?.values?.fields).toBe("Text, Find, Replace with");
     const bn = toolGuideSteps(tool, "bn", "form");
-    expect(bn[0].values?.fields).toBe("টেক্সট, খুঁজুন, বদলে দিন");
+    expect(bn[0]?.values?.fields).toBe("টেক্সট, খুঁজুন, বদলে দিন");
   });
 
   it("classifies live, file, form and text tools", () => {
@@ -45,9 +45,9 @@ describe("toolGuideSteps", () => {
   it("gives live instruments their own control-specific first step", () => {
     const typing = toolGuideSteps(bySlug.get("typing-speed-test")!, "en", "live");
     const wheel = toolGuideSteps(bySlug.get("decision-wheel")!, "en", "live");
-    expect(typing[0].key).toBe("tool.guide.live.s.typing");
-    expect(wheel[0].key).toBe("tool.guide.live.s.wheel");
-    expect(typing[0].key).not.toBe(wheel[0].key);
+    expect(typing[0]?.key).toBe("tool.guide.live.s.typing");
+    expect(wheel[0]?.key).toBe("tool.guide.live.s.wheel");
+    expect(typing[0]?.key).not.toBe(wheel[0]?.key);
   });
 
   // A diagnostic for the Phase 3 acceptance note: prove the steps are not one block

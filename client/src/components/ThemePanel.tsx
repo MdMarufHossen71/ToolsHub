@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { Check, Clipboard, Download, Edit3, Palette, Plus, RotateCcw, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { type ThemePreset, type ThemeTokens } from "@/data/themes";
+import { defaultPreset, type ThemePreset, type ThemeTokens } from "@/data/themes";
 import { useSettings } from "@/contexts/AppSettingsContext";
 import { type TranslationKey } from "@/i18n/translations";
 import { luminance, readableOn } from "@/lib/color";
@@ -13,7 +13,7 @@ const fresh = (): ThemeTokens => ({ background: "#151b29", surface: "#202a3b", t
 
 export function ThemePanel() {
   const { appearance, allThemes, setAppearance, saveCustomTheme, deleteCustomTheme, resetThemes, t } = useSettings();
-  const [tokens, setTokens] = useState<ThemeTokens>(fresh()); const [name, setName] = useState(""); const [importValue, setImportValue] = useState(""); const [notice, setNotice] = useState(""); const active = allThemes.find((theme) => theme.id === appearance) ?? allThemes[0];
+  const [tokens, setTokens] = useState<ThemeTokens>(fresh()); const [name, setName] = useState(""); const [importValue, setImportValue] = useState(""); const [notice, setNotice] = useState(""); const active = allThemes.find((theme) => theme.id === appearance) ?? defaultPreset;
   const exportTheme = async () => { try { await navigator.clipboard.writeText(JSON.stringify({ name: active.name, tokens: active.tokens }, null, 2)); setNotice(t("appearance.copied")); } catch { setNotice(t("tool.copyFailed")); } };
   const parseImport = () => { try { if (importValue.length > 20000) throw new Error(); const parsed = JSON.parse(importValue); const next = parsed.tokens ?? parsed; if (!next || !labels.every(({ key }) => /^#[0-9a-f]{6}$/i.test(next[key]))) throw new Error(); setTokens(next); setName(typeof parsed.name === "string" && parsed.name.trim() ? parsed.name.trim().slice(0, 60) : t("appearance.importedName")); setNotice(t("appearance.imported")); } catch { setNotice(t("appearance.invalid")); } };
   // `isDark` drives the `dark` class, the light/dark toggle and every derived token,

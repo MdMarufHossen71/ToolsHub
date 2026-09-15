@@ -49,6 +49,11 @@ function Wheel({ options, onDone }: { options: string[]; onDone: (winner: string
       const pointer = ((Math.PI * 1.5 - target) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
       const index = Math.floor((pointer / (Math.PI * 2)) * options.length) % options.length;
       const won = options[index];
+      // Spin is disabled on an empty wheel, so this is type-level only.
+      if (won === undefined) {
+        setSpinning(false);
+        return;
+      }
       setWinner(won);
       setSpinning(false);
       onDone(won);

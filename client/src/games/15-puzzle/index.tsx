@@ -34,7 +34,11 @@ export function inversionCount(tiles: Tiles): number {
   let inversions = 0;
   for (let i = 0; i < values.length; i += 1) {
     for (let j = i + 1; j < values.length; j += 1) {
-      if (values[i] > values[j]) inversions += 1;
+      const a = values[i];
+      const b = values[j];
+      // Loop-bounded; the guard is type-level only.
+      if (a === undefined || b === undefined) continue;
+      if (a > b) inversions += 1;
     }
   }
   return inversions;
@@ -49,14 +53,23 @@ export function solvableShuffle(random: () => number = Math.random): Tiles {
   const tiles = solvedTiles();
   for (let i = tiles.length - 1; i > 0; i -= 1) {
     const j = Math.floor(random() * (i + 1));
-    [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
+    const a = tiles[i];
+    const b = tiles[j];
+    if (a === undefined || b === undefined) continue;
+    tiles[i] = b;
+    tiles[j] = a;
   }
   if (isSolved(tiles)) return solvableShuffle(random);
   const blankRowFromBottom = SIZE - Math.floor(tiles.indexOf(0) / SIZE);
   if ((inversionCount(tiles) + blankRowFromBottom) % 2 === 0) {
     const a = tiles.findIndex((t) => t !== 0);
     const b = tiles.findIndex((t, i) => t !== 0 && i !== a);
-    [tiles[a], tiles[b]] = [tiles[b], tiles[a]];
+    const va = tiles[a];
+    const vb = tiles[b];
+    if (va !== undefined && vb !== undefined && a >= 0 && b >= 0) {
+      tiles[a] = vb;
+      tiles[b] = va;
+    }
   }
   return tiles;
 }
@@ -92,7 +105,11 @@ export default function FifteenPuzzle({ slug, title }: GameModuleProps) {
     const blank = board.tiles.indexOf(0);
     if (!neighbours(blank).includes(index)) return;
     const tiles = board.tiles.slice();
-    [tiles[blank], tiles[index]] = [tiles[index], tiles[blank]];
+    const moving = tiles[index];
+    const empty = tiles[blank];
+    if (moving === undefined || empty === undefined) return;
+    tiles[blank] = moving;
+    tiles[index] = empty;
     const moves = board.moves + 1;
     if (isSolved(tiles)) {
       const score = Math.max(100, 3000 - moves * 10);

@@ -11,10 +11,13 @@ const map: Record<string, readonly [TranslationKey, TranslationKey]> = {
   privacy: ["static.privacy.title", "static.privacy.copy"],
 };
 
+// The about pair, written out so the lookup below never needs a double fallback.
+const FALLBACK: readonly [TranslationKey, TranslationKey] = ["static.about.title", "static.about.copy"];
+
 export default function InfoPage() {
   const [, params] = useRoute("/:slug");
   const { t } = useTranslation();
-  const [titleKey, copyKey] = map[safeSlug(params?.slug).toLowerCase()] ?? map.about;
+  const [titleKey, copyKey] = map[safeSlug(params?.slug).toLowerCase()] ?? FALLBACK;
   usePageMeta(titleKey, copyKey);
 
   return (

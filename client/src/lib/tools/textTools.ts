@@ -182,7 +182,8 @@ export const runTextTools: ToolRunner = async (slug, input, _option, t, extra) =
     for (let i = 0; i < paras; i += 1) {
       const sentences = 3 + Math.floor(Math.random() * 3);
       const lines: string[] = [];
-      for (let s = 0; s < sentences; s += 1) lines.push(LOREM[(i * 3 + s) % LOREM.length]);
+      // Modulo-bounded into the eight sentences; `?? ""` is type-level only.
+      for (let s = 0; s < sentences; s += 1) lines.push(LOREM[(i * 3 + s) % LOREM.length] ?? "");
       out.push(lines.join(" "));
     }
     return { text: out.join("\n\n") };

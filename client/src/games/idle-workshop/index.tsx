@@ -74,9 +74,9 @@ export default function IdleWorkshop({ slug, title }: GameModuleProps) {
     if (save.score > 0 || cursors > 0 || machines > 0 || factories > 0 || bonus > 0) {
       setShop({ coins: save.score + bonus, cursors, machines, factories, bonus });
     }
-    // Mount-only restore; the save object is the initial one by construction.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    // Mount-only restore: `session` is a stable memo, so this runs once (twice in
+    // StrictMode dev, where the `welcomed` guard above absorbs the second pass).
+  }, [session]);
 
   const persist = (next: Shop) => {
     session.commit({

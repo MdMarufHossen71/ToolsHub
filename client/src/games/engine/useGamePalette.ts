@@ -90,7 +90,8 @@ export function withAlpha(color: string, alpha: number): string {
   const hex = color.trim();
   const match = /^#([0-9a-f]{6})$/i.exec(hex);
   if (!match) return color;
-  const value = parseInt(match[1], 16);
+  // The group always participates on a match; `?? ""` is type-level only.
+  const value = parseInt(match[1] ?? "", 16);
   const r = (value >> 16) & 255;
   const g = (value >> 8) & 255;
   const b = value & 255;

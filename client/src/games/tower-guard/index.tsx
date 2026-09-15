@@ -61,6 +61,8 @@ export function pathCells(waypoints: Waypoint[] = WAYPOINTS): Set<number> {
   for (let s = 0; s < waypoints.length - 1; s += 1) {
     const a = waypoints[s];
     const b = waypoints[s + 1];
+    // Loop-bounded, so both ends exist; the guard below is type-level only.
+    if (!a || !b) continue;
     const steps = Math.max(Math.abs(b.x - a.x), Math.abs(b.y - a.y));
     for (let i = 0; i <= steps; i += 1) {
       const x = Math.round(a.x + ((b.x - a.x) * i) / steps);
@@ -75,7 +77,10 @@ export function pathCells(waypoints: Waypoint[] = WAYPOINTS): Set<number> {
 export function roadLengths(waypoints: Waypoint[] = WAYPOINTS): { segments: number[]; total: number } {
   const segments = [];
   for (let s = 0; s < waypoints.length - 1; s += 1) {
-    segments.push(Math.hypot(waypoints[s + 1].x - waypoints[s].x, waypoints[s + 1].y - waypoints[s].y));
+    const a = waypoints[s];
+    const b = waypoints[s + 1];
+    if (!a || !b) continue;
+    segments.push(Math.hypot(b.x - a.x, b.y - a.y));
   }
   return { segments, total: segments.reduce((a, b) => a + b, 0) };
 }
@@ -86,6 +91,7 @@ export function positionAt(distance: number, waypoints: Waypoint[] = WAYPOINTS):
   for (let s = 0; s < waypoints.length - 1; s += 1) {
     const a = waypoints[s];
     const b = waypoints[s + 1];
+    if (!a || !b) continue;
     const length = Math.hypot(b.x - a.x, b.y - a.y);
     if (remaining <= length) {
       const t = length === 0 ? 0 : remaining / length;
@@ -93,7 +99,10 @@ export function positionAt(distance: number, waypoints: Waypoint[] = WAYPOINTS):
     }
     remaining -= length;
   }
+  // An empty waypoint list has no road: report the origin as done rather than
+  // throwing on the missing last point.
   const last = waypoints[waypoints.length - 1];
+  if (!last) return { x: 0, y: 0, done: true };
   return { x: last.x, y: last.y, done: true };
 }
 
@@ -457,16 +466,14 @@ export default function TowerGuard({ slug, title }: GameModuleProps) {
   const kinds: TowerKind[] = ["arrow", "cannon", "frost"];
   const kindName = (kind: TowerKind) => t(kind === "arrow" ? "game.towerArrow" : kind === "cannon" ? "game.towerCannon" : "game.towerFrost");
 
-  const readouts = useMemo(
-    () => [
-      { labelKey: "game.lives" as const, value: state.current.lives },
-      { labelKey: "game.level" as const, value: session.run.level ?? 1 },
-      { labelKey: "game.coins" as const, value: Math.floor(state.current.coins) },
-    ],
-    // `panel` re-renders the shell on shop actions that skip commits.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [session.run.score, session.run.level, panel],
-  );
+  // Plain array, not a memo: these are three cheap reads, and every value that can
+  // change them (`panel` included — shop actions that skip commits) already
+  // re-renders this component. A dep array here would either lie or need a disable.
+  const readouts = [
+    { labelKey: "game.lives" as const, value: state.current.lives },
+    { labelKey: "game.level" as const, value: session.run.level ?? 1 },
+    { labelKey: "game.coins" as const, value: Math.floor(state.current.coins) },
+  ];
 
   return (
     <GameShell session={session} spec={SPEC} title={title} readouts={readouts} onEvent={onEvent}>

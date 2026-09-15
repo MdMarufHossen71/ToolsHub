@@ -8,7 +8,7 @@ function hexOf(buffer: ArrayBuffer): string {
 function base64Of(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer);
   let binary = "";
-  for (let i = 0; i < bytes.length; i += 1) binary += String.fromCharCode(bytes[i]);
+  for (let i = 0; i < bytes.length; i += 1) binary += String.fromCharCode(bytes[i] ?? 0);
   return btoa(binary);
 }
 
@@ -80,9 +80,10 @@ export const runCryptoTools: ToolRunner = async (slug, _input, _option, t, extra
       const parts = F("text").split(".");
       if (parts.length !== 3) throw new ToolError("tool.error.generic");
       try {
-        const salt = Uint8Array.from(atob(parts[0]), (c) => c.charCodeAt(0));
-        const iv = Uint8Array.from(atob(parts[1]), (c) => c.charCodeAt(0));
-        const data = Uint8Array.from(atob(parts[2]), (c) => c.charCodeAt(0));
+        // Three parts proven by the length check; `?? ""` is type-level only.
+        const salt = Uint8Array.from(atob(parts[0] ?? ""), (c) => c.charCodeAt(0));
+        const iv = Uint8Array.from(atob(parts[1] ?? ""), (c) => c.charCodeAt(0));
+        const data = Uint8Array.from(atob(parts[2] ?? ""), (c) => c.charCodeAt(0));
         const key = await passwordKey(password, salt);
         const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: iv as BufferSource }, key, data as BufferSource);
         return { text: new TextDecoder().decode(plain) };
@@ -96,7 +97,7 @@ export const runCryptoTools: ToolRunner = async (slug, _input, _option, t, extra
     const cipher = await crypto.subtle.encrypt({ name: "AES-GCM", iv: iv as BufferSource }, key, new TextEncoder().encode(F("text")));
     const b64 = (bytes: Uint8Array) => {
       let binary = "";
-      for (let i = 0; i < bytes.length; i += 1) binary += String.fromCharCode(bytes[i]);
+      for (let i = 0; i < bytes.length; i += 1) binary += String.fromCharCode(bytes[i] ?? 0);
       return btoa(binary);
     };
     return { text: `${b64(salt)}.${b64(iv)}.${base64Of(cipher)}` };
@@ -122,7 +123,11 @@ export const runCryptoTools: ToolRunner = async (slug, _input, _option, t, extra
     const out: string[] = [];
     for (let i = 0; i < count; i += 1) {
       let password = "";
-      for (let j = 0; j < length; j += 1) password += chars[bytes[i * length + j] % chars.length];
+      // Bounded by construction; fallbacks are type-level only.
+      for (let j = 0; j < length; j += 1) {
+        const byte = bytes[i * length + j] ?? 0;
+        password += chars[byte % chars.length] ?? "";
+      }
       out.push(password);
     }
     return { text: out.join("\n") };
@@ -145,7 +150,10 @@ export const runCryptoTools: ToolRunner = async (slug, _input, _option, t, extra
     const separator = F("separator", "-");
     const bytes = crypto.getRandomValues(new Uint8Array(count));
     const picked: string[] = [];
-    for (let i = 0; i < count; i += 1) picked.push(PASSPHRASE_WORDS[bytes[i] % PASSPHRASE_WORDS.length]);
+    for (let i = 0; i < count; i += 1) {
+      const byte = bytes[i] ?? 0;
+      picked.push(PASSPHRASE_WORDS[byte % PASSPHRASE_WORDS.length] ?? "");
+    }
     return { text: picked.join(separator) };
   }
   if (slug === "totp-otp-generator") {
@@ -162,7 +170,7 @@ export const runCryptoTools: ToolRunner = async (slug, _input, _option, t, extra
     const user = F("user");
     const bytes = new TextEncoder().encode(`${user}:${F("pass")}`);
     let binary = "";
-    for (let i = 0; i < bytes.length; i += 1) binary += String.fromCharCode(bytes[i]);
+    for (let i = 0; i < bytes.length; i += 1) binary += String.fromCharCode(bytes[i] ?? 0);
     return { text: `Basic ${btoa(binary)}` };
   }
   if (slug === "file-to-base64") {

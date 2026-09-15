@@ -2,7 +2,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ErrorBoundary from "./ErrorBoundary";
 
 function Boom(): never {
@@ -47,11 +47,14 @@ describe("ErrorBoundary", () => {
     const user = userEvent.setup();
     try {
       // Drive recovery through the boundary's own retry button: fix the
-      // underlying tree first, then retry and expect the page back.
-      let setFixed!: (value: boolean) => void;
+      // underlying tree first, then retry and expect the page back. The
+      // capture runs in an effect (not during render) so the tree stays pure.
+      const control: { fix?: (value: boolean) => void } = {};
       function Outer() {
         const [fixed, setFixedState] = useState(false);
-        setFixed = setFixedState;
+        useEffect(() => {
+          control.fix = setFixedState;
+        }, []);
         return (
           <ErrorBoundary>
             <Flaky fixed={fixed} />
@@ -60,7 +63,7 @@ describe("ErrorBoundary", () => {
       }
       const { rerender } = render(<Outer />);
       expect(screen.getByRole("alert")).toBeInTheDocument();
-      setFixed(true);
+      control.fix?.(true);
       rerender(<Outer />);
       await user.click(screen.getByRole("button"));
       expect(await screen.findByText("recovered")).toBeInTheDocument();

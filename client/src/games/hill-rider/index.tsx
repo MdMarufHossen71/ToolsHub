@@ -16,7 +16,6 @@ import {
   useGameSession,
   type CanvasSize,
   type ControlSpec,
-  type GameEvent,
 } from "@/games/engine";
 import type { GameModuleProps } from "@/games/registry";
 
@@ -221,10 +220,10 @@ export default function HillRider({ slug, title }: GameModuleProps) {
       { labelKey: "game.level" as const, value: session.run.level ?? 1 },
       { labelKey: "game.resources" as const, value: session.run.resources ?? 100 },
     ],
-    [session.run.score, session.run.level, session.run.resources],
+    [session.run.level, session.run.resources],
   );
 
-  const onEvent = (_event: GameEvent) => undefined;
+  const onEvent = () => undefined;
 
   return (
     <GameShell session={session} spec={SPEC} title={title} readouts={readouts} onEvent={onEvent}>

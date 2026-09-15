@@ -1,7 +1,7 @@
 /** Cobalt Workshop design reminder: direct, tactile settings controls with Electric Cobalt as the visible active state. */
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { interpolate, translations, type Locale, type TranslationKey } from "@/i18n/translations";
-import { fallbackTokens, isThemeTokens, themePresets, type ThemePreset } from "@/data/themes";
+import { defaultPreset, fallbackTokens, isThemeTokens, themePresets, type ThemePreset } from "@/data/themes";
 import { migrateLegacyKeys, safeGet, safeSet, settingsKey } from "@/lib/storage";
 import { mix, mutedText, readableAccent, readableOn, contrastRatio } from "@/lib/color";
 
@@ -74,7 +74,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
 
   const allThemes = useMemo(() => [...themePresets, ...customThemes], [customThemes]);
   const activeTheme = useMemo(
-    () => (appearance === "system" ? (systemDark ? (themePresets.find((theme) => theme.id === "dark") ?? themePresets[0]) : themePresets[0]) : (allThemes.find((theme) => theme.id === appearance) ?? themePresets[0])),
+    () => (appearance === "system" ? (systemDark ? (themePresets.find((theme) => theme.id === "dark") ?? defaultPreset) : defaultPreset) : (allThemes.find((theme) => theme.id === appearance) ?? defaultPreset)),
     [appearance, allThemes, systemDark],
   );
   const theme = activeTheme.isDark ? "dark" : "light";

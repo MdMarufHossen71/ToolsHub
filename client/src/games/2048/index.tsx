@@ -75,6 +75,8 @@ function spawnTile(board: Board): number {
   }
   if (free.length === 0) return -1;
   const index = free[Math.floor(Math.random() * free.length)];
+  // Non-empty by the check above; the guard is type-level only.
+  if (index === undefined) return -1;
   board.grid[index] = Math.random() < 0.9 ? 2 : 4;
   board.pop[index] = POP_SECONDS;
   return index;
@@ -116,13 +118,13 @@ function slide(values: number[]): SlideResult {
     // which is why the second tile is consumed here rather than left for the next
     // iteration to look at.
     if (index + 1 < packed.length && packed[index] === packed[index + 1]) {
-      const value = packed[index] * 2;
+      const value = (packed[index] ?? 0) * 2;
       out.push(value);
       merged.push(true);
       gained += value;
       index += 1;
     } else {
-      out.push(packed[index]);
+      out.push(packed[index] ?? 0);
       merged.push(false);
     }
   }
@@ -138,13 +140,17 @@ function applyMove(board: Board, direction: Direction): boolean {
   let changed = false;
   for (let line = 0; line < SIZE; line += 1) {
     const indices = lineIndices(direction, line);
-    const before = indices.map((index) => board.grid[index]);
+    const before = indices.map((index) => board.grid[index] ?? 0);
     const result = slide(before);
     for (let step = 0; step < SIZE; step += 1) {
       const index = indices[step];
-      if (board.grid[index] !== result.values[step]) changed = true;
-      board.grid[index] = result.values[step];
-      if (result.merged[step]) board.pop[index] = POP_SECONDS;
+      const value = result.values[step];
+      const merged = result.merged[step];
+      // All three arrays hold exactly SIZE entries; the guard is type-level only.
+      if (index === undefined || value === undefined || merged === undefined) continue;
+      if (board.grid[index] !== value) changed = true;
+      board.grid[index] = value;
+      if (merged) board.pop[index] = POP_SECONDS;
     }
     board.score += result.gained;
   }
@@ -207,7 +213,7 @@ export default function Game2048({ slug, title }: GameModuleProps) {
         const column = index % SIZE;
         const x = offsetX + gap + column * (cell + gap);
         const y = offsetY + gap + row * (cell + gap);
-        const value = current.grid[index];
+        const value = current.grid[index] ?? 0;
 
         // Every slot is drawn, empty or not, so the grid stays legible as a grid and a
         // player can see where a tile can still go.
@@ -218,8 +224,9 @@ export default function Game2048({ slug, title }: GameModuleProps) {
         const exponent = exponentOf(value);
         // Growth on spawn and on merge, and nothing else. Skipped outright when the
         // player has asked for reduced motion: the tile simply appears at full size.
-        const popping = !reducedMotion && current.pop[index] > 0;
-        const grow = popping ? 0.82 + 0.18 * (1 - current.pop[index] / POP_SECONDS) : 1;
+        const pop = current.pop[index] ?? 0;
+        const popping = !reducedMotion && pop > 0;
+        const grow = popping ? 0.82 + 0.18 * (1 - pop / POP_SECONDS) : 1;
         const drawn = cell * grow;
         const inset = (cell - drawn) / 2;
 
@@ -249,8 +256,9 @@ export default function Game2048({ slug, title }: GameModuleProps) {
       const current = state.current;
       let animating = false;
       for (let index = 0; index < CELLS; index += 1) {
-        if (current.pop[index] > 0) {
-          current.pop[index] = Math.max(0, current.pop[index] - dt);
+        const remaining = current.pop[index] ?? 0;
+        if (remaining > 0) {
+          current.pop[index] = Math.max(0, remaining - dt);
           animating = true;
         }
       }
@@ -273,7 +281,7 @@ export default function Game2048({ slug, title }: GameModuleProps) {
       spawnTile(current);
       let largest = current.best;
       for (let index = 0; index < CELLS; index += 1) {
-        largest = Math.max(largest, exponentOf(current.grid[index]));
+        largest = Math.max(largest, exponentOf(current.grid[index] ?? 0));
       }
       current.best = largest;
       dirty.current = true;

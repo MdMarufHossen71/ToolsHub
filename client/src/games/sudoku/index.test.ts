@@ -16,7 +16,9 @@ describe("sudoku generator", () => {
   it("flags duplicates and only duplicates", () => {
     const grid = solvedGrid();
     const broken = grid.slice();
-    broken[1] = broken[0];
+    const first = broken[0];
+    if (first === undefined) throw new Error("bad-init");
+    broken[1] = first;
     expect(conflicts(broken, 1).length).toBeGreaterThan(0);
     expect(conflicts(grid, 10)).toEqual([]);
     const empty = Array(81).fill(0);

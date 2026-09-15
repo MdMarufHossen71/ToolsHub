@@ -27,7 +27,8 @@ export const WORDS = [
 ];
 
 export function pickWord(random: () => number = Math.random): string {
-  return WORDS[Math.floor(random() * WORDS.length)];
+  // Static bank, always non-empty; the fallback below is type-level only.
+  return WORDS[Math.floor(random() * WORDS.length)] ?? "HANGMAN";
 }
 
 type RoundState = { word: string; guessed: string[]; misses: number; over: boolean; won: boolean };

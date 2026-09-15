@@ -9,7 +9,7 @@
  * the board's own paint; hunters are squares, the player a circle with a
  * mark — shape, never colour alone.
  */
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useRef } from "react";
 import {
   GameShell,
   useGameCanvas,
@@ -44,7 +44,10 @@ const HUNTER_SPAWNS = [
   { x: COLS - 2, y: 1, corner: { x: 1, y: 1 } },
 ];
 
-const VECTORS: Record<string, { x: number; y: number }> = {
+const DIRECTIONS = ["up", "down", "left", "right"] as const;
+type Direction = (typeof DIRECTIONS)[number];
+
+const VECTORS: Record<Direction, { x: number; y: number }> = {
   up: { x: 0, y: -1 },
   down: { x: 0, y: 1 },
   left: { x: -1, y: 0 },
@@ -55,32 +58,44 @@ const VECTORS: Record<string, { x: number; y: number }> = {
 export function carveMaze(random: () => number = Math.random): boolean[][] {
   const open = Array.from({ length: ROWS }, () => Array(COLS).fill(false));
   const seen = Array.from({ length: ROWS }, () => Array(COLS).fill(false));
+  // Row-captured writes: every coordinate below is in-bounds by construction,
+  // so a missing row is impossible — the guard is type-level only.
+  const setCell = (grid: boolean[][], x: number, y: number) => {
+    const row = grid[y];
+    if (row) row[x] = true;
+  };
   const stack: Array<[number, number]> = [[1, 1]];
-  seen[1][1] = true;
-  open[1][1] = true;
+  setCell(seen, 1, 1);
+  setCell(open, 1, 1);
   const dirs: Array<[number, number]> = [[2, 0], [-2, 0], [0, 2], [0, -2]];
   while (stack.length > 0) {
-    const [x, y] = stack[stack.length - 1];
+    const top = stack[stack.length - 1];
+    if (!top) break;
+    const [x, y] = top;
     const options = dirs.filter(([dx, dy]) => {
       const nx = x + dx;
       const ny = y + dy;
-      return nx > 0 && nx < COLS - 1 && ny > 0 && ny < ROWS - 1 && !seen[ny][nx];
+      if (nx <= 0 || nx >= COLS - 1 || ny <= 0 || ny >= ROWS - 1) return false;
+      const row = seen[ny];
+      return !!row && !row[nx];
     });
     if (options.length === 0) {
       stack.pop();
       continue;
     }
-    const [dx, dy] = options[Math.floor(random() * options.length)];
-    open[y + dy / 2][x + dx / 2] = true;
-    open[y + dy][x + dx] = true;
-    seen[y + dy][x + dx] = true;
+    const pick = options[Math.floor(random() * options.length)];
+    if (!pick) continue;
+    const [dx, dy] = pick;
+    setCell(open, x + dx / 2, y + dy / 2);
+    setCell(open, x + dx, y + dy);
+    setCell(seen, x + dx, y + dy);
     stack.push([x + dx, y + dy]);
   }
   return open;
 }
 
 export function walkable(open: boolean[][], x: number, y: number): boolean {
-  return x >= 0 && x < COLS && y >= 0 && y < ROWS && open[y][x];
+  return x >= 0 && x < COLS && y >= 0 && y < ROWS && (open[y]?.[x] ?? false);
 }
 
 type Mover = { tx: number; ty: number; dx: number; dy: number; progress: number };
@@ -105,12 +120,12 @@ function dealDots(open: boolean[][]): { dots: Set<number>; pellets: Set<number> 
   const dots = new Set<number>();
   for (let y = 0; y < ROWS; y += 1) {
     for (let x = 0; x < COLS; x += 1) {
-      if (open[y][x] && !(x === 1 && y === 1)) dots.add(y * COLS + x);
+      if ((open[y]?.[x] ?? false) && !(x === 1 && y === 1)) dots.add(y * COLS + x);
     }
   }
   const pellets = new Set<number>();
   for (const [x, y] of PELLETS) {
-    if (open[y][x]) {
+    if (open[y]?.[x]) {
       pellets.add(y * COLS + x);
       dots.delete(y * COLS + x);
     }
@@ -158,7 +173,7 @@ export default function MazeChaser({ slug, title }: GameModuleProps) {
       context.fillStyle = palette.borderStrong;
       for (let y = 0; y < ROWS; y += 1) {
         for (let x = 0; x < COLS; x += 1) {
-          if (!current.open[y][x]) context.fillRect(offsetX + x * cell, offsetY + y * cell, cell, cell);
+          if (!current.open[y]?.[x]) context.fillRect(offsetX + x * cell, offsetY + y * cell, cell, cell);
         }
       }
 
@@ -299,6 +314,7 @@ export default function MazeChaser({ slug, title }: GameModuleProps) {
           hunter.dead -= dtClamped;
           if (hunter.dead <= 0) {
             const spawn = HUNTER_SPAWNS[hunter.seed % HUNTER_SPAWNS.length];
+            if (!spawn) continue; // modulo-bounded; type-level only
             hunter.tx = spawn.x;
             hunter.ty = spawn.y;
             hunter.dx = 0;
@@ -310,15 +326,17 @@ export default function MazeChaser({ slug, title }: GameModuleProps) {
         const speed = current.fright > 0 ? FRIGHT_SPEED : hunterSpeed;
         advance(current, hunter, speed, dtClamped, (tx, ty) => {
           const options: Array<{ x: number; y: number }> = [];
-          for (const key of ["up", "down", "left", "right"]) {
+          for (const key of DIRECTIONS) {
             const v = VECTORS[key];
             if (v.x === -hunter.dx && v.y === -hunter.dy) continue;
             if (walkable(current.open, tx + v.x, ty + v.y)) options.push(v);
           }
           if (options.length === 0) return { x: -hunter.dx, y: -hunter.dy };
-          if (current.fright > 0) return options[Math.floor(Math.random() * options.length)];
+          const [first] = options;
+          if (!first) return { x: -hunter.dx, y: -hunter.dy };
+          if (current.fright > 0) return options[Math.floor(Math.random() * options.length)] ?? first;
           const target = hunterTarget(current, hunter);
-          let best = options[0];
+          let best = first;
           let bestDist = Infinity;
           for (const option of options) {
             const dist = Math.abs(tx + option.x - target.x) + Math.abs(ty + option.y - target.y);
@@ -367,19 +385,17 @@ export default function MazeChaser({ slug, title }: GameModuleProps) {
 
   const onEvent = useCallback((event: GameEvent) => {
     const id = event.kind === "action" ? event.id : event.kind === "swipe" ? event.id : null;
-    if (!id) return;
-    const vector = VECTORS[id];
-    if (!vector) return;
-    state.current.queue = vector;
+    // Only steering keys reach the queue; anything else is a deliberate no-op.
+    if (id === "up" || id === "down" || id === "left" || id === "right") {
+      state.current.queue = VECTORS[id];
+    }
   }, []);
 
-  const readouts = useMemo(
-    () => [
-      { labelKey: "game.lives" as const, value: state.current.lives },
-      { labelKey: "game.level" as const, value: session.run.level ?? 1 },
-    ],
-    [session.run.score, session.run.level],
-  );
+  // Plain array, not a memo, so no dep array can lie about ref reads.
+  const readouts = [
+    { labelKey: "game.lives" as const, value: state.current.lives },
+    { labelKey: "game.level" as const, value: session.run.level ?? 1 },
+  ];
 
   return (
     <GameShell session={session} spec={SPEC} title={title} readouts={readouts} onEvent={onEvent}>

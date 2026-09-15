@@ -30,8 +30,14 @@ const GOAL = { x: SIZE - 1, y: SIZE - 1 };
 export function generateMaze(random: () => number = Math.random): number[][] {
   const walls = Array.from({ length: SIZE }, () => Array(SIZE).fill(0b1111));
   const seen = Array.from({ length: SIZE }, () => Array(SIZE).fill(false));
+  // Row-captured writes: every coordinate below is in-bounds by construction,
+  // so a missing row is impossible — the guard is type-level only.
+  const setCell = <T,>(grid: T[][], x: number, y: number, value: T) => {
+    const row = grid[y];
+    if (row) row[x] = value;
+  };
   const stack: Array<[number, number]> = [[0, 0]];
-  seen[0][0] = true;
+  setCell(seen, 0, 0, true);
   const dirs: Array<[number, number, number, number]> = [
     [0, -1, 0, 2],
     [1, 0, 1, 3],
@@ -39,22 +45,28 @@ export function generateMaze(random: () => number = Math.random): number[][] {
     [-1, 0, 3, 1],
   ];
   while (stack.length > 0) {
-    const [x, y] = stack[stack.length - 1];
+    const top = stack[stack.length - 1];
+    if (!top) break;
+    const [x, y] = top;
     const options = dirs.filter(([dx, dy]) => {
       const nx = x + dx;
       const ny = y + dy;
-      return nx >= 0 && nx < SIZE && ny >= 0 && ny < SIZE && !seen[ny][nx];
+      if (nx < 0 || nx >= SIZE || ny < 0 || ny >= SIZE) return false;
+      const row = seen[ny];
+      return !!row && !row[nx];
     });
     if (options.length === 0) {
       stack.pop();
       continue;
     }
-    const [dx, dy, wall, opposite] = options[Math.floor(random() * options.length)];
+    const pick = options[Math.floor(random() * options.length)];
+    if (!pick) continue;
+    const [dx, dy, wall, opposite] = pick;
     const nx = x + dx;
     const ny = y + dy;
-    walls[y][x] &= ~(1 << wall);
-    walls[ny][nx] &= ~(1 << opposite);
-    seen[ny][nx] = true;
+    setCell(walls, x, y, (walls[y]?.[x] ?? 0b1111) & ~(1 << wall));
+    setCell(walls, nx, ny, (walls[ny]?.[nx] ?? 0b1111) & ~(1 << opposite));
+    setCell(seen, nx, ny, true);
     stack.push([nx, ny]);
   }
   return walls;
@@ -77,7 +89,7 @@ export function solveMaze(walls: number[][]): Array<{ x: number; y: number }> {
     const x = current % SIZE;
     const y = Math.floor(current / SIZE);
     for (const [dx, dy, wall] of moves) {
-      if ((walls[y][x] & (1 << wall)) !== 0) continue;
+      if ((((walls[y] ?? [])[x] ?? 0) & (1 << wall)) !== 0) continue;
       const next = (y + dy) * SIZE + (x + dx);
       if (!prev.has(next)) {
         prev.set(next, current);
@@ -137,7 +149,7 @@ export default function MazeRunner({ slug, title }: GameModuleProps) {
         for (let x = 0; x < SIZE; x += 1) {
           const px = offsetX + x * cell;
           const py = offsetY + y * cell;
-          const w = walls[y][x];
+          const w = walls[y]?.[x] ?? 0;
           if ((w & 1) !== 0) {
             context.moveTo(px, py);
             context.lineTo(px + cell, py);
@@ -187,7 +199,7 @@ export default function MazeRunner({ slug, title }: GameModuleProps) {
     const { walls } = maze.current;
     const { x, y } = player.current;
     const wall = dx === 1 ? 1 : dx === -1 ? 3 : dy === 1 ? 2 : 0;
-    if ((walls[y][x] & (1 << wall)) !== 0) return;
+    if ((((walls[y] ?? [])[x] ?? 0) & (1 << wall)) !== 0) return;
     const next = { x: x + dx, y: y + dy };
     player.current = next;
     maze.current.path = [];

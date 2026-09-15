@@ -158,7 +158,7 @@ restart, and persist best score locally.
 - Self-hosted fonts (Fontsource: Noto Sans Bengali, Space Grotesk, DM Mono)
 - Service worker (precache + cache-first, no third-party requests)
 - Browser-native storage, file, and Web Crypto APIs
-- Vitest: 56 files / 311 tests (logic + jsdom component + axe a11y) with a v8 coverage gate; CI also runs shell/SEO, i18n, contrast, and bundle-budget audits
+- Vitest: 57 files / 314 tests (logic + jsdom component + axe a11y) with a v8 coverage gate; CI also runs lint, shell/SEO, i18n, contrast, CSP-hash, and bundle-budget audits
 
 ## License
 

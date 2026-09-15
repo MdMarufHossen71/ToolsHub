@@ -83,6 +83,9 @@ export function parseRoute(location: string): ParsedRoute {
 
   const segments = path.replace(/^\/+|\/+$/g, "").split("/").filter(Boolean);
   const [first, second] = segments;
+  // The root path returned above, so an empty segment list is unreachable;
+  // unknown routes canonicalise to home rather than pointing at a URL that 404s.
+  if (first === undefined) return { kind: "other", slug: null, path: "/" };
 
   if (first === "tools" && second) return { kind: "tool", slug: second, path: `/tools/${second}/` };
   if (first === "games" && second) return { kind: "game", slug: second, path: `/games/${second}/` };
@@ -135,7 +138,7 @@ export type PageMetaInput = {
    * Absolute per-locale URLs for hreflang alternates. Pass both when the route
    * has bn + en shells; omit (or pass nulls) and no alternate links are emitted.
    */
-  alternates?: { en: string | null; bn: string | null };
+  alternates?: { en: string | null; bn: string | null } | undefined;
 };
 
 function hreflangOf(locale: Locale): string {

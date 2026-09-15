@@ -23,7 +23,12 @@ export function shuffledDeck(random: () => number = Math.random): string[] {
   const deck = [...FACES, ...FACES];
   for (let i = deck.length - 1; i > 0; i -= 1) {
     const j = Math.floor(random() * (i + 1));
-    [deck[i], deck[j]] = [deck[j], deck[i]];
+    const a = deck[i];
+    const b = deck[j];
+    // Loop-bounded on both sides; the guard is type-level only.
+    if (a === undefined || b === undefined) continue;
+    deck[i] = b;
+    deck[j] = a;
   }
   return deck;
 }
@@ -79,6 +84,8 @@ export default function MemoryMatch({ slug, title }: GameModuleProps) {
       }
       const moves = current.moves + 1;
       const [a, b] = open;
+      // Two cards by the length check above; the guard is type-level only.
+      if (a === undefined || b === undefined) return;
       if (current.deck[a] === current.deck[b]) {
         const matched = current.matched.slice();
         matched[a] = true;

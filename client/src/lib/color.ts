@@ -16,10 +16,15 @@ const clamp = (value: number, min: number, max: number) => Math.min(max, Math.ma
 export function parseHex(input: string): Rgb | null {
   const hex = input.trim().replace("#", "");
   if (/^[0-9a-f]{3}$/i.test(hex)) {
+    // Length-checked by the regex above: `slice` (unlike indexing) always
+    // returns a string, so no fallback is needed.
+    const a = hex.slice(0, 1);
+    const b = hex.slice(1, 2);
+    const c = hex.slice(2, 3);
     return {
-      r: Number.parseInt(hex[0] + hex[0], 16),
-      g: Number.parseInt(hex[1] + hex[1], 16),
-      b: Number.parseInt(hex[2] + hex[2], 16),
+      r: Number.parseInt(a + a, 16),
+      g: Number.parseInt(b + b, 16),
+      b: Number.parseInt(c + c, 16),
     };
   }
   if (/^[0-9a-f]{6}$/i.test(hex)) {

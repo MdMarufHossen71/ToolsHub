@@ -31,7 +31,7 @@ export function winningLine(grid: Cell[], index: number): number[] {
   if (player === 0) return [];
   const col = index % COLS;
   const row = Math.floor(index / COLS);
-  const directions = [
+  const directions: Array<[number, number]> = [
     [1, 0],
     [0, 1],
     [1, 1],
@@ -79,9 +79,11 @@ export function aiColumn(grid: Cell[], random: () => number = Math.random): numb
     if (winningLine(next, freeRow(grid, c) * COLS + c).length > 0) return c;
   }
   // Otherwise the centre, with a little wobble so it does not play one line.
+  // `open` is non-empty here and every entry is a real column, so the pick below
+  // always lands; `?? -1` (no column) is type-level only.
   const preference = [3, 2, 4, 1, 5, 0, 6].filter((c) => open.includes(c));
   const jitter = Math.floor(random() * Math.min(3, preference.length));
-  return preference[jitter];
+  return preference[jitter] ?? -1;
 }
 
 type BoardState = { grid: Cell[]; over: boolean; result: "" | "draw" | "win" | "loss" };
@@ -141,7 +143,7 @@ export default function ConnectFour({ slug, title }: GameModuleProps) {
     const out: number[] = Array(COLS).fill(0);
     for (let c = 0; c < COLS; c += 1) {
       for (let r = 0; r < ROWS; r += 1) {
-        if (board.grid[r * COLS + c] !== 0) out[c] += 1;
+        if (board.grid[r * COLS + c] !== 0) out[c] = (out[c] ?? 0) + 1;
       }
     }
     return out;
@@ -179,7 +181,7 @@ export default function ConnectFour({ slug, title }: GameModuleProps) {
               type="button"
               className="game-column-pick"
               data-active={nav.cursor === c}
-              aria-disabled={board.over || counts[c] >= ROWS}
+              aria-disabled={board.over || (counts[c] ?? ROWS) >= ROWS}
               aria-label={`${c + 1}: ${counts[c]}`}
               {...nav.cellProps(c)}
               onClick={() => {

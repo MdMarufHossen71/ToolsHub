@@ -213,7 +213,6 @@ export function ToolWorkspace({ tool }: { tool: Tool }) {
       cancelled = true;
     };
     // `fields` is compared by identity; every keystroke replaces it.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [memory.input, option, tool.slug, t, isFileHash, formMode, fields, pickedFiles]);
 
   // Real file hashing: the file is read only on this device via `arrayBuffer`,

@@ -325,8 +325,16 @@ function vitePluginStatic404(): Plugin {
 // Production ships only the runtime essentials. Dev-only instrumentation
 // (manus runtime, jsx-loc source paths, debug collector, storage proxy) is
 // serve-only so it never inflates `dist/` or leaks internal paths.
+//
+// React Compiler runs inside plugin-react's Babel transform: components that
+// follow the Rules of React (enforced by `pnpm run lint`) get automatic
+// memoization; anything else bails out to normal rendering, never a break.
 const plugins = [
-  react(),
+  react({
+    babel: {
+      plugins: [["babel-plugin-react-compiler", {}]],
+    },
+  }),
   tailwindcss(),
   vitePluginPwaPrecache(),
   vitePluginStatic404(),
@@ -348,6 +356,24 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        // Two stable vendor chunks: React (+scheduler+compiler runtime, which
+        // only change on React upgrades) and the router. The object form of
+        // `manualChunks` cannot express this reliably under pnpm (its first
+        // attempt captured only `react-compiler-runtime` and left react-dom in
+        // an auto chunk), so this matches on the `node_modules/<pkg>/` path
+        // segment instead. Everything else keeps Vite's default splitting, so
+        // lazy tool/game/parser chunks are untouched. Both vendors land well
+        // under the per-chunk budget in `scripts/bundle-budget.mjs`.
+        manualChunks(id) {
+          const normalized = id.replace(/\\/g, "/");
+          if (/\/node_modules\/(react|react-dom|scheduler)(\/|$)/.test(normalized)) return "vendor-react";
+          if (normalized.includes("node_modules") && normalized.includes("wouter")) return "vendor-router";
+          return undefined;
+        },
+      },
+    },
   },
   server: {
     port: 3000,

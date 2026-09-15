@@ -24,7 +24,12 @@ function shuffled<T>(items: T[], random: () => number): T[] {
   const out = items.slice();
   for (let i = out.length - 1; i > 0; i -= 1) {
     const j = Math.floor(random() * (i + 1));
-    [out[i], out[j]] = [out[j], out[i]];
+    const a = out[i];
+    const b = out[j];
+    // Loop-bounded on both sides; the guard is type-level only.
+    if (a === undefined || b === undefined) continue;
+    out[i] = b;
+    out[j] = a;
   }
   return out;
 }
@@ -38,7 +43,7 @@ export function solvedGrid(random: () => number = Math.random): number[] {
   const grid: number[] = Array(CELLS).fill(0);
   for (let r = 0; r < SIZE; r += 1) {
     for (let c = 0; c < SIZE; c += 1) {
-      grid[r * SIZE + c] = digits[pattern(rows[r], cols[c])];
+      grid[r * SIZE + c] = digits[pattern(rows[r] ?? 0, cols[c] ?? 0)] ?? 0;
     }
   }
   return grid;
@@ -136,7 +141,8 @@ export default function Sudoku({ slug, title }: GameModuleProps) {
     if (session.phase !== "playing" || puzzle.over || puzzle.givens[cursor] !== 0) return;
     if (puzzle.notesMode) {
       const notes = puzzle.notes.slice();
-      const cell = notes[cursor];
+      // Cursor always addresses a real cell (81 notes); type-level only.
+      const cell = notes[cursor] ?? "";
       notes[cursor] = cell.includes(digit) ? cell.split("").filter((d) => d !== digit).sort().join("") : (cell + digit).split("").sort().join("");
       setPuzzle({ ...puzzle, notes });
       return;
@@ -202,7 +208,7 @@ export default function Sudoku({ slug, title }: GameModuleProps) {
         <div className="game-board-dense" style={{ ["--cols" as string]: SIZE }} aria-label={title}>
           {puzzle.values.map((value, i) => {
             const given = puzzle.givens[i] !== 0;
-            const note = !given && value === 0 ? puzzle.notes[i] : "";
+            const note = (!given && value === 0 ? puzzle.notes[i] : "") ?? "";
             return (
               <button
                 key={i}

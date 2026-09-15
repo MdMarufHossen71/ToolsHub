@@ -81,6 +81,6 @@ describe("toolGuide agrees with the input predicate", () => {
   it("gives an accept-only tool file-oriented steps", () => {
     const tool = bySlug.get("image-base64")!;
     const steps = toolGuideSteps(tool, "en", guideKind("image-base64", true));
-    expect(steps[0].key).toBe("tool.guide.step.file.choose");
+    expect(steps[0]?.key).toBe("tool.guide.step.file.choose");
   });
 });

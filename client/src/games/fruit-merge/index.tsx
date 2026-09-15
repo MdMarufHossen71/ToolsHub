@@ -8,7 +8,8 @@
  * so progress reads without colour. The next fruit is always announced in
  * the readouts.
  */
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useRef } from "react";
+import { usePersistFn } from "@/hooks/usePersistFn";
 import {
   GameShell,
   useGameCanvas,
@@ -40,7 +41,7 @@ const GRAVITY = 130;
 const DROP_COOLDOWN = 0.7;
 const AIM_SPEED = 55;
 
-/** Radius, points and hue per tier. Size carries the tier; hue repeats it. */
+/** Radius, points and hue per tier. Size carries the tier; hue repeats it. Read-only. */
 const TIERS = [
   { r: 4, points: 10, hue: 4 },
   { r: 5.5, points: 25, hue: 28 },
@@ -48,8 +49,17 @@ const TIERS = [
   { r: 9, points: 100, hue: 140 },
   { r: 11, points: 200, hue: 212 },
   { r: 13.5, points: 400, hue: 280 },
-];
+] as const;
 const MAX_TIER = TIERS.length - 1;
+
+type Tier = (typeof TIERS)[number];
+
+/**
+ * Clamped tier lookup. `next` is dealt 0–2 and merges stop at MAX_TIER, so the
+ * clamp never fires on reachable input — it exists because tier numbers arrive
+ * as plain `number`s and the type system cannot see the invariant.
+ */
+const tierAt = (tier: number): Tier => TIERS[Math.min(MAX_TIER, Math.max(0, tier))] ?? TIERS[0] as Tier;
 
 type Fruit = { x: number; y: number; vx: number; vy: number; tier: number; id: number };
 
@@ -120,14 +130,14 @@ export default function FruitMerge({ slug, title }: GameModuleProps) {
       context.setLineDash([]);
 
       // The held fruit hangs at the aim position: what you see is next.
-      const held = TIERS[current.next];
+      const held = tierAt(current.next);
       context.fillStyle = `hsl(${held.hue}, 70%, 55%)`;
       context.beginPath();
       context.arc(X(current.aimX), Y(DROP_Y), held.r * scale, 0, Math.PI * 2);
       context.fill();
 
       for (const fruit of current.fruits) {
-        const tier = TIERS[fruit.tier];
+        const tier = tierAt(fruit.tier);
         context.fillStyle = `hsl(${tier.hue}, 70%, 55%)`;
         context.beginPath();
         context.arc(X(fruit.x), Y(fruit.y), tier.r * scale, 0, Math.PI * 2);
@@ -156,7 +166,7 @@ export default function FruitMerge({ slug, title }: GameModuleProps) {
     const current = state.current;
     if (current.dropTimer < DROP_COOLDOWN) return;
     current.dropTimer = 0;
-    current.fruits.push({ x: current.aimX, y: DROP_Y + TIERS[current.next].r + 1, vx: 0, vy: 0, tier: current.next, id: current.seq });
+    current.fruits.push({ x: current.aimX, y: DROP_Y + tierAt(current.next).r + 1, vx: 0, vy: 0, tier: current.next, id: current.seq });
     current.seq += 1;
     current.next = Math.floor(Math.random() * 3);
   };
@@ -175,7 +185,7 @@ export default function FruitMerge({ slug, title }: GameModuleProps) {
         fruit.vy += GRAVITY * dt;
         fruit.x += fruit.vx * dt;
         fruit.y += fruit.vy * dt;
-        const r = TIERS[fruit.tier].r;
+        const r = tierAt(fruit.tier).r;
         if (fruit.x - r < WALL) {
           fruit.x = WALL + r;
           fruit.vx = Math.abs(fruit.vx) * 0.3;
@@ -198,16 +208,18 @@ export default function FruitMerge({ slug, title }: GameModuleProps) {
         for (let j = i + 1; j < current.fruits.length; j += 1) {
           const a = current.fruits[i];
           const b = current.fruits[j];
+          // Loop-bounded, so always defined; the guard below is type-level only.
+          if (!a || !b) continue;
           if (merged.has(a.id) || merged.has(b.id)) continue;
           const dx = b.x - a.x;
           const dy = b.y - a.y;
           const dist = Math.hypot(dx, dy);
-          const minDist = TIERS[a.tier].r + TIERS[b.tier].r;
+          const minDist = tierAt(a.tier).r + tierAt(b.tier).r;
           if (dist >= minDist || dist === 0) continue;
           if (a.tier === b.tier && a.tier < MAX_TIER) {
             merged.add(a.id);
             merged.add(b.id);
-            current.score += TIERS[a.tier].points;
+            current.score += tierAt(a.tier).points;
             current.top = Math.max(current.top, a.tier + 1);
             current.fruits.push({
               x: (a.x + b.x) / 2,
@@ -232,7 +244,7 @@ export default function FruitMerge({ slug, title }: GameModuleProps) {
       if (merged.size > 0) current.fruits = current.fruits.filter((f) => !merged.has(f.id));
 
       // Overflow: a near-motionless fruit lingering above the dashed line.
-      const resting = current.fruits.some((f) => f.y - TIERS[f.tier].r < OVERFLOW_Y && Math.hypot(f.vx, f.vy) < 6);
+      const resting = current.fruits.some((f) => f.y - tierAt(f.tier).r < OVERFLOW_Y && Math.hypot(f.vx, f.vy) < 6);
       current.overTimer = resting ? current.overTimer + dt : 0;
       if (current.overTimer > 2) {
         sync();
@@ -246,32 +258,27 @@ export default function FruitMerge({ slug, title }: GameModuleProps) {
     { hz: 60 },
   );
 
-  const onEvent = useCallback(
-    (event: GameEvent) => {
-      const current = state.current;
-      if (event.kind === "action" && event.id === "primary" && !event.repeat) {
-        drop();
-        return;
-      }
-      if (event.kind !== "point") return;
-      current.aimX = Math.min(WORLD_W - WALL - 4, Math.max(WALL + 4, event.x * WORLD_W));
-      // Release commits the drop: drag to aim, let go to let go.
-      if (event.phase === "end") drop();
-    },
-    // `drop` reads the state ref; the session is stable.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
+  // Stable identity with latest-closure semantics (same ref-mirror idiom as the
+  // engine's own `eventRef`): the body only touches refs and module constants.
+  const onEvent = usePersistFn((event: GameEvent) => {
+    const current = state.current;
+    if (event.kind === "action" && event.id === "primary" && !event.repeat) {
+      drop();
+      return;
+    }
+    if (event.kind !== "point") return;
+    current.aimX = Math.min(WORLD_W - WALL - 4, Math.max(WALL + 4, event.x * WORLD_W));
+    // Release commits the drop: drag to aim, let go to let go.
+    if (event.phase === "end") drop();
+  });
 
   // Both readouts are tier numbers starting at one: what hangs next, and
-  // the biggest merge so far. They re-render on every scored commit.
-  const readouts = useMemo(
-    () => [
-      { labelKey: "game.next" as const, value: state.current.next + 1 },
-      { labelKey: "game.tile" as const, value: state.current.top + 1 },
-    ],
-    [session.run.score, session.run.resources],
-  );
+  // the biggest merge so far. They re-render on every scored commit: plain
+  // array, not a memo, so no dep array can lie about ref reads.
+  const readouts = [
+    { labelKey: "game.next" as const, value: state.current.next + 1 },
+    { labelKey: "game.tile" as const, value: state.current.top + 1 },
+  ];
 
   return (
     <GameShell session={session} spec={SPEC} title={title} readouts={readouts} onEvent={onEvent}>

@@ -86,7 +86,10 @@ describe("qr-transfer receiver robustness", () => {
     const n = prepared.dataFrames.length;
     const order = [2, 0, n - 1, 1, 0, 2, 1, n - 1];
     for (const idx of order) {
-      if (idx < prepared.dataFrames.length) rx.ingest(prepared.dataFrames[idx]);
+      if (idx < prepared.dataFrames.length) {
+        const frame = prepared.dataFrames[idx];
+        if (frame) rx.ingest(frame);
+      }
     }
     expect(rx.received).toBe(prepared.meta.n);
     expect(rx.duplicates).toBeGreaterThan(0);
@@ -97,7 +100,10 @@ describe("qr-transfer receiver robustness", () => {
     const prepared = await prepareTransfer({ name: "a.bin", mime: "application/octet-stream", bytes: new Uint8Array(2500) });
     const rx = new QftReceiver();
     rx.ingest(prepared.metaFrame);
-    for (let i = 0; i < prepared.dataFrames.length - 1; i += 1) rx.ingest(prepared.dataFrames[i]);
+    for (let i = 0; i < prepared.dataFrames.length - 1; i += 1) {
+      const frame = prepared.dataFrames[i];
+      if (frame) rx.ingest(frame);
+    }
     expect(rx.complete).toBe(false);
     expect(rx.missing()).toHaveLength(1);
     await expect(rx.reassemble()).rejects.toThrow("incomplete");
@@ -162,7 +168,8 @@ describe("qr-transfer receiver robustness", () => {
     rx2.ingest(prepared.metaFrame);
     for (const frame of prepared.dataFrames) rx2.ingest(frame);
     const stored = (rx2 as unknown as { chunks: Map<number, Uint8Array> }).chunks.get(0);
-    if (stored) stored[0] ^= 0xff;
+    if (!stored) throw new Error("frame-missing");
+    stored[0] = (stored[0] ?? 0) ^ 0xff;
     await expect(rx2.reassemble()).rejects.toThrow("checksum-mismatch");
   });
 

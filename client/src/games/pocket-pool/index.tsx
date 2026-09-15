@@ -7,7 +7,8 @@
  * turns the cue; a shot needs the Action button or a real drag past a
  * minimum length, so a ranging tap can never fire by accident.
  */
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useRef } from "react";
+import { usePersistFn } from "@/hooks/usePersistFn";
 import {
   GameShell,
   useGameCanvas,
@@ -78,7 +79,7 @@ function rackUp(): Ball[] {
         vy: 0,
         pocketed: false,
         cue: false,
-        hue: BALL_HUES[hue % BALL_HUES.length],
+        hue: BALL_HUES[hue % BALL_HUES.length] ?? 0,
       });
       hue += 1;
     }
@@ -148,8 +149,9 @@ export default function PocketPool({ slug, title }: GameModuleProps) {
         context.fill();
       }
 
+      // Index 0 is always the cue ball; the guard below is type-level only.
       const cue = current.balls[0];
-      if (!current.rolling && !cue.pocketed) {
+      if (cue && !current.rolling && !cue.pocketed) {
         const length = 8 + (current.power / 100) * 22;
         context.setLineDash([4, 4]);
         context.strokeStyle = withAlpha(palette.primary, 0.85);
@@ -190,7 +192,7 @@ export default function PocketPool({ slug, title }: GameModuleProps) {
     const current = state.current;
     if (current.rolling) return;
     const cue = current.balls[0];
-    if (cue.pocketed) return;
+    if (!cue || cue.pocketed) return;
     const speed = (current.power / 100) * SHOT_SPEED;
     cue.vx = Math.cos(current.aim) * speed;
     cue.vy = Math.sin(current.aim) * speed;
@@ -243,7 +245,13 @@ export default function PocketPool({ slug, title }: GameModuleProps) {
       }
       const live = current.balls.filter((b) => !b.pocketed);
       for (let i = 0; i < live.length; i += 1) {
-        for (let j = i + 1; j < live.length; j += 1) collidePair(live[i], live[j]);
+        for (let j = i + 1; j < live.length; j += 1) {
+          const a = live[i];
+          const b = live[j];
+          // Loop-bounded; the guard is type-level only.
+          if (!a || !b) continue;
+          collidePair(a, b);
+        }
       }
       for (const ball of current.balls) {
         if (ball.pocketed) continue;
@@ -259,6 +267,7 @@ export default function PocketPool({ slug, title }: GameModuleProps) {
       }
       // A scratch resports the cue with no points lost and none gained.
       const cueBall = current.balls[0];
+      if (!cueBall) return;
       if (cueBall.pocketed) {
         cueBall.pocketed = false;
         cueBall.x = TABLE_W / 4;
@@ -282,55 +291,51 @@ export default function PocketPool({ slug, title }: GameModuleProps) {
     { hz: 60 },
   );
 
-  const onEvent = useCallback(
-    (event: GameEvent) => {
-      const current = state.current;
-      if (event.kind === "action" && event.id === "primary" && !event.repeat) {
+  // Stable identity with latest-closure semantics (same ref-mirror idiom as the
+  // engine's own `eventRef`): the body only touches refs and module constants.
+  const onEvent = usePersistFn((event: GameEvent) => {
+    const current = state.current;
+    if (event.kind === "action" && event.id === "primary" && !event.repeat) {
+      shoot();
+      return;
+    }
+    if (event.kind !== "point") return;
+    // Slingshot: press near the cue ball, pull back, release to fire. A
+    // short tap only turns the cue toward the finger — never a shot.
+    if (event.phase === "start") {
+      dragStart.current = { x: event.x, y: event.y };
+    } else if (event.phase === "move" && dragStart.current) {
+      const dx = (dragStart.current.x - event.x) * TABLE_W;
+      const dy = (dragStart.current.y - event.y) * TABLE_H;
+      if (Math.hypot(dx, dy) > 2) {
+        current.aim = Math.atan2(dy, dx);
+        current.power = Math.min(100, Math.max(10, Math.hypot(dx, dy) * 1.6));
+      }
+    } else if (event.phase === "end" && dragStart.current) {
+      const dx = (dragStart.current.x - event.x) * TABLE_W;
+      const dy = (dragStart.current.y - event.y) * TABLE_H;
+      const pull = Math.hypot(event.x - dragStart.current.x, event.y - dragStart.current.y);
+      dragStart.current = null;
+      if (pull >= MIN_DRAG_SHOT) {
+        current.aim = Math.atan2(dy, dx);
+        current.power = Math.min(100, Math.max(10, Math.hypot(dx, dy) * 1.6));
         shoot();
-        return;
+      } else {
+        // A tap turns the cue toward the finger without firing.
+        const cue = current.balls[0];
+        if (!cue) return;
+        current.aim = Math.atan2(event.y * TABLE_H - cue.y, event.x * TABLE_W - cue.x);
       }
-      if (event.kind !== "point") return;
-      // Slingshot: press near the cue ball, pull back, release to fire. A
-      // short tap only turns the cue toward the finger — never a shot.
-      if (event.phase === "start") {
-        dragStart.current = { x: event.x, y: event.y };
-      } else if (event.phase === "move" && dragStart.current) {
-        const dx = (dragStart.current.x - event.x) * TABLE_W;
-        const dy = (dragStart.current.y - event.y) * TABLE_H;
-        if (Math.hypot(dx, dy) > 2) {
-          current.aim = Math.atan2(dy, dx);
-          current.power = Math.min(100, Math.max(10, Math.hypot(dx, dy) * 1.6));
-        }
-      } else if (event.phase === "end" && dragStart.current) {
-        const dx = (dragStart.current.x - event.x) * TABLE_W;
-        const dy = (dragStart.current.y - event.y) * TABLE_H;
-        const pull = Math.hypot(event.x - dragStart.current.x, event.y - dragStart.current.y);
-        dragStart.current = null;
-        if (pull >= MIN_DRAG_SHOT) {
-          current.aim = Math.atan2(dy, dx);
-          current.power = Math.min(100, Math.max(10, Math.hypot(dx, dy) * 1.6));
-          shoot();
-        } else {
-          // A tap turns the cue toward the finger without firing.
-          const cue = current.balls[0];
-          current.aim = Math.atan2(event.y * TABLE_H - cue.y, event.x * TABLE_W - cue.x);
-        }
-      } else if (event.phase === "cancel") {
-        dragStart.current = null;
-      }
-    },
-    // `shoot` reads the state ref; the session is stable.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
+    } else if (event.phase === "cancel") {
+      dragStart.current = null;
+    }
+  });
 
-  const readouts = useMemo(
-    () => [
-      { labelKey: "game.moves" as const, value: session.run.resources ?? 0 },
-      { labelKey: "game.level" as const, value: 1 },
-    ],
-    [session.run.score, session.run.resources],
-  );
+  // Plain array, not a memo, so no dep array can lie about ref reads.
+  const readouts = [
+    { labelKey: "game.moves" as const, value: session.run.resources ?? 0 },
+    { labelKey: "game.level" as const, value: 1 },
+  ];
 
   return (
     <GameShell session={session} spec={SPEC} title={title} readouts={readouts} onEvent={onEvent}>

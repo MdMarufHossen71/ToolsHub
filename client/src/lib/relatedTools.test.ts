@@ -56,7 +56,7 @@ describe("relatedTools", () => {
       make({ slug: "close", name: "Close", group: "text", keywords: ["json", "format", "pretty"] }),
       make({ slug: "far", name: "Far", group: "text", keywords: ["unrelated"] }),
     ];
-    expect(relatedTools("base", tools)[0].slug).toBe("close");
+    expect(relatedTools("base", tools)[0]?.slug).toBe("close");
   });
 
   it("returns nothing for a slug that is not in the registry", () => {

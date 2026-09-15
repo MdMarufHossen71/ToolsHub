@@ -20,7 +20,7 @@ export async function prepareTransfer(input: {
   mime: string;
   bytes: Uint8Array;
   chunkBytes?: number;
-  passphrase?: string;
+  passphrase?: string | undefined;
   frameMs?: number;
 }): Promise<PreparedTransfer> {
   assertTransferableSize(input.bytes.length);

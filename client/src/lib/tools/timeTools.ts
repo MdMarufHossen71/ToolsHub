@@ -9,7 +9,7 @@ function parseDate(value: string): Date {
 
 const BN_MONTHS = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
 const BN_DIGITS = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
-const toBnDigits = (text: string) => text.replace(/[0-9]/g, (d) => BN_DIGITS[Number(d)]);
+const toBnDigits = (text: string) => text.replace(/[0-9]/g, (d) => BN_DIGITS[Number(d)] ?? d);
 
 export const runTimeTools: ToolRunner = async (slug, _input, _option, _t, extra) => {
   const F = (key: string, fallback = "") => field(extra, key, fallback);

@@ -17,7 +17,8 @@ export function TypingTest() {
   const [typed, setTyped] = useState("");
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [finishedAt, setFinishedAt] = useState<number | null>(null);
-  const target = PASSAGES[index % PASSAGES.length];
+  // Four passages by construction; the fallback below is type-level only.
+  const target = PASSAGES[index % PASSAGES.length] ?? "";
   const areaRef = useRef<HTMLTextAreaElement>(null);
 
   const correct = useMemo(() => {

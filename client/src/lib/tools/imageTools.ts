@@ -14,6 +14,16 @@ const MAX_DIMENSION = 1920;
 
 const clampByte = (n: number) => (n < 0 ? 0 : n > 255 ? 255 : Math.round(n));
 
+/**
+ * Indexed byte read with a type-level backstop. Every call site computes its
+ * index in-bounds (loop counters, clamped coordinates, length-checked headers),
+ * so `?? 0` is unreachable by construction — it exists only because indexed
+ * access types as `T | undefined` under `noUncheckedIndexedAccess`.
+ */
+function px(data: ArrayLike<number>, index: number): number {
+  return data[index] ?? 0;
+}
+
 export function blankPix(width: number, height: number, r = 0, g = 0, b = 0, a = 255): Pix {
   const data = new Uint8ClampedArray(width * height * 4);
   for (let i = 0; i < width * height; i += 1) {
@@ -66,7 +76,7 @@ export function mapPixels(pix: Pix, fn: (r: number, g: number, b: number, a: num
   for (let y = 0; y < pix.height; y += 1) {
     for (let x = 0; x < pix.width; x += 1) {
       const i = (y * pix.width + x) * 4;
-      const [r, g, b, a] = fn(pix.data[i], pix.data[i + 1], pix.data[i + 2], pix.data[i + 3], x, y);
+      const [r, g, b, a] = fn(px(pix.data, i), px(pix.data, i + 1), px(pix.data, i + 2), px(pix.data, i + 3), x, y);
       out[i] = clampByte(r);
       out[i + 1] = clampByte(g);
       out[i + 2] = clampByte(b);
@@ -90,8 +100,8 @@ export function resizePix(pix: Pix, width: number, height: number): Pix {
       const fx = sx - x0;
       const fy = sy - y0;
       for (let c = 0; c < 4; c += 1) {
-        const top = pix.data[(y0 * pix.width + x0) * 4 + c] * (1 - fx) + pix.data[(y0 * pix.width + x1) * 4 + c] * fx;
-        const bottom = pix.data[(y1 * pix.width + x0) * 4 + c] * (1 - fx) + pix.data[(y1 * pix.width + x1) * 4 + c] * fx;
+        const top = px(pix.data, (y0 * pix.width + x0) * 4 + c) * (1 - fx) + px(pix.data, (y0 * pix.width + x1) * 4 + c) * fx;
+        const bottom = px(pix.data, (y1 * pix.width + x0) * 4 + c) * (1 - fx) + px(pix.data, (y1 * pix.width + x1) * 4 + c) * fx;
         out[(y * width + x) * 4 + c] = Math.round(top * (1 - fy) + bottom * fy);
       }
     }
@@ -108,7 +118,7 @@ export function cropPix(pix: Pix, x: number, y: number, width: number, height: n
   const out = new Uint8ClampedArray(cw * ch * 4);
   for (let row = 0; row < ch; row += 1) {
     for (let col = 0; col < cw; col += 1) {
-      for (let c = 0; c < 4; c += 1) out[(row * cw + col) * 4 + c] = pix.data[((cy + row) * pix.width + cx + col) * 4 + c];
+      for (let c = 0; c < 4; c += 1) out[(row * cw + col) * 4 + c] = px(pix.data, ((cy + row) * pix.width + cx + col) * 4 + c);
     }
   }
   return { width: cw, height: ch, data: out };
@@ -122,7 +132,7 @@ export function rotateFlip(pix: Pix, quarterTurns: number, flip: "none" | "h" | 
     const out = new Uint8ClampedArray(current.data.length);
     for (let y = 0; y < current.height; y += 1) {
       for (let x = 0; x < current.width; x += 1) {
-        for (let c = 0; c < 4; c += 1) out[(x * current.height + (current.height - 1 - y)) * 4 + c] = current.data[(y * current.width + x) * 4 + c];
+        for (let c = 0; c < 4; c += 1) out[(x * current.height + (current.height - 1 - y)) * 4 + c] = px(current.data, (y * current.width + x) * 4 + c);
       }
     }
     current = { width: current.height, height: current.width, data: out };
@@ -133,7 +143,7 @@ export function rotateFlip(pix: Pix, quarterTurns: number, flip: "none" | "h" | 
       for (let x = 0; x < current.width; x += 1) {
         const sx = flip === "h" ? current.width - 1 - x : x;
         const sy = flip === "v" ? current.height - 1 - y : y;
-        for (let c = 0; c < 4; c += 1) out[(y * current.width + x) * 4 + c] = current.data[(sy * current.width + sx) * 4 + c];
+        for (let c = 0; c < 4; c += 1) out[(y * current.width + x) * 4 + c] = px(current.data, (sy * current.width + sx) * 4 + c);
       }
     }
     current = { width: current.width, height: current.height, data: out };
@@ -159,10 +169,10 @@ export function blurPix(pix: Pix, radius: number): Pix {
           const ny = y + dy;
           if (nx < 0 || nx >= pix.width || ny < 0 || ny >= pix.height) continue;
           const i = (ny * pix.width + nx) * 4;
-          sumR += pix.data[i];
-          sumG += pix.data[i + 1];
-          sumB += pix.data[i + 2];
-          sumA += pix.data[i + 3];
+          sumR += px(pix.data, i);
+          sumG += px(pix.data, i + 1);
+          sumB += px(pix.data, i + 2);
+          sumA += px(pix.data, i + 3);
           count += 1;
         }
       }
@@ -182,18 +192,18 @@ export function convolve(pix: Pix, kernel: number[], divisor = 1): Pix {
   const at = (x: number, y: number, c: number) => {
     const cx = Math.min(pix.width - 1, Math.max(0, x));
     const cy = Math.min(pix.height - 1, Math.max(0, y));
-    return pix.data[(cy * pix.width + cx) * 4 + c];
+    return px(pix.data, (cy * pix.width + cx) * 4 + c);
   };
   for (let y = 0; y < pix.height; y += 1) {
     for (let x = 0; x < pix.width; x += 1) {
       for (let c = 0; c < 3; c += 1) {
         let sum = 0;
         for (let ky = -1; ky <= 1; ky += 1) {
-          for (let kx = -1; kx <= 1; kx += 1) sum += at(x + kx, y + ky, c) * kernel[(ky + 1) * 3 + (kx + 1)];
+          for (let kx = -1; kx <= 1; kx += 1) sum += at(x + kx, y + ky, c) * px(kernel, (ky + 1) * 3 + (kx + 1));
         }
         out[(y * pix.width + x) * 4 + c] = clampByte(sum / divisor);
       }
-      out[(y * pix.width + x) * 4 + 3] = pix.data[(y * pix.width + x) * 4 + 3];
+      out[(y * pix.width + x) * 4 + 3] = px(pix.data, (y * pix.width + x) * 4 + 3);
     }
   }
   return { width: pix.width, height: pix.height, data: out };
@@ -204,18 +214,23 @@ export function equalizePix(pix: Pix): Pix {
   const maps: number[][] = [];
   for (let c = 0; c < 3; c += 1) {
     const histogram = new Array(256).fill(0);
-    for (let i = c; i < pix.data.length; i += 4) histogram[pix.data[i]] += 1;
+    for (let i = c; i < pix.data.length; i += 4) {
+      const value = px(pix.data, i);
+      histogram[value] = px(histogram, value) + 1;
+    }
     const total = pix.width * pix.height;
     const cdf = new Array(256).fill(0);
     let running = 0;
     for (let v = 0; v < 256; v += 1) {
-      running += histogram[v];
+      running += px(histogram, v);
       cdf[v] = running;
     }
     const cdfMin = cdf.find((value) => value > 0) ?? 0;
     maps.push(cdf.map((value) => Math.round(((value - cdfMin) / Math.max(1, total - cdfMin)) * 255)));
   }
-  return mapPixels(pix, (r, g, b, a) => [maps[0][r], maps[1][g], maps[2][b], a]);
+  // Three maps by construction; the defaults below are unreachable.
+  const [red = [], green = [], blue = []] = maps;
+  return mapPixels(pix, (r, g, b, a) => [px(red, r), px(green, g), px(blue, b), a]);
 }
 
 /** Sobel edge magnitude. Pure. */
@@ -228,11 +243,11 @@ export function edgePix(pix: Pix): Pix {
   const gy = convolve(grey, [-1, -2, -1, 0, 0, 0, 1, 2, 1]);
   const out = new Uint8ClampedArray(pix.data.length);
   for (let i = 0; i < pix.data.length; i += 4) {
-    const magnitude = Math.min(255, Math.round(Math.hypot(gx.data[i], gy.data[i])));
+    const magnitude = Math.min(255, Math.round(Math.hypot(px(gx.data, i), px(gy.data, i))));
     out[i] = 255 - magnitude;
     out[i + 1] = 255 - magnitude;
     out[i + 2] = 255 - magnitude;
-    out[i + 3] = pix.data[i + 3];
+    out[i + 3] = px(pix.data, i + 3);
   }
   return { width: pix.width, height: pix.height, data: out };
 }
@@ -248,10 +263,10 @@ export function overlayPix(base: Pix, foreground: Pix, offsetX: number, offsetY:
       if (tx < 0 || tx >= base.width || ty < 0 || ty >= base.height) continue;
       const s = (y * foreground.width + x) * 4;
       const d = (ty * base.width + tx) * 4;
-      const alpha = (foreground.data[s + 3] / 255) * opacity;
-      out[d] = Math.round(foreground.data[s] * alpha + out[d] * (1 - alpha));
-      out[d + 1] = Math.round(foreground.data[s + 1] * alpha + out[d + 1] * (1 - alpha));
-      out[d + 2] = Math.round(foreground.data[s + 2] * alpha + out[d + 2] * (1 - alpha));
+      const alpha = (px(foreground.data, s + 3) / 255) * opacity;
+      out[d] = Math.round(px(foreground.data, s) * alpha + px(out, d) * (1 - alpha));
+      out[d + 1] = Math.round(px(foreground.data, s + 1) * alpha + px(out, d + 1) * (1 - alpha));
+      out[d + 2] = Math.round(px(foreground.data, s + 2) * alpha + px(out, d + 2) * (1 - alpha));
     }
   }
   return result;
@@ -267,12 +282,12 @@ export function analyzeColors(pix: Pix, swatches: number): { average: string; pa
   let samples = 0;
   for (let i = 0; i < pix.width * pix.height; i += step) {
     const o = i * 4;
-    if (pix.data[o + 3] < 128) continue;
-    sumR += pix.data[o];
-    sumG += pix.data[o + 1];
-    sumB += pix.data[o + 2];
+    if (px(pix.data, o + 3) < 128) continue;
+    sumR += px(pix.data, o);
+    sumG += px(pix.data, o + 1);
+    sumB += px(pix.data, o + 2);
     samples += 1;
-    const key = ((pix.data[o] >> 5) << 10) | ((pix.data[o + 1] >> 5) << 5) | (pix.data[o + 2] >> 5);
+    const key = ((px(pix.data, o) >> 5) << 10) | ((px(pix.data, o + 1) >> 5) << 5) | (px(pix.data, o + 2) >> 5);
     buckets.set(key, (buckets.get(key) ?? 0) + 1);
   }
   const hex = (r: number, g: number, b: number) => `#${[r, g, b].map((v) => Math.round(v).toString(16).padStart(2, "0")).join("")}`;
@@ -518,8 +533,8 @@ export const runImageTools: ToolRunner = async (slug, input, _option, _t, extra)
       const blurred = blurPix(pix, 1);
       const out = new Uint8ClampedArray(pix.data.length);
       for (let i = 0; i < pix.data.length; i += 4) {
-        for (let c = 0; c < 3; c += 1) out[i + c] = clampByte(pix.data[i + c] + (pix.data[i + c] - blurred.data[i + c]) * amount * 0.5);
-        out[i + 3] = pix.data[i + 3];
+        for (let c = 0; c < 3; c += 1) out[i + c] = clampByte(px(pix.data, i + c) + (px(pix.data, i + c) - px(blurred.data, i + c)) * amount * 0.5);
+        out[i + 3] = px(pix.data, i + 3);
       }
       return finishPix({ width: pix.width, height: pix.height, data: out }, file, "sharpened.png");
     }
@@ -532,8 +547,8 @@ export const runImageTools: ToolRunner = async (slug, input, _option, _t, extra)
       const grain = crypto.getRandomValues(new Int16Array(pix.width * pix.height));
       let seed = 0;
       return finishPix(
-        mapPixels(pix, (r, g, b, a, _x, _y) => {
-          const noise = grain[seed++ % grain.length] * (amount / 32768);
+        mapPixels(pix, (r, g, b, a) => {
+          const noise = px(grain, seed++ % grain.length) * (amount / 32768);
           return [r + noise, g + noise, b + noise, a];
         }),
         file,
@@ -582,7 +597,7 @@ export const runImageTools: ToolRunner = async (slug, input, _option, _t, extra)
         mapPixels(pix, (r, g, b, a, x, y) => {
           const i = (y * pix.width + x) * 4;
           const amount = strength * 0.7;
-          return [r + (soft.data[i] - r) * amount + 20 * strength, g + (soft.data[i + 1] - g) * amount + 20 * strength, b + (soft.data[i + 2] - b) * amount + 20 * strength, a];
+          return [r + (px(soft.data, i) - r) * amount + 20 * strength, g + (px(soft.data, i + 1) - g) * amount + 20 * strength, b + (px(soft.data, i + 2) - b) * amount + 20 * strength, a];
         }),
         file,
         "glow.png",
@@ -635,7 +650,7 @@ export const runImageTools: ToolRunner = async (slug, input, _option, _t, extra)
       mapPixels(pix, (r, g, b, a, x, y) => {
         const i = (y * pix.width + x) * 4;
         const distance = Math.min(1, Math.max(0, (Math.abs(y - center) - band) / (pix.height * 0.3)));
-        return [r + (soft.data[i] - r) * distance, g + (soft.data[i + 1] - g) * distance, b + (soft.data[i + 2] - b) * distance, a];
+        return [r + (px(soft.data, i) - r) * distance, g + (px(soft.data, i + 1) - g) * distance, b + (px(soft.data, i + 2) - b) * distance, a];
       }),
       file,
       "tilt-shift.png",
@@ -686,6 +701,8 @@ export const runImageTools: ToolRunner = async (slug, input, _option, _t, extra)
   if (slug === "merge-images") {
     const files = (extra?.files ?? []).slice(0, 8);
     if (files.length < 2) throw new ToolError("tool.error.generic");
+    const [first] = files;
+    if (!first) throw new ToolError("tool.error.generic");
     const pictures: Pix[] = [];
     for (const item of files) {
       try {
@@ -705,21 +722,23 @@ export const runImageTools: ToolRunner = async (slug, input, _option, _t, extra)
       if (side) oy += picture.height;
       else ox += picture.width;
     }
-    return finishPix(canvas, files[0], "merged.png");
+    return finishPix(canvas, first, "merged.png");
   }
   if (slug === "overlay-images") {
     const files = (extra?.files ?? []).slice(0, 2);
     if (files.length < 2) throw new ToolError("tool.error.generic");
+    const [baseFile, topFile] = files;
+    if (!baseFile || !topFile) throw new ToolError("tool.error.generic");
     let base: Pix;
     let top: Pix;
     try {
-      base = await loadPix(files[0]);
-      top = await loadPix(files[1]);
+      base = await loadPix(baseFile);
+      top = await loadPix(topFile);
     } catch {
       throw new ToolError("tool.error.generic");
     }
     const opacity = num("opacity", 80, 0, 100) / 100;
-    return finishPix(overlayPix(base, top, Math.round(num("x", 20, -5000, 5000)), Math.round(num("y", 20, -5000, 5000)), opacity), files[0], "overlay.png");
+    return finishPix(overlayPix(base, top, Math.round(num("x", 20, -5000, 5000)), Math.round(num("y", 20, -5000, 5000)), opacity), baseFile, "overlay.png");
   }
   if (slug === "split-image") {
     const { pix } = await firstPix();
@@ -737,7 +756,7 @@ export const runImageTools: ToolRunner = async (slug, input, _option, _t, extra)
     }
     return {
       text: JSON.stringify({ tiles: artifacts.length, rows, cols }, null, 2),
-      image: artifacts[0].dataUrl,
+      image: artifacts[0]?.dataUrl ?? "",
       artifacts,
     };
   }
@@ -855,7 +874,10 @@ export const runImageTools: ToolRunner = async (slug, input, _option, _t, extra)
     let seed = 0;
     for (let gy = 0; gy < height; gy += cell) {
       for (let gx = 0; gx < width; gx += cell) {
-        const [r, g, b] = hexToRgb(palette[picks[seed++ % picks.length]]);
+        // A random byte reduced into the palette: indexing by the raw byte
+        // would miss the 2–8 entry table ~97% of the time and throw.
+        const pick = px(picks, seed++ % picks.length) % palette.length;
+        const [r, g, b] = hexToRgb(palette[pick] ?? "#000000");
         for (let y = gy; y < Math.min(gy + cell, height); y += 1) {
           for (let x = gx; x < Math.min(gx + cell, width); x += 1) {
             const i = (y * width + x) * 4;
@@ -924,7 +946,7 @@ export const runImageTools: ToolRunner = async (slug, input, _option, _t, extra)
     const out = new Uint8ClampedArray(pix.data);
     for (let row = 0; row < region.height; row += 1) {
       for (let col = 0; col < region.width; col += 1) {
-        for (let c = 0; c < 4; c += 1) out[((y + row) * pix.width + x + col) * 4 + c] = censored.data[(row * region.width + col) * 4 + c];
+        for (let c = 0; c < 4; c += 1) out[((y + row) * pix.width + x + col) * 4 + c] = px(censored.data, (row * region.width + col) * 4 + c);
       }
     }
     return finishPix({ width: pix.width, height: pix.height, data: out }, file, "censored.png");
@@ -1006,7 +1028,7 @@ export const runImageTools: ToolRunner = async (slug, input, _option, _t, extra)
     // AI segmentation would need a model download this app refuses to hide.
     const out = new Uint8ClampedArray(pix.data);
     for (let i = 0; i < pix.data.length; i += 4) {
-      const distance = Math.hypot(pix.data[i] - kr, pix.data[i + 1] - kg, pix.data[i + 2] - kb);
+      const distance = Math.hypot(px(pix.data, i) - kr, px(pix.data, i + 1) - kg, px(pix.data, i + 2) - kb);
       if (distance < threshold) out[i + 3] = 0;
     }
     return finishPix({ width: pix.width, height: pix.height, data: out }, file, "cutout.png");
@@ -1046,7 +1068,7 @@ export const runImageTools: ToolRunner = async (slug, input, _option, _t, extra)
     if (rows.length === 0) throw new ToolError("tool.error.generic");
     const blob = await zip.generateAsync({ type: "uint8array" });
     let binary = "";
-    for (let i = 0; i < blob.length; i += 1) binary += String.fromCharCode(blob[i]);
+    for (let i = 0; i < blob.length; i += 1) binary += String.fromCharCode(px(blob, i));
     return {
       text: JSON.stringify({ processed: rows.length }, null, 2),
       table: { head: ["Source", "Output"], rows },
@@ -1088,7 +1110,7 @@ export const runImageTools: ToolRunner = async (slug, input, _option, _t, extra)
     if (file.size > 10 * 1024 * 1024) throw new ToolError("tool.error.fileTooLarge");
     const buffer = new Uint8Array(await file.arrayBuffer());
     let binary = "";
-    for (let i = 0; i < buffer.length; i += 1) binary += String.fromCharCode(buffer[i]);
+    for (let i = 0; i < buffer.length; i += 1) binary += String.fromCharCode(px(buffer, i));
     const encoded = `data:${file.type || "application/octet-stream"};base64,${btoa(binary)}`;
     return {
       text: encoded,
@@ -1117,9 +1139,13 @@ export const runImageTools: ToolRunner = async (slug, input, _option, _t, extra)
       const dataUrl = canvas.toDataURL("image/png");
       artifacts.push({ name: `favicon-${size}.png`, mime: "image/png", dataUrl });
     }
+    // Four sizes pushed above, so the preview always exists; the guard below is
+    // type-level only.
+    const preview = artifacts[3];
+    if (!preview) throw new ToolError("tool.error.generic");
     return {
       text: JSON.stringify({ file: file.name, sizes: [16, 32, 48, 180] }, null, 2),
-      image: artifacts[3].dataUrl,
+      image: preview.dataUrl,
       artifacts,
     };
   }
@@ -1128,15 +1154,16 @@ export const runImageTools: ToolRunner = async (slug, input, _option, _t, extra)
 
 /** GIF89a header facts: dimensions plus an image-descriptor count. Pure. */
 export function parseGif(bytes: Uint8Array): { width: number; height: number; frames: number } | null {
-  const header = String.fromCharCode(bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5]);
+  // Short inputs read as 0 and miss the magic, returning null exactly as before.
+  const header = String.fromCharCode(px(bytes, 0), px(bytes, 1), px(bytes, 2), px(bytes, 3), px(bytes, 4), px(bytes, 5));
   if (header !== "GIF87a" && header !== "GIF89a" || bytes.length < 13) return null;
-  const width = bytes[6] + bytes[7] * 256;
-  const height = bytes[8] + bytes[9] * 256;
+  const width = px(bytes, 6) + px(bytes, 7) * 256;
+  const height = px(bytes, 8) + px(bytes, 9) * 256;
   let frames = 0;
   let i = 13;
-  if ((bytes[10] & 0x80) !== 0) i += 3 * Math.pow(2, (bytes[10] & 7) + 1);
+  if ((px(bytes, 10) & 0x80) !== 0) i += 3 * Math.pow(2, (px(bytes, 10) & 7) + 1);
   while (i < bytes.length) {
-    const block = bytes[i];
+    const block = px(bytes, i);
     if (block === 0x3b) break;
     if (block === 0x2c) {
       frames += 1;
@@ -1146,14 +1173,14 @@ export function parseGif(bytes: Uint8Array): { width: number; height: number; fr
       if ((packed & 0x80) !== 0) i += 3 * Math.pow(2, (packed & 7) + 1);
       // LZW minimum code byte, then data sub-blocks to their terminator.
       i += 1;
-      while (i < bytes.length && bytes[i] !== 0) i += bytes[i] + 1;
+      while (i < bytes.length && px(bytes, i) !== 0) i += px(bytes, i) + 1;
       i += 1;
       continue;
     }
     if (block === 0x21) {
       // Extension: label + sub-blocks.
       i += 2;
-      while (i < bytes.length && bytes[i] !== 0) i += bytes[i] + 1;
+      while (i < bytes.length && px(bytes, i) !== 0) i += px(bytes, i) + 1;
       i += 1;
       continue;
     }

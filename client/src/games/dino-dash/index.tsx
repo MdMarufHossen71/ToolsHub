@@ -229,7 +229,7 @@ export default function DinoDash({ slug, title }: GameModuleProps) {
       { labelKey: "game.level" as const, value: session.run.level ?? 1 },
       { labelKey: "game.moves" as const, value: session.run.resources ?? 0 },
     ],
-    [session.run.score, session.run.level, session.run.resources],
+    [session.run.level, session.run.resources],
   );
 
   return (

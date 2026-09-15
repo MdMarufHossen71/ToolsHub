@@ -5,7 +5,11 @@ describe("15-puzzle logic", () => {
   it("recognises the solved board", () => {
     expect(isSolved(solvedTiles())).toBe(true);
     const bad = solvedTiles();
-    [bad[0], bad[1]] = [bad[1], bad[0]];
+    const first = bad[0];
+    const second = bad[1];
+    if (first === undefined || second === undefined) throw new Error("bad-init");
+    bad[0] = second;
+    bad[1] = first;
     expect(isSolved(bad)).toBe(false);
   });
 

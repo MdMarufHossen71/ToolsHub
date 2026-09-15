@@ -63,7 +63,7 @@ describe("Wave 3 data tools", () => {
 describe("Wave 3 file tools", () => {
   it("optimizes svg and reports savings", async () => {
     const out = await run("svg-optimizer", { text: '<svg xmlns="http://www.w3.org/2000/svg"><g><rect width="1" height="1"/></g></svg>' });
-    expect(out.artifacts?.[0].name).toBe("optimized.svg");
+    expect(out.artifacts?.[0]?.name).toBe("optimized.svg");
     expect(out.label).toMatch(/→/);
   });
 
@@ -82,7 +82,7 @@ describe("Wave 3 file tools", () => {
     doc.addPage([100, 100]);
     const pdf = new File([await doc.save()], "d.pdf", { type: "application/pdf" });
     const out = await run("compress-pdf", {}, "", [pdf]);
-    expect(out.artifacts?.[0].name).toBe("compressed.pdf");
+    expect(out.artifacts?.[0]?.name).toBe("compressed.pdf");
     expect(JSON.parse(out.text).after).toBeGreaterThan(0);
     expect((await run("pdf-to-images", { pages: "1" }, "", [pdf])).error).toBe(true);
   });

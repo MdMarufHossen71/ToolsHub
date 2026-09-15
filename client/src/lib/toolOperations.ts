@@ -47,7 +47,9 @@ function randomInt(bound: number) {
   const buffer = new Uint32Array(1);
   for (;;) {
     crypto.getRandomValues(buffer);
-    if (buffer[0] < limit) return buffer[0] % bound;
+    // Fresh single-element buffer: always defined, the fallback is type-level only.
+    const value = buffer[0] ?? 0;
+    if (value < limit) return value % bound;
   }
 }
 
@@ -56,7 +58,12 @@ function shuffle<T>(items: T[]): T[] {
   const output = items.slice();
   for (let index = output.length - 1; index > 0; index -= 1) {
     const swap = randomInt(index + 1);
-    [output[index], output[swap]] = [output[swap], output[index]];
+    const a = output[index];
+    const b = output[swap];
+    // Loop-bounded on both sides; the guard is type-level only.
+    if (a === undefined || b === undefined) continue;
+    output[index] = b;
+    output[swap] = a;
   }
   return output;
 }
@@ -71,7 +78,7 @@ export function base64EncodeUnicode(input: string): string {
   const CHUNK = 8192;
   for (let i = 0; i < bytes.length; i += CHUNK) {
     const end = Math.min(i + CHUNK, bytes.length);
-    for (let j = i; j < end; j += 1) binary += String.fromCharCode(bytes[j]);
+    for (let j = i; j < end; j += 1) binary += String.fromCharCode(bytes[j] ?? 0);
   }
   return btoa(binary);
 }
@@ -152,19 +159,19 @@ const identity: ToolTranslate = (key) => englishFallback[key] ?? key;
 
 export type ToolResult = {
   text: string;
-  html?: string;
+  html?: string | undefined;
   /** Already-localized caption for the output panel. */
-  label?: string;
+  label?: string | undefined;
   /** Set when the result describes a failure rather than a value. */
-  error?: boolean;
+  error?: boolean | undefined;
   /** Set when the tool has no implementation yet. */
-  unavailable?: boolean;
+  unavailable?: boolean | undefined;
   /** Data-URL preview (charts, swatches, generated images). */
-  image?: string;
+  image?: string | undefined;
   /** Tabular data rendered as a real table, not monospaced text. */
-  table?: { head: string[]; rows: string[][] };
+  table?: { head: string[]; rows: string[][] } | undefined;
   /** Downloadable files (images, PDFs, ZIPs) as data URLs. */
-  artifacts?: Array<{ name: string; mime: string; dataUrl: string }>;
+  artifacts?: Array<{ name: string; mime: string; dataUrl: string }> | undefined;
 };
 
 /** Named form values + picked files for schema-driven tools. */
@@ -306,9 +313,9 @@ async function dispatchTool(slug: string, input: string, option = "default", t: 
     if (slug === "base64-text") return { text: option === "decode" ? new TextDecoder().decode(Uint8Array.from(atob(input), (char) => char.charCodeAt(0))) : base64EncodeUnicode(input) };
     if (slug === "url-encode-decode") return { text: option === "decode" ? decodeURIComponent(input) : encodeURIComponent(input) };
     if (slug === "html-entities") return { text: option === "unescape" ? new DOMParser().parseFromString(input, "text/html").documentElement.textContent ?? "" : escapeHtml(input) };
-    if (slug === "email-normalizer") { const [local, domain] = clean.toLowerCase().split("@"); return { text: domain === "gmail.com" ? `${local.split("+")[0].replace(/\./g, "")}@gmail.com` : `${local ?? ""}@${domain ?? ""}` }; }
+    if (slug === "email-normalizer") { const [local = "", domain = ""] = clean.toLowerCase().split("@"); const user = local.split("+")[0] ?? local; return { text: domain === "gmail.com" ? `${user.replace(/\./g, "")}@gmail.com` : `${local}@${domain}` }; }
     if (slug === "html-to-plain-text") return { text: new DOMParser().parseFromString(input, "text/html").body.textContent ?? "" };
-    if (slug === "markdown-to-html" || slug === "markdown-editor") { const [{ marked }, { default: DOMPurify }] = await Promise.all([loadMarkdown(), loadSanitizer()]); const html = DOMPurify.sanitize(marked.parse(input) as string, { USE_PROFILES: { html: true } }); return { text: html, html, label: t("tool.result.preview") }; }
+    if (slug === "markdown-to-html" || slug === "markdown-editor") { const [{ marked }, { default: DOMPurify }] = await Promise.all([loadMarkdown(), loadSanitizer()]); const html = DOMPurify.sanitize(marked.parse(input) as string, { USE_PROFILES: { html: true }, FORBID_ATTR: ["style"] }); return { text: html, html, label: t("tool.result.preview") }; }
     // Hash tools resolve through Web Crypto (see `runHashText`); the file
     // variant is driven by `runHashFile` from the workspace's file flow.
     if (slug === "hash-generator") return runHashText(input, t);
@@ -349,8 +356,8 @@ async function dispatchTool(slug: string, input: string, option = "default", t: 
         throw error;
       }
     }
-    if (slug === "percentage-calculator") { const [x, y] = clean.split(/[ ,]+/).map(Number); if (!Number.isFinite(x) || !Number.isFinite(y)) throw new ToolError("tool.error.number"); return { text: JSON.stringify({ [`${x}% of ${y}`]: (x / 100) * y, [`${x} is what % of ${y}`]: y ? (x / y) * 100 : null, change: y ? ((x - y) / y) * 100 : null }, null, 2) }; }
-    if (slug === "bmi-calculator") { const [weight, height] = clean.split(/[ ,]+/).map(Number); if (!Number.isFinite(weight) || !Number.isFinite(height) || height <= 0) throw new ToolError("tool.error.number"); const bmi = weight / (height / 100) ** 2; return { text: JSON.stringify({ bmi: Number(bmi.toFixed(1)), status: bmi < 18.5 ? t("tool.bmi.underweight") : bmi < 25 ? t("tool.bmi.healthy") : bmi < 30 ? t("tool.bmi.overweight") : t("tool.bmi.obese") }, null, 2) }; }
+    if (slug === "percentage-calculator") { const [x = NaN, y = NaN] = clean.split(/[ ,]+/).map(Number); if (!Number.isFinite(x) || !Number.isFinite(y)) throw new ToolError("tool.error.number"); return { text: JSON.stringify({ [`${x}% of ${y}`]: (x / 100) * y, [`${x} is what % of ${y}`]: y ? (x / y) * 100 : null, change: y ? ((x - y) / y) * 100 : null }, null, 2) }; }
+    if (slug === "bmi-calculator") { const [weight = NaN, height = NaN] = clean.split(/[ ,]+/).map(Number); if (!Number.isFinite(weight) || !Number.isFinite(height) || height <= 0) throw new ToolError("tool.error.number"); const bmi = weight / (height / 100) ** 2; return { text: JSON.stringify({ bmi: Number(bmi.toFixed(1)), status: bmi < 18.5 ? t("tool.bmi.underweight") : bmi < 25 ? t("tool.bmi.healthy") : bmi < 30 ? t("tool.bmi.overweight") : t("tool.bmi.obese") }, null, 2) }; }
     if (slug === "random-number-generator") { const parsed = clean.split(/[ ,]+/).filter(Boolean).map(Number); if (parsed.some((value) => !Number.isFinite(value))) throw new ToolError("tool.error.number"); const [low = 1, high = 100] = parsed; const min = Math.min(low, high); const span = Math.abs(high - low) + 1; return { text: Array.from({ length: option === "bulk" ? 10 : 1 }, () => min + randomInt(span)).join("\n") }; }
     if (slug === "random-string-generator") { const length = Math.min(Math.max(Number(clean) || 16, 1), 512); const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789"; return { text: Array.from({ length }, () => chars[randomInt(chars.length)]).join("") }; }
     if (slug === "email-validator") return { text: JSON.stringify({ email: clean, valid: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean) }, null, 2) };

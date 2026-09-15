@@ -31,7 +31,7 @@ const WORKLOADS: Array<{ id: string; run: (n: number) => number }> = [
       let total = 0;
       for (let i = 0; i < n; i += 1) {
         crypto.getRandomValues(bytes);
-        total += bytes[0];
+        total += bytes[0] ?? 0;
       }
       return total;
     },
@@ -43,7 +43,7 @@ const WORKLOADS: Array<{ id: string; run: (n: number) => number }> = [
       for (let i = 0; i < n; i += 1) {
         const list = Array.from({ length: 200 }, (_, k) => 200 - k);
         list.sort((a, b) => a - b);
-        total += list[0];
+        total += list[0] ?? 0;
       }
       return total;
     },

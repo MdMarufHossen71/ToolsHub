@@ -17,7 +17,7 @@ export type GuideKind = "live" | "file" | "form" | "text" | "unavailable";
 
 export type GuideStep = {
   key: TranslationKey;
-  values?: Record<string, string | number>;
+  values?: Record<string, string | number> | undefined;
 };
 
 /** Slugs that expose a mode selector above the input; kept beside the guide so the

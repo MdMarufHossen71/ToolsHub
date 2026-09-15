@@ -44,7 +44,8 @@ const POINTS_PER_FOOD = 10;
 
 type Vector = { x: number; y: number };
 
-const VECTORS: Record<string, Vector> = {
+// Keys are the four steering directions, so indexing below always lands.
+const VECTORS: Record<"up" | "down" | "left" | "right", Vector> = {
   up: { x: 0, y: -1 },
   down: { x: 0, y: 1 },
   left: { x: -1, y: 0 },
@@ -112,7 +113,8 @@ function placeFood(body: Vector[]): Vector {
     if (!occupied.has(index)) return { x: index % COLS, y: Math.floor(index / COLS) };
   }
   // Board full, which means the player has won. The next step ends the run anyway.
-  return body[0];
+  // The fallback below is unreachable: callers always pass a non-empty body.
+  return body[0] ?? { x: 0, y: 0 };
 }
 
 export default function Snake({ slug, title }: GameModuleProps) {
@@ -187,6 +189,8 @@ export default function Snake({ slug, title }: GameModuleProps) {
       const inset = Math.max(1, cell * 0.09);
       for (let index = current.body.length - 1; index >= 0; index -= 1) {
         const segment = current.body[index];
+        // Loop-bounded; the guard is type-level only.
+        if (!segment) continue;
         const head = index === 0;
         context.fillStyle = head ? palette.primary : withAlpha(palette.primary, 0.72);
         context.fillRect(cellX(segment.x) + inset, cellY(segment.y) + inset, cell - inset * 2, cell - inset * 2);
@@ -195,6 +199,8 @@ export default function Snake({ slug, title }: GameModuleProps) {
       // The head carries an inner mark as well as a stronger fill, so which end is
       // moving is legible without relying on the shade difference.
       const head = current.body[0];
+      // The body never empties (the tail moves, it is never removed); type-level only.
+      if (!head) return;
       context.fillStyle = palette.onPrimary;
       const markSize = Math.max(2, cell * 0.24);
       context.fillRect(cellX(head.x + 0.5) - markSize / 2, cellY(head.y + 0.5) - markSize / 2, markSize, markSize);
@@ -211,6 +217,9 @@ export default function Snake({ slug, title }: GameModuleProps) {
     if (turn) current.direction = turn;
 
     const head = current.body[0];
+    // The body only grows and shrinks by one per step from four segments; the
+    // guard below is type-level only.
+    if (!head) return;
     const next = { x: head.x + current.direction.x, y: head.y + current.direction.y };
 
     if (next.x < 0 || next.y < 0 || next.x >= COLS || next.y >= ROWS) {
@@ -221,7 +230,9 @@ export default function Snake({ slug, title }: GameModuleProps) {
     // following your own tail is legal and always has been.
     const tailIndex = current.body.length - 1;
     for (let index = 0; index < tailIndex; index += 1) {
-      if (current.body[index].x === next.x && current.body[index].y === next.y) {
+      const segment = current.body[index];
+      if (!segment) continue;
+      if (segment.x === next.x && segment.y === next.y) {
         session.end({ score: current.score, level: current.level, resources: current.eaten });
         return;
       }
@@ -263,14 +274,15 @@ export default function Snake({ slug, title }: GameModuleProps) {
 
   const onEvent = useCallback((event: GameEvent) => {
     const id = event.kind === "action" ? event.id : event.kind === "swipe" ? event.id : null;
-    if (!id) return;
+    // Only steering keys reach the queue; anything else is a deliberate no-op.
+    if (id !== "up" && id !== "down" && id !== "left" && id !== "right") return;
     const vector = VECTORS[id];
-    if (!vector) return;
 
     const current = state.current;
     // Compared against the last queued turn, not the current direction, so two quick
     // turns in the same step cannot produce an illegal reversal on the second one.
-    const reference = current.queue.length > 0 ? current.queue[current.queue.length - 1] : current.direction;
+    const queued = current.queue[current.queue.length - 1];
+    const reference = current.queue.length > 0 && queued ? queued : current.direction;
     if (vector.x === -reference.x && vector.y === -reference.y) return;
     if (vector.x === reference.x && vector.y === reference.y) return;
     if (current.queue.length >= 2) return;

@@ -32,16 +32,17 @@ function serialize(tubes: Tubes): string {
 export function legalPours(tubes: Tubes): Array<[number, number]> {
   const out: Array<[number, number]> = [];
   for (let from = 0; from < tubes.length; from += 1) {
-    const source = tubes[from];
+    const source = tubes[from] ?? [];
     if (source.length === 0) continue;
     // A finished tube pours nowhere and needs nothing poured in.
-    if (source.length === CAPACITY && source.every((c) => c === source[0])) continue;
-    const color = source[source.length - 1];
+    const first = source[0] ?? -1;
+    if (source.length === CAPACITY && source.every((c) => c === first)) continue;
+    const color = source[source.length - 1] ?? -1;
     for (let to = 0; to < tubes.length; to += 1) {
       if (to === from) continue;
-      const dest = tubes[to];
+      const dest = tubes[to] ?? [];
       if (dest.length >= CAPACITY) continue;
-      if (dest.length === 0 || dest[dest.length - 1] === color) out.push([from, to]);
+      if (dest.length === 0 || (dest[dest.length - 1] ?? -1) === color) out.push([from, to]);
     }
   }
   return out;
@@ -50,20 +51,28 @@ export function legalPours(tubes: Tubes): Array<[number, number]> {
 /** Pour the contiguous top group. Returns null when nothing moves. Pure. */
 export function pour(tubes: Tubes, from: number, to: number): Tubes | null {
   if (from === to) return null;
+  // Exported and tested directly, so out-of-range indices are a legal `null`,
+  // not a crash — the same contract as every other rejection below.
   const source = tubes[from];
   const dest = tubes[to];
+  if (!source || !dest) return null;
   if (source.length === 0 || dest.length >= CAPACITY) return null;
   const color = source[source.length - 1];
+  if (color === undefined) return null;
   if (dest.length > 0 && dest[dest.length - 1] !== color) return null;
-  if (source.length === CAPACITY && source.every((c) => c === color) && dest.length === 0) return null;
+  const finished = source[0];
+  if (source.length === CAPACITY && source.every((c) => c === finished) && dest.length === 0) return null;
   let group = 0;
-  for (let i = source.length - 1; i >= 0 && source[i] === color; i -= 1) group += 1;
+  for (let i = source.length - 1; i >= 0 && (source[i] ?? -1) === color; i -= 1) group += 1;
   const space = CAPACITY - dest.length;
   const amount = Math.min(group, space);
   const next = tubes.map((t) => t.slice());
+  const nextSource = next[from];
+  const nextDest = next[to];
+  if (!nextSource || !nextDest) return null;
   for (let i = 0; i < amount; i += 1) {
-    next[from].pop();
-    next[to].push(color);
+    nextSource.pop();
+    nextDest.push(color);
   }
   return next;
 }
@@ -103,13 +112,18 @@ export function dealPuzzle(random: () => number = Math.random): Tubes {
     }
     for (let i = units.length - 1; i > 0; i -= 1) {
       const j = Math.floor(random() * (i + 1));
-      [units[i], units[j]] = [units[j], units[i]];
+      // Both indices are in-bounds by construction; the fallbacks are unreachable.
+      const a = units[i] ?? 0;
+      const b = units[j] ?? 0;
+      units[i] = b;
+      units[j] = a;
     }
     const tubes: Tubes = Array.from({ length: TUBE_COUNT }, () => []);
     // Two tubes stay empty; the rest take four units each.
     const filled = tubes.slice(0, TUBE_COUNT - 2);
     units.forEach((unit, i) => {
-      filled[i % filled.length].push(unit);
+      const tube = filled[i % filled.length];
+      if (tube) tube.push(unit);
     });
     if (!isSolved(tubes) && isSolvable(tubes)) return tubes;
   }
@@ -133,8 +147,11 @@ export default function WaterSort({ slug, title }: GameModuleProps) {
 
   const choose = (index: number) => {
     if (session.phase !== "playing" || sort.over) return;
+    // Cursor and selection are always valid tube indices (0–5 over 6 tubes).
+    const tube = sort.tubes[index];
+    if (!tube) return;
     if (sort.selected === null) {
-      if (sort.tubes[index].length === 0) return;
+      if (tube.length === 0) return;
       setSort({ ...sort, selected: index });
       return;
     }
@@ -145,7 +162,7 @@ export default function WaterSort({ slug, title }: GameModuleProps) {
     const next = pour(sort.tubes, sort.selected, index);
     if (!next) {
       // Illegal target: move the selection there instead of dropping it.
-      if (sort.tubes[index].length > 0) setSort({ ...sort, selected: index });
+      if (tube.length > 0) setSort({ ...sort, selected: index });
       else setSort({ ...sort, selected: null });
       return;
     }
@@ -194,7 +211,7 @@ export default function WaterSort({ slug, title }: GameModuleProps) {
             }}
           >
             {tube.map((unit, layer) => (
-              <span key={layer} className="game-liquid" style={{ backgroundColor: LIQUIDS[unit] }} />
+              <span key={layer} className="game-liquid" style={{ backgroundColor: LIQUIDS[unit] ?? "transparent" }} />
             ))}
           </button>
         ))}

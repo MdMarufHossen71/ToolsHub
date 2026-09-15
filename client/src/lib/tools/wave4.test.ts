@@ -81,4 +81,14 @@ describe("browser-only image tools fail gracefully in node", () => {
     const file = new File([new Uint8Array([1, 2, 3])], "x.png", { type: "image/png" });
     await expect(runImageTools("image-resize", "", "default", t, { fields: { width: "10", height: "10" }, files: [file] })).rejects.toThrow();
   });
+
+  it("random-bitmap builds every pixel before touching canvas", async () => {
+    // Regression: the palette was indexed by the raw random byte (0–255) into a
+    // 2–8 entry table, so this threw a TypeError on the first cell. Reaching the
+    // canvas step (`no-canvas` here) proves pixel generation completed.
+    const t = ((key: string) => key) as Parameters<typeof runImageTools>[3];
+    await expect(
+      runImageTools("random-bitmap-generator", "", "default", t, { fields: { w: "16", h: "16", cells: "4", colors: "4" }, files: [] }),
+    ).rejects.toThrow("no-canvas");
+  });
 });

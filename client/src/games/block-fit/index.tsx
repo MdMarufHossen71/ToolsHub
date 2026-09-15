@@ -91,7 +91,10 @@ export function anyFit(board: number[], tray: Array<Shape | null>): boolean {
 }
 
 function dealTray(random: () => number = Math.random): Shape[] {
-  return [0, 1, 2].map(() => LIBRARY[Math.floor(random() * LIBRARY.length)]);
+  // Eight shapes by construction; failing fast beats dealing an empty tray.
+  const first = LIBRARY[0];
+  if (!first) throw new Error("library-empty-unreachable");
+  return [0, 1, 2].map(() => LIBRARY[Math.floor(random() * LIBRARY.length)] ?? first);
 }
 
 type FitState = {
@@ -170,7 +173,6 @@ export default function BlockFit({ slug, title }: GameModuleProps) {
     const piece = fit.tray[fit.selected];
     if (!piece || fit.over) return new Set<number>();
     return new Set(fits(fit.board, piece, nav.cursor) ? (cellsFor(piece, nav.cursor) as number[]) : []);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fit.board, fit.tray, fit.selected, nav.cursor, fit.over]);
 
   const filled = useMemo(() => {

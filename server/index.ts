@@ -3,6 +3,7 @@ import { createServer } from "http";
 import { existsSync } from "node:fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { PERMISSIONS_POLICY_VALUE, securityMiddleware } from "./security";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -13,6 +14,14 @@ async function startServer() {
   const app = express();
   const server = createServer(app);
   app.disable("x-powered-by");
+  // Same header set as `vercel.json` (see `server/security.ts`); the
+  // Permissions-Policy string is set verbatim because helmet's option format
+  // cannot express this exact value.
+  app.use(securityMiddleware());
+  app.use((_req, res, next) => {
+    res.setHeader("Permissions-Policy", PERMISSIONS_POLICY_VALUE);
+    next();
+  });
 
   // Serve static files from dist/public in production
   const staticPath =

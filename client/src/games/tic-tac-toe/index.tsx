@@ -18,7 +18,7 @@ const SPEC: ControlSpec = { actions: [], surface: "board" };
 type Mark = "X" | "O" | "";
 type Mode = "ai" | "duo";
 
-const LINES = [
+const LINES: Array<[number, number, number]> = [
   [0, 1, 2],
   [3, 4, 5],
   [6, 7, 8],
@@ -33,8 +33,11 @@ const LINES = [
 export function winnerOf(board: Mark[]): { winner: Mark; line: number[] } {
   for (const line of LINES) {
     const [a, b, c] = line;
-    if (board[a] !== "" && board[a] === board[b] && board[a] === board[c]) {
-      return { winner: board[a], line };
+    const mark = board[a];
+    // In-bounds cells by construction; the guard is type-level only.
+    if (mark === undefined || mark === "") continue;
+    if (mark === board[b] && mark === board[c]) {
+      return { winner: mark, line };
     }
   }
   return { winner: "", line: [] };

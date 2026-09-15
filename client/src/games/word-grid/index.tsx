@@ -43,18 +43,22 @@ export function clueGuess(guess: string, target: string): Clue[] {
   const clues: Clue[] = Array(LENGTH).fill("absent");
   const remaining = new Map<string, number>();
   for (let i = 0; i < LENGTH; i += 1) {
-    if (guess[i] === target[i]) {
+    // Same-length caller strings by contract; `?? ""` is type-level only.
+    const g = guess[i] ?? "";
+    const t = target[i] ?? "";
+    if (g === t) {
       clues[i] = "correct";
     } else {
-      remaining.set(target[i], (remaining.get(target[i]) ?? 0) + 1);
+      remaining.set(t, (remaining.get(t) ?? 0) + 1);
     }
   }
   for (let i = 0; i < LENGTH; i += 1) {
     if (clues[i] !== "correct") {
-      const left = remaining.get(guess[i]) ?? 0;
+      const g = guess[i] ?? "";
+      const left = remaining.get(g) ?? 0;
       if (left > 0) {
         clues[i] = "present";
-        remaining.set(guess[i], left - 1);
+        remaining.set(g, left - 1);
       }
     }
   }
@@ -62,12 +66,13 @@ export function clueGuess(guess: string, target: string): Clue[] {
 }
 
 export function pickTarget(random: () => number = Math.random): string {
-  return WORDS[Math.floor(random() * WORDS.length)];
+  // Non-empty word list; the fallback below is type-level only.
+  return WORDS[Math.floor(random() * WORDS.length)] ?? "";
 }
 
-type GridState = { target: string; guesses: string[]; current: string; notice: boolean; over: boolean; won: boolean };
+type GridState = { target: string; guesses: string[]; entry: string; notice: boolean; over: boolean; won: boolean };
 
-const fresh = (): GridState => ({ target: pickTarget(), guesses: [], current: "", notice: false, over: false, won: false });
+const fresh = (): GridState => ({ target: pickTarget(), guesses: [], entry: "", notice: false, over: false, won: false });
 
 export default function WordGrid({ slug, title }: GameModuleProps) {
   const { t } = useTranslation();
@@ -81,30 +86,30 @@ export default function WordGrid({ slug, title }: GameModuleProps) {
   });
 
   const submit = () => {
-    if (session.phase !== "playing" || grid.over || grid.current.length !== LENGTH) return;
-    if (!WORDS.includes(grid.current)) {
+    if (session.phase !== "playing" || grid.over || grid.entry.length !== LENGTH) return;
+    if (!WORDS.includes(grid.entry)) {
       setGrid({ ...grid, notice: true });
       return;
     }
-    const guesses = [...grid.guesses, grid.current];
-    const won = grid.current === grid.target;
+    const guesses = [...grid.guesses, grid.entry];
+    const won = grid.entry === grid.target;
     if (won || guesses.length >= TRIES) {
       const score = won ? (TRIES + 1 - guesses.length) * 100 : 0;
-      setGrid({ target: grid.target, guesses, current: "", notice: false, over: true, won });
+      setGrid({ target: grid.target, guesses, entry: "", notice: false, over: true, won });
       session.commit({ score, level: 1, resources: guesses.length });
       session.end({ score, level: 1, resources: guesses.length });
       return;
     }
-    setGrid({ ...grid, guesses, current: "", notice: false });
+    setGrid({ ...grid, guesses, entry: "", notice: false });
     session.commit({ score: 0, level: 1, resources: guesses.length });
   };
 
   const onEvent = (event: GameEvent) => {
     if (grid.over || session.phase !== "playing") return;
     if (event.kind === "text" && /^[A-Z]$/.test(event.value)) {
-      if (grid.current.length < LENGTH) setGrid({ ...grid, current: grid.current + event.value, notice: false });
+      if (grid.entry.length < LENGTH) setGrid({ ...grid, entry: grid.entry + event.value, notice: false });
     } else if (event.kind === "action" && event.id === "erase") {
-      setGrid({ ...grid, current: grid.current.slice(0, -1), notice: false });
+      setGrid({ ...grid, entry: grid.entry.slice(0, -1), notice: false });
     } else if (event.kind === "action" && event.id === "primary") {
       submit();
     }
@@ -116,7 +121,7 @@ export default function WordGrid({ slug, title }: GameModuleProps) {
       clues: clueGuess(g, grid.target),
     }));
     if (!grid.over) {
-      const letters = grid.current.split("");
+      const letters = grid.entry.split("");
       while (letters.length < LENGTH) letters.push("");
       out.push({ letters, clues: Array(LENGTH).fill("") });
     }
@@ -124,7 +129,7 @@ export default function WordGrid({ slug, title }: GameModuleProps) {
       out.push({ letters: Array(LENGTH).fill(""), clues: Array(LENGTH).fill("") });
     }
     return out;
-  }, [grid.guesses, grid.current, grid.target, grid.over]);
+  }, [grid.guesses, grid.entry, grid.target, grid.over]);
 
   const readouts = useMemo(() => [{ labelKey: "game.moves" as const, value: grid.guesses.length }], [grid.guesses.length]);
 

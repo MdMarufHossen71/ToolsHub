@@ -7,7 +7,7 @@
  * typing or the on-screen pad; erase drops the current target. Letter input
  * suppresses `R` restart by design, so fast typing can never reset the run.
  */
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useRef } from "react";
 import {
   GameShell,
   useGameCanvas,
@@ -56,7 +56,8 @@ const startState = (): BlastState => ({ words: [], lives: START_LIVES, score: 0,
 export function pickWord(avoid: Set<string>, random: () => number = Math.random): string {
   // `avoid` holds initials (the caller maps `w.text[0]`), so filtering on the whole
   // word never matched and the "avoid recently used initials" rule did nothing.
-  const pool = WORDS.filter((w) => !avoid.has(w[0]));
+  // `w[0]` always exists on a real word; `?? ""` is type-level only.
+  const pool = WORDS.filter((w) => !avoid.has(w[0] ?? ""));
   return pool[Math.floor(random() * pool.length)] ?? "CODE";
 }
 
@@ -129,7 +130,7 @@ export default function TypeBlaster({ slug, title }: GameModuleProps) {
       const interval = Math.max(MIN_SPAWN, BASE_SPAWN - (current.level - 1) * 0.18);
       if (current.sinceSpawn >= interval && current.words.length < 6) {
         current.sinceSpawn = 0;
-        const avoid = new Set(current.words.map((w) => w.text[0]));
+        const avoid = new Set(current.words.map((w) => w.text[0] ?? ""));
         const text = pickWord(avoid);
         current.words.push({ text, lane: Math.floor(Math.random() * LANES), y: 0, typed: 0 });
       }
@@ -191,13 +192,11 @@ export default function TypeBlaster({ slug, title }: GameModuleProps) {
 
   // Lives live in the loop ref (the tick needs them without renders); the
   // commit on every kill and landing re-renders, so this readout stays fresh.
-  const readouts = useMemo(
-    () => [
-      { labelKey: "game.lives" as const, value: state.current.lives },
-      { labelKey: "game.level" as const, value: session.run.level ?? 1 },
-    ],
-    [session.run.score, session.run.level],
-  );
+  // Plain array, not a memo, so no dep array can lie about ref reads.
+  const readouts = [
+    { labelKey: "game.lives" as const, value: state.current.lives },
+    { labelKey: "game.level" as const, value: session.run.level ?? 1 },
+  ];
 
   return (
     <GameShell session={session} spec={SPEC} title={title} readouts={readouts} announcement={undefined} onEvent={onEvent}>

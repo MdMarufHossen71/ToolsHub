@@ -9,8 +9,12 @@ describe("maze-runner", () => {
       expect(path[0]).toEqual({ x: 0, y: 0 });
       expect(path[path.length - 1]).toEqual({ x: 14, y: 14 });
       for (let s = 1; s < path.length; s += 1) {
-        const dx = Math.abs(path[s].x - path[s - 1].x);
-        const dy = Math.abs(path[s].y - path[s - 1].y);
+        const a = path[s];
+        const b = path[s - 1];
+        // A solver gap would be a maze bug, not a test artifact: fail loudly.
+        if (!a || !b) throw new Error("path gap");
+        const dx = Math.abs(a.x - b.x);
+        const dy = Math.abs(a.y - b.y);
         expect(dx + dy).toBe(1);
       }
     }

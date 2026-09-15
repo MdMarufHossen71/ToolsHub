@@ -236,7 +236,7 @@ function SenderPane({ onBack }: { onBack: () => void }) {
             {prepared.meta.enc === 1 ? ` · ${t("qr.encrypted")}` : ""}
           </p>
           <div ref={qrBoxRef} style={{ background: "#fff", padding: 16, borderRadius: 16, display: "grid", justifyItems: "center" }}>
-            <QrCanvas text={sequence[frameIndex]} size={320} />
+            <QrCanvas text={sequence[frameIndex] ?? ""} size={320} />
           </div>
           <div className="bench-actions" role="group" aria-label={t("qr.frame", { current: frameIndex + 1, total })}>
             <Button size="sm" variant="outline" onClick={() => setPlaying((p) => !p)} aria-pressed={playing}>

@@ -44,8 +44,9 @@ export type GameShellProps = {
   /**
    * A short localized sentence announced politely when it changes. Leave undefined
    * during fast-paced play; the shell already announces pause and game over.
+   * Explicit `undefined` is allowed: most games compute it conditionally.
    */
-  announcement?: string;
+  announcement?: string | undefined;
   onEvent: GameEventHandler;
   /** The board or canvas. Pointer coordinates are measured against this element's box. */
   children: React.ReactNode;
@@ -304,7 +305,8 @@ function TouchControls({
   // only reads three of the four directions — Tetris has no use for `up` — gets three
   // buttons and an empty cell rather than a fourth button that silently does nothing.
   // `.game-dpad-four` places each direction by name, so the gap closes up cleanly.
-  const directionIds = DPAD_LAYOUT[directions].filter((id) => spec.actions.includes(id));
+  // Every layout key exists above; `?? []` is type-level only.
+  const directionIds = (DPAD_LAYOUT[directions] ?? []).filter((id) => spec.actions.includes(id));
 
   const buttonIds = spec.actions.filter((id) => !directionIds.includes(id) && !["up", "down", "left", "right"].includes(id));
 

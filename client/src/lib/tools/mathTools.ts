@@ -33,8 +33,9 @@ function fromRoman(text: string): number {
   const values: Record<string, number> = { M: 1000, D: 500, C: 100, L: 50, X: 10, V: 5, I: 1 };
   let total = 0;
   for (let i = 0; i < clean.length; i += 1) {
-    const current = values[clean[i]];
-    const next = values[clean[i + 1]] ?? 0;
+    // Validated charset above, so both lookups hit; `?? 0` is type-level only.
+    const current = values[clean[i] ?? ""] ?? 0;
+    const next = values[clean[i + 1] ?? ""] ?? 0;
     total += next > current ? -current : current;
   }
   return total;
@@ -45,7 +46,7 @@ const EN_TENS = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy
 
 function numberToEnglish(n: number): string {
   if (!Number.isInteger(n) || n < 0 || n > 999999999) throw new ToolError("tool.error.number");
-  if (n < 20) return EN_ONES[n];
+  if (n < 20) return EN_ONES[n] ?? "";
   if (n < 100) return EN_TENS[Math.floor(n / 10)] + (n % 10 === 0 ? "" : `-${EN_ONES[n % 10]}`);
   if (n < 1000) return `${EN_ONES[Math.floor(n / 100)]} hundred${n % 100 === 0 ? "" : ` ${numberToEnglish(n % 100)}`}`;
   if (n < 1000000) return `${numberToEnglish(Math.floor(n / 1000))} thousand${n % 1000 === 0 ? "" : ` ${numberToEnglish(n % 1000)}`}`;
@@ -67,7 +68,7 @@ const BN_UNDER_100 = [
 
 function numberToBangla(n: number): string {
   if (!Number.isInteger(n) || n < 0 || n > 999999999) throw new ToolError("tool.error.number");
-  if (n < 100) return BN_UNDER_100[n];
+  if (n < 100) return BN_UNDER_100[n] ?? "";
   if (n < 1000) return `${BN_UNDER_100[Math.floor(n / 100)]} শত${n % 100 === 0 ? "" : ` ${numberToBangla(n % 100)}`}`;
   if (n < 100000) return `${numberToBangla(Math.floor(n / 1000))} হাজার${n % 1000 === 0 ? "" : ` ${numberToBangla(n % 1000)}`}`;
   if (n < 10000000) return `${numberToBangla(Math.floor(n / 100000))} লাখ${n % 100000 === 0 ? "" : ` ${numberToBangla(n % 100000)}`}`;
@@ -173,7 +174,7 @@ export const runMathTools: ToolRunner = async (slug, input, _option, _t, extra) 
   if (slug === "fibonacci-generator") {
     const count = Math.min(Math.max(Math.floor(num(F("count", "10"))), 1), 200);
     const seq = [0, 1];
-    while (seq.length < count) seq.push(seq[seq.length - 1] + seq[seq.length - 2]);
+    while (seq.length < count) seq.push((seq[seq.length - 1] ?? 0) + (seq[seq.length - 2] ?? 0));
     return { text: seq.slice(0, count).join(", ") };
   }
   if (slug === "prime-checker-generator") {
@@ -219,8 +220,9 @@ export const runMathTools: ToolRunner = async (slug, input, _option, _t, extra) 
     const sum = numbers.reduce((a, b) => a + b, 0);
     const sorted = [...numbers].sort((a, b) => a - b);
     const mid = Math.floor(sorted.length / 2);
-    const median = sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
-    return { text: JSON.stringify({ count: numbers.length, sum: Number(sum.toFixed(4)), average: Number((sum / numbers.length).toFixed(4)), median: Number(median.toFixed(4)), min: sorted[0], max: sorted[sorted.length - 1] }, null, 2) };
+    // Non-empty by the throw above: both branches read live entries.
+    const median = sorted.length % 2 === 0 ? ((sorted[mid - 1] ?? 0) + (sorted[mid] ?? 0)) / 2 : (sorted[mid] ?? 0);
+    return { text: JSON.stringify({ count: numbers.length, sum: Number(sum.toFixed(4)), average: Number((sum / numbers.length).toFixed(4)), median: Number(median.toFixed(4)), min: sorted[0] ?? 0, max: sorted[sorted.length - 1] ?? 0 }, null, 2) };
   }
   if (slug === "number-list-generator") {
     const from = num(F("from", "1"));
@@ -243,7 +245,7 @@ export const runMathTools: ToolRunner = async (slug, input, _option, _t, extra) 
       const n = Number(value.slice(0, -1));
       if (Number.isFinite(n)) decimal = n / 100;
     } else if (value.includes("/")) {
-      const [a, b] = value.split("/").map(Number);
+      const [a = NaN, b = NaN] = value.split("/").map(Number);
       if (Number.isFinite(a) && Number.isFinite(b) && b !== 0) decimal = a / b;
     } else {
       const n = Number(value);
@@ -311,8 +313,8 @@ export const runMathTools: ToolRunner = async (slug, input, _option, _t, extra) 
     const monthNames = ["বৈশাখ", "জ্যৈষ্ঠ", "আষাঢ়", "শ্রাবণ", "ভাদ্র", "আশ্বিন", "কার্তিক", "অগ্রহায়ণ", "পৌষ", "মাঘ", "ফাল্গুন", "চৈত্র"];
     let remaining = Math.round((date.getTime() - target) / 86400000);
     let month = 0;
-    while (month < 11 && remaining >= monthLengths[month]) {
-      remaining -= monthLengths[month];
+    while (month < 11 && remaining >= (monthLengths[month] ?? 0)) {
+      remaining -= monthLengths[month] ?? 0;
       month += 1;
     }
     const day = remaining + 1;

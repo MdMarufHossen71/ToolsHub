@@ -154,7 +154,9 @@ export function SearchBox({
       return;
     }
     if (event.key === "Enter") {
-      const highlightedSlug = panelOpen && highlight >= 0 ? suggestions[highlight].slug : null;
+      // A stale highlight past a shrunk suggestion list falls back to submit
+      // instead of throwing on the missing row.
+      const highlightedSlug = panelOpen && highlight >= 0 ? (suggestions[highlight]?.slug ?? null) : null;
       const action = resolveSearchEnter(value, highlightedSlug);
       if (action.type === "open-tool") {
         // Stop the key from also submitting the form: two navigations would race.

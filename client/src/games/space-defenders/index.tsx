@@ -7,7 +7,8 @@
  * action events, so OS auto-repeat and touch taps funnel through the same
  * cooldown. Lives, wave, and bombs persist through the session.
  */
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useRef } from "react";
+import { usePersistFn } from "@/hooks/usePersistFn";
 import {
   GameShell,
   useGameCanvas,
@@ -183,7 +184,8 @@ export default function SpaceDefenders({ slug, title }: GameModuleProps) {
         const alive = current.invaders.filter((i) => i.alive);
         if (alive.length > 0) {
           const shooter = alive[Math.floor(Math.random() * alive.length)];
-          current.bullets.push({ x: shooter.x, y: shooter.y + 3, enemy: true });
+          // Non-empty by the length check; the guard is type-level only.
+          if (shooter) current.bullets.push({ x: shooter.x, y: shooter.y + 3, enemy: true });
         }
       }
 
@@ -235,48 +237,42 @@ export default function SpaceDefenders({ slug, title }: GameModuleProps) {
     { hz: 60 },
   );
 
-  const onEvent = useCallback(
-    (event: GameEvent) => {
-      if (event.kind !== "action") return;
-      const current = state.current;
-      if (event.id === "primary" && !event.repeat) {
-        if (current.fireTimer >= FIRE_COOLDOWN) {
-          current.fireTimer = 0;
-          current.bullets.push({ x: current.playerX, y: PLAYER_Y - 5, enemy: false });
-        }
-      } else if (event.id === "secondary" && !event.repeat) {
-        // One bomb clears the sky. Scarce on purpose: three per run, one back
-        // per wave, so it stays an escape hatch rather than the whole game.
-        if (current.bombs > 0) {
-          current.bombs -= 1;
-          for (const invader of current.invaders) {
-            if (invader.alive) {
-              invader.alive = false;
-              current.score += 5 * current.wave;
-            }
-          }
-          current.bullets = current.bullets.filter((b) => !b.enemy);
-          sync();
-          redraw();
-        }
+  // Stable identity with latest-closure semantics (same ref-mirror idiom as the
+  // engine's own `eventRef`): the body only touches refs and module constants.
+  const onEvent = usePersistFn((event: GameEvent) => {
+    if (event.kind !== "action") return;
+    const current = state.current;
+    if (event.id === "primary" && !event.repeat) {
+      if (current.fireTimer >= FIRE_COOLDOWN) {
+        current.fireTimer = 0;
+        current.bullets.push({ x: current.playerX, y: PLAYER_Y - 5, enemy: false });
       }
-    },
-    // `sync`/`redraw` close over the stable session; state lives in a ref.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
+    } else if (event.id === "secondary" && !event.repeat) {
+      // One bomb clears the sky. Scarce on purpose: three per run, one back
+      // per wave, so it stays an escape hatch rather than the whole game.
+      if (current.bombs > 0) {
+        current.bombs -= 1;
+        for (const invader of current.invaders) {
+          if (invader.alive) {
+            invader.alive = false;
+            current.score += 5 * current.wave;
+          }
+        }
+        current.bullets = current.bullets.filter((b) => !b.enemy);
+        sync();
+        redraw();
+      }
+    }
+  });
 
   // Lives and bombs live in the loop ref; the change-checked `sync` above
   // re-renders exactly when they move, so these readouts stay fresh without
-  // rendering sixty times a second.
-  const readouts = useMemo(
-    () => [
-      { labelKey: "game.lives" as const, value: state.current.lives },
-      { labelKey: "game.level" as const, value: session.run.level ?? 1 },
-      { labelKey: "game.resources" as const, value: session.run.resources ?? 3 },
-    ],
-    [session.run.score, session.run.level, session.run.resources],
-  );
+  // rendering sixty times a second. Plain array, not a memo.
+  const readouts = [
+    { labelKey: "game.lives" as const, value: state.current.lives },
+    { labelKey: "game.level" as const, value: session.run.level ?? 1 },
+    { labelKey: "game.resources" as const, value: session.run.resources ?? 3 },
+  ];
 
   return (
     <GameShell session={session} spec={SPEC} title={title} readouts={readouts} onEvent={onEvent}>

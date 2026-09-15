@@ -14,7 +14,7 @@ type NotFoundProps = {
   backHref?: string;
   backLabelKey?: TranslationKey;
   /** The raw slug that failed to resolve, shown so the user can see the typo. */
-  detail?: string;
+  detail?: string | undefined;
 };
 
 export default function NotFound({ titleKey = "static.notFound.title", copyKey = "static.notFound.copy", backHref = "/tools", backLabelKey = "nav.tools", detail }: NotFoundProps) {

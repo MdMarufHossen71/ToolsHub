@@ -90,7 +90,8 @@ export const runColorTools: ToolRunner = async (slug, _input, _option, _t, extra
     const bytes = crypto.getRandomValues(new Uint8Array(count * 3));
     const colors: string[] = [];
     for (let i = 0; i < count; i += 1) {
-      colors.push(`#${bytes[i * 3].toString(16).padStart(2, "0")}${bytes[i * 3 + 1].toString(16).padStart(2, "0")}${bytes[i * 3 + 2].toString(16).padStart(2, "0")}`);
+      // Three bytes per color by loop construction; `?? 0` is type-level only.
+      colors.push(`#${(bytes[i * 3] ?? 0).toString(16).padStart(2, "0")}${(bytes[i * 3 + 1] ?? 0).toString(16).padStart(2, "0")}${(bytes[i * 3 + 2] ?? 0).toString(16).padStart(2, "0")}`);
     }
     return { text: colors.join("\n"), image: swatchImage(colors) };
   }
@@ -135,10 +136,10 @@ export const runColorTools: ToolRunner = async (slug, _input, _option, _t, extra
     const { r, g, b } = colord(base).toRgb();
     // Machado 2009 matrices, protanopia / deuteranopia / tritanopia.
     const simulate = (matrix: number[][]) => {
-      const [nr, ng, nb] = matrix.map((row) => Math.min(255, Math.max(0, Math.round(row[0] * r + row[1] * g + row[2] * b))));
+      const [nr = 0, ng = 0, nb = 0] = matrix.map((row) => Math.min(255, Math.max(0, Math.round((row[0] ?? 0) * r + (row[1] ?? 0) * g + (row[2] ?? 0) * b))));
       return `#${nr.toString(16).padStart(2, "0")}${ng.toString(16).padStart(2, "0")}${nb.toString(16).padStart(2, "0")}`;
     };
-    const rows = [
+    const rows: Array<[string, string]> = [
       ["Original", base],
       ["Protanopia (red-blind)", simulate([[0.567, 0.433, 0], [0.558, 0.442, 0], [0, 0.242, 0.758]])],
       ["Deuteranopia (green-blind)", simulate([[0.625, 0.375, 0], [0.7, 0.3, 0], [0, 0.3, 0.7]])],

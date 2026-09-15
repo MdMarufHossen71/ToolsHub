@@ -4,7 +4,8 @@ export function crc16Ccitt(text: string): number {
   const bytes = new TextEncoder().encode(text);
   let crc = 0xffff;
   for (let i = 0; i < bytes.length; i += 1) {
-    crc ^= bytes[i] << 8;
+    // Loop-bounded; `?? 0` is type-level only.
+    crc ^= (bytes[i] ?? 0) << 8;
     for (let b = 0; b < 8; b += 1) {
       crc = crc & 0x8000 ? ((crc << 1) ^ 0x1021) & 0xffff : (crc << 1) & 0xffff;
     }
@@ -15,7 +16,7 @@ export function crc16Ccitt(text: string): number {
 export function bytesToHex(bytes: Uint8Array | ArrayBuffer): string {
   const view = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
   let out = "";
-  for (let i = 0; i < view.length; i += 1) out += view[i].toString(16).padStart(2, "0");
+  for (let i = 0; i < view.length; i += 1) out += (view[i] ?? 0).toString(16).padStart(2, "0");
   return out;
 }
 

@@ -34,7 +34,12 @@ export function scramble(word: string, random: () => number = Math.random): stri
     const out = letters.slice();
     for (let i = out.length - 1; i > 0; i -= 1) {
       const j = Math.floor(random() * (i + 1));
-      [out[i], out[j]] = [out[j], out[i]];
+      const a = out[i];
+      const b = out[j];
+      // Loop-bounded on both sides; the guard is type-level only.
+      if (a === undefined || b === undefined) continue;
+      out[i] = b;
+      out[j] = a;
     }
     if (out.join("") !== word) return out.join("");
   }
@@ -43,7 +48,8 @@ export function scramble(word: string, random: () => number = Math.random): stri
 
 export function pickWord(random: () => number = Math.random): string {
   const long = WORDS.filter((w) => w.length >= MIN_LENGTH);
-  return long[Math.floor(random() * long.length)];
+  // The static bank always has long words; the fallback below is type-level only.
+  return long[Math.floor(random() * long.length)] ?? "";
 }
 
 type SprintState = {

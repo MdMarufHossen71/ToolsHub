@@ -8,7 +8,7 @@
  * discrete events through one cooldown each. The ship is a triangle, rocks
  * are stroked polygons — shape, never colour alone.
  */
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useRef } from "react";
 import {
   GameShell,
   useGameCanvas,
@@ -132,7 +132,7 @@ export default function Asteroids({ slug, title }: GameModuleProps) {
         context.beginPath();
         rock.verts.forEach((v, i) => {
           const a = rock.angle + (i / rock.verts.length) * Math.PI * 2;
-          const r = ROCK_RADIUS[rock.size] * v;
+          const r = (ROCK_RADIUS[rock.size] ?? 0) * v;
           const px = X(rock.x + Math.cos(a) * r);
           const py = Y(rock.y + Math.sin(a) * r);
           if (i === 0) context.moveTo(px, py);
@@ -233,10 +233,10 @@ export default function Asteroids({ slug, title }: GameModuleProps) {
         if (bullet.life <= 0) continue;
         for (const rock of current.rocks) {
           if (deadRocks.has(rock)) continue;
-          if (Math.hypot(bullet.x - rock.x, bullet.y - rock.y) >= ROCK_RADIUS[rock.size] + 1) continue;
+          if (Math.hypot(bullet.x - rock.x, bullet.y - rock.y) >= (ROCK_RADIUS[rock.size] ?? 0) + 1) continue;
           bullet.life = 0;
           deadRocks.add(rock);
-          current.score += ROCK_SCORE[rock.size];
+          current.score += ROCK_SCORE[rock.size] ?? 0;
           if (rock.size > 1) {
             const next = (rock.size - 1) as 1 | 2;
             for (let i = 0; i < 2; i += 1) {
@@ -262,7 +262,7 @@ export default function Asteroids({ slug, title }: GameModuleProps) {
 
       if (current.protect <= 0) {
         for (const rock of current.rocks) {
-          if (Math.hypot(ship.x - rock.x, ship.y - rock.y) < ROCK_RADIUS[rock.size] + 2.5) {
+          if (Math.hypot(ship.x - rock.x, ship.y - rock.y) < (ROCK_RADIUS[rock.size] ?? 0) + 2.5) {
             killShip(current);
             break;
           }
@@ -317,13 +317,11 @@ export default function Asteroids({ slug, title }: GameModuleProps) {
     [],
   );
 
-  const readouts = useMemo(
-    () => [
-      { labelKey: "game.lives" as const, value: state.current.lives },
-      { labelKey: "game.level" as const, value: session.run.level ?? 1 },
-    ],
-    [session.run.score, session.run.level],
-  );
+  // Plain array, not a memo, so no dep array can lie about ref reads.
+  const readouts = [
+    { labelKey: "game.lives" as const, value: state.current.lives },
+    { labelKey: "game.level" as const, value: session.run.level ?? 1 },
+  ];
 
   return (
     <GameShell session={session} spec={SPEC} title={title} readouts={readouts} onEvent={onEvent}>

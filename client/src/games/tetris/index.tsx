@@ -174,14 +174,21 @@ function shuffledBag(): Piece[] {
   const bag = PIECES.slice();
   for (let index = bag.length - 1; index > 0; index -= 1) {
     const swap = Math.floor(Math.random() * (index + 1));
-    [bag[index], bag[swap]] = [bag[swap], bag[index]];
+    const a = bag[index];
+    const b = bag[swap];
+    // Loop-bounded on both sides; the guard is type-level only.
+    if (a === undefined || b === undefined) continue;
+    bag[index] = b;
+    bag[swap] = a;
   }
   return bag;
 }
 
 const startState = (): TetrisState => {
   const bag = shuffledBag();
-  const next = bag.pop() as Piece;
+  // Seven pieces by construction; the throw below is type-level only.
+  const next = bag.pop();
+  if (!next) throw new Error("bag-empty-unreachable");
   return {
     well: new Array(COLS * ROWS).fill(0),
     active: null,
@@ -201,7 +208,11 @@ const fallInterval = (level: number) => Math.max(MIN_FALL, BASE_FALL * FALL_PER_
 
 /** Absolute cells a piece occupies at a given rotation and position. */
 function occupied(active: Active): Cell[] {
-  return active.piece.states[active.rotation].map((cell) => ({ x: active.x + cell.x, y: active.y + cell.y }));
+  // Rotations always index a real state (each piece declares 1, 2 or 4, and the
+  // rotation wraps modulo that count); anything else is a logic bug, fail loudly.
+  const states = active.piece.states[active.rotation];
+  if (!states) throw new Error("rotation-out-of-range");
+  return states.map((cell) => ({ x: active.x + cell.x, y: active.y + cell.y }));
 }
 
 /**
@@ -312,9 +323,9 @@ export default function Tetris({ slug, title }: GameModuleProps) {
       };
 
       for (let index = 0; index < current.well.length; index += 1) {
-        const value = current.well[index];
+        const value = current.well[index] ?? 0;
         if (value === 0) continue;
-        block(index % COLS, Math.floor(index / COLS), pieceColours[value]);
+        block(index % COLS, Math.floor(index / COLS), pieceColours[value] ?? "");
       }
 
       // Cleared rows flash before they vanish. Purely decorative, so it is skipped for
@@ -337,7 +348,7 @@ export default function Tetris({ slug, title }: GameModuleProps) {
         }
         for (const point of occupied(current.active)) {
           if (point.y < 0) continue;
-          block(point.x, point.y, pieceColours[current.active.piece.id]);
+          block(point.x, point.y, pieceColours[current.active.piece.id] ?? "");
         }
       }
 
@@ -353,6 +364,8 @@ export default function Tetris({ slug, title }: GameModuleProps) {
       context.fillText(t("game.next"), panelX, offsetY + cell * 0.3);
 
       const preview = current.next.states[0];
+      // Every piece declares at least one rotation state; type-level only.
+      if (!preview) return;
       const minX = Math.min(...preview.map((c) => c.x));
       const minY = Math.min(...preview.map((c) => c.y));
       const previewCell = cell * 0.8;
@@ -360,7 +373,7 @@ export default function Tetris({ slug, title }: GameModuleProps) {
         const x = panelX + (point.x - minX) * previewCell;
         const y = offsetY + cell * 1.4 + (point.y - minY) * previewCell;
         const inset = Math.max(1, previewCell * 0.08);
-        context.fillStyle = pieceColours[current.next.id];
+        context.fillStyle = pieceColours[current.next.id] ?? "";
         context.fillRect(x + inset, y + inset, previewCell - inset * 2, previewCell - inset * 2);
       }
     },
@@ -419,12 +432,12 @@ export default function Tetris({ slug, title }: GameModuleProps) {
         const kept: number[] = [];
         for (let row = 0; row < ROWS; row += 1) {
           if (full.includes(row)) continue;
-          for (let col = 0; col < COLS; col += 1) kept.push(current.well[row * COLS + col]);
+          for (let col = 0; col < COLS; col += 1) kept.push(current.well[row * COLS + col] ?? 0);
         }
         const empty = new Array(full.length * COLS).fill(0);
         current.well = empty.concat(kept);
         current.lines += full.length;
-        current.score += CLEAR_POINTS[full.length] * current.level;
+        current.score += (CLEAR_POINTS[full.length] ?? 0) * current.level;
         current.level = Math.floor(current.lines / LINES_PER_LEVEL) + 1;
         current.flashRows = full;
         current.flashTimer = 0.18;

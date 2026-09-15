@@ -9,7 +9,7 @@
  * drift wide, run home). Territory is area fill, trails are bright lines,
  * heads carry a mark — state never rides on colour alone.
  */
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useRef } from "react";
 import {
   GameShell,
   useGameCanvas,
@@ -31,7 +31,8 @@ const CELLS = COLS * ROWS;
 const PLAYER_SPEED = 8;
 const RIVAL_SPEED = 6.2;
 const PLAYER = 1;
-const RIVALS = [2, 3];
+const RIVAL_A = 2;
+const RIVAL_B = 3;
 
 const VECTORS: Record<string, { x: number; y: number }> = {
   up: { x: 0, y: -1 },
@@ -90,7 +91,7 @@ export function claimLoop(territory: number[], owner: number, trail: number[]): 
     seen.add(cell);
     const x = cell % COLS;
     const y = Math.floor(cell / COLS);
-    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as Array<[number, number]>) {
       const nx = x + dx;
       const ny = y + dy;
       if (inBounds(nx, ny)) queue.push(at(nx, ny));
@@ -113,9 +114,12 @@ function startState(): LoopState {
   const territory = Array(CELLS).fill(0);
   const homes = [
     homeBlock(1, ROWS - 6, PLAYER),
-    homeBlock(COLS - 6, 1, RIVALS[0]),
-    homeBlock(COLS - 6, ROWS - 6, RIVALS[1]),
+    homeBlock(COLS - 6, 1, RIVAL_A),
+    homeBlock(COLS - 6, ROWS - 6, RIVAL_B),
   ];
+  // Three literals above, so always present; the guard is type-level only.
+  const [playerHome, rivalHomeA, rivalHomeB] = homes;
+  if (!playerHome || !rivalHomeA || !rivalHomeB) throw new Error("homes-init-unreachable");
   for (const home of homes) {
     home.territory.forEach((value, i) => {
       if (value !== 0) territory[i] = value;
@@ -123,17 +127,20 @@ function startState(): LoopState {
   }
   return {
     territory,
-    player: { x: homes[0].home.x, y: homes[0].home.y, dx: 0, dy: 0, progress: 0 },
+    player: { x: playerHome.home.x, y: playerHome.home.y, dx: 0, dy: 0, progress: 0 },
     queue: { x: 0, y: 0 },
     trail: [],
-    rivals: [1, 2].map((i) => ({
-      x: homes[i].home.x,
-      y: homes[i].home.y,
+    rivals: [
+      { house: rivalHomeA, id: RIVAL_A },
+      { house: rivalHomeB, id: RIVAL_B },
+    ].map(({ house, id }) => ({
+      x: house.home.x,
+      y: house.home.y,
       dx: 0,
       dy: 0,
       progress: 0,
-      id: RIVALS[i - 1],
-      home: homes[i].home,
+      id,
+      home: house.home,
       trail: [],
       mode: "out" as const,
       dead: 0,
@@ -171,18 +178,19 @@ export default function TerritoryLoop({ slug, title }: GameModuleProps) {
 
       const fills: Record<number, string> = {
         [PLAYER]: withAlpha(palette.primary, 0.5),
-        [RIVALS[0]]: withAlpha(palette.danger, 0.5),
-        [RIVALS[1]]: withAlpha(palette.accent, 0.5),
+        [RIVAL_A]: withAlpha(palette.danger, 0.5),
+        [RIVAL_B]: withAlpha(palette.accent, 0.5),
       };
       for (let i = 0; i < CELLS; i += 1) {
         const owner = current.territory[i];
-        if (owner === 0) continue;
-        context.fillStyle = fills[owner];
+        if (!owner) continue;
+        // Every live owner (player + both rivals) has a fill above.
+        context.fillStyle = fills[owner] ?? palette.primary;
         context.fillRect(offsetX + (i % COLS) * cell, offsetY + Math.floor(i / COLS) * cell, cell, cell);
       }
 
       const paintTrail = (trail: number[], owner: number) => {
-        context.fillStyle = owner === PLAYER ? palette.primary : owner === RIVALS[0] ? palette.danger : palette.accent;
+        context.fillStyle = owner === PLAYER ? palette.primary : owner === RIVAL_A ? palette.danger : palette.accent;
         for (const t of trail) {
           context.fillRect(offsetX + (t % COLS) * cell, offsetY + Math.floor(t / COLS) * cell, cell, cell);
         }
@@ -203,7 +211,7 @@ export default function TerritoryLoop({ slug, title }: GameModuleProps) {
       head(current.player, palette.primary);
       for (const rival of current.rivals) {
         if (rival.dead > 0) continue;
-        head(rival, rival.id === RIVALS[0] ? palette.danger : palette.accent);
+          head(rival, rival.id === RIVAL_A ? palette.danger : palette.accent);
       }
     },
     [palette],
@@ -304,8 +312,10 @@ export default function TerritoryLoop({ slug, title }: GameModuleProps) {
     });
     if (options.length === 0) return { x: 0, y: 0 };
     if (rival.dead > 0) return null;
-    const target = rival.mode === "back" ? rival.home : rival.goal;
-    let best = options[0];
+      const target = rival.mode === "back" ? rival.home : rival.goal;
+      const [first] = options;
+      if (!first) return { x: 0, y: 0 };
+      let best = first;
     let bestScore = -Infinity;
     for (const option of options) {
       const dist = Math.abs(rival.x + option.x - target.x) + Math.abs(rival.y + option.y - target.y);
@@ -399,13 +409,11 @@ export default function TerritoryLoop({ slug, title }: GameModuleProps) {
     if (vector) state.current.queue = vector;
   }, []);
 
-  const readouts = useMemo(
-    () => [
-      { labelKey: "game.lives" as const, value: state.current.lives },
-      { labelKey: "game.level" as const, value: session.run.level ?? 1 },
-    ],
-    [session.run.score, session.run.level],
-  );
+  // Plain array, not a memo, so no dep array can lie about ref reads.
+  const readouts = [
+    { labelKey: "game.lives" as const, value: state.current.lives },
+    { labelKey: "game.level" as const, value: session.run.level ?? 1 },
+  ];
 
   return (
     <GameShell session={session} spec={SPEC} title={title} readouts={readouts} onEvent={onEvent}>

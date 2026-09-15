@@ -27,7 +27,7 @@ describe("changelog data", () => {
   });
 
   it("keeps the footer's last-updated date equal to the newest entry", () => {
-    expect(SITE_LAST_UPDATED).toBe(changelog[0].date);
+    expect(SITE_LAST_UPDATED).toBe(changelog[0]?.date);
   });
 });
 

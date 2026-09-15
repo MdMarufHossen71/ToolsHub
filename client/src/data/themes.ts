@@ -19,5 +19,13 @@ export const themePresets: ThemePreset[] = [
   { id: "ocean-dark", name: "Ocean Dark", isDark: true, tokens: { background: "#0b1426", surface: "#111f38", text: "#dcecff", primary: "#0ea5e9", secondary: "#22d3ee", border: "#23405e" } },
   { id: "midnight-purple", name: "Midnight Purple", isDark: true, tokens: { background: "#1a1025", surface: "#271a36", text: "#f0e7ff", primary: "#a78bfa", secondary: "#e879f9", border: "#48305f" } },
 ];
-export const fallbackTokens = themePresets[0].tokens;
+/**
+ * The Light preset leads the array by construction. Centralized here so no call
+ * site repeats the "first preset, or else" fallback — and so an emptied array
+ * fails fast at import with a clear message instead of an undefined crash later.
+ */
+const firstPreset = themePresets[0];
+if (!firstPreset) throw new Error("theme-presets-empty");
+export const defaultPreset: ThemePreset = firstPreset;
+export const fallbackTokens = defaultPreset.tokens;
 export const isThemeTokens = (value: unknown): value is ThemeTokens => !!value && typeof value === "object" && ["background", "surface", "text", "primary", "secondary", "border"].every((key) => /^#[0-9A-Fa-f]{6}$/.test((value as Record<string, unknown>)[key] as string));

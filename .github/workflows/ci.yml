@@ -18,9 +18,11 @@ jobs:
           cache: pnpm
       - run: corepack pnpm install --frozen-lockfile
       - run: corepack pnpm run check
+      - run: corepack pnpm run lint
       - run: corepack pnpm run test:coverage
       - run: node scripts/i18n-parity.mjs
       - run: node scripts/theme-contrast.mjs
       - run: corepack pnpm run build
       - run: corepack pnpm run budget
       - run: node scripts/shell-audit.mjs
+      - run: corepack pnpm run audit:csp

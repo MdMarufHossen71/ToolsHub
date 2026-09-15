@@ -3,6 +3,8 @@ import { ToolError, field, type ToolRunner } from "@/lib/toolOperations";
 
 const MAX_FILE_BYTES = 50 * 1024 * 1024;
 
+function needFiles(extra: { files?: File[] } | undefined, min: 1, mime?: string): [File, ...File[]];
+function needFiles(extra: { files?: File[] } | undefined, min: 2, mime?: string): [File, File, ...File[]];
 function needFiles(extra: { files?: File[] } | undefined, min: number, mime = ""): File[] {
   const files = (extra?.files ?? []).filter((f) => (mime === "" || f.type === mime || (mime === "application/pdf" && f.name.toLowerCase().endsWith(".pdf"))));
   if (files.length < min) throw new ToolError("tool.error.generic");
@@ -16,7 +18,7 @@ function downloadArtifact(name: string, mime: string, bytes: Uint8Array): { name
   let binary = "";
   const CHUNK = 8192;
   for (let i = 0; i < bytes.length; i += CHUNK) {
-    for (let j = i; j < Math.min(i + CHUNK, bytes.length); j += 1) binary += String.fromCharCode(bytes[j]);
+    for (let j = i; j < Math.min(i + CHUNK, bytes.length); j += 1) binary += String.fromCharCode(bytes[j] ?? 0);
   }
   return { name, mime, dataUrl: `data:${mime};base64,${btoa(binary)}` };
 }
@@ -78,7 +80,7 @@ export const runFileTools: ToolRunner = async (slug, input, _option, _t, extra) 
     for (const file of files) {
       const bytes = new Uint8Array(await file.arrayBuffer());
       total += bytes.length;
-      for (let i = 0; i < bytes.length; i += 1) chunks.push(bytes[i]);
+      for (let i = 0; i < bytes.length; i += 1) chunks.push(bytes[i] ?? 0);
     }
     const name = files[0].name.replace(/\.part\d+$/i, "") || "joined.bin";
     return {
@@ -97,9 +99,10 @@ export const runFileTools: ToolRunner = async (slug, input, _option, _t, extra) 
     const value = Number(F("value", "1536"));
     const unit = F("unit", "KB");
     const exp: Record<string, number> = { B: 0, KB: 1, MB: 2, GB: 3, TB: 4 };
-    if (!Number.isFinite(value) || !(unit in exp)) throw new ToolError("tool.error.number");
-    const bytes = value * Math.pow(1024, exp[unit]);
-    const rows = Object.keys(exp).map((name) => [name, String(Number((bytes / Math.pow(1024, exp[name])).toFixed(4)))]);
+    const expValue = exp[unit];
+    if (!Number.isFinite(value) || expValue === undefined) throw new ToolError("tool.error.number");
+    const bytes = value * Math.pow(1024, expValue);
+    const rows = Object.keys(exp).map((name) => [name, String(Number((bytes / Math.pow(1024, exp[name] ?? 0)).toFixed(4)))]);
     return { text: JSON.stringify({ bytes }, null, 2), table: { head: ["Unit", "Value"], rows } };
   }
   if (slug === "batch-file-rename") {
@@ -110,13 +113,11 @@ export const runFileTools: ToolRunner = async (slug, input, _option, _t, extra) 
     const { default: JSZip } = await import("jszip");
     const zip = new JSZip();
     const rows: string[][] = [];
-    files.forEach((file, i) => {
+    for (const [i, file] of files.entries()) {
       const extension = file.name.includes(".") ? file.name.slice(file.name.lastIndexOf(".")) : "";
       const renamed = `${pattern.replace(/\{n\}/g, String(start + i))}${extension}`;
       rows.push([file.name, renamed]);
-    });
-    for (let i = 0; i < files.length; i += 1) {
-      zip.file(rows[i][1], await files[i].arrayBuffer());
+      zip.file(renamed, await file.arrayBuffer());
     }
     const blob = await zip.generateAsync({ type: "uint8array" });
     return {
@@ -126,7 +127,7 @@ export const runFileTools: ToolRunner = async (slug, input, _option, _t, extra) 
     };
   }
   if (slug === "text-to-file-download") {
-    const name = (F("name", "notes.txt").trim() || "notes.txt").replace(/[^\w.\-]+/g, "_");
+    const name = (F("name", "notes.txt").trim() || "notes.txt").replace(/[^\w.-]+/g, "_");
     return {
       text: JSON.stringify({ file: name, bytes: new TextEncoder().encode(F("text")).length }, null, 2),
       artifacts: [{ name, mime: "text/plain", dataUrl: `data:text/plain;charset=utf-8,${encodeURIComponent(F("text"))}` }],
@@ -140,6 +141,7 @@ export const runFileTools: ToolRunner = async (slug, input, _option, _t, extra) 
       const zip = await JSZip.loadAsync(await file.arrayBuffer());
       const rows = Object.keys(zip.files).map((path) => {
         const entry = zip.files[path];
+        if (!entry) return [path, "? bytes"];
         return [path, entry.dir ? "folder" : `${(entry as { _data?: { uncompressedSize?: number } })._data?.uncompressedSize ?? "?"} bytes`];
       });
       return { text: JSON.stringify({ file: file.name, entries: rows.length }, null, 2), table: { head: ["Path", "Info"], rows } };
@@ -147,7 +149,7 @@ export const runFileTools: ToolRunner = async (slug, input, _option, _t, extra) 
     const zip = new JSZip();
     for (const file of files) zip.file(file.name, await file.arrayBuffer());
     const blob = await zip.generateAsync({ type: "uint8array" });
-    const name = (F("name", "files.zip").trim() || "files.zip").replace(/[^\w.\-]+/g, "_");
+    const name = (F("name", "files.zip").trim() || "files.zip").replace(/[^\w.-]+/g, "_");
     return {
       text: JSON.stringify({ files: files.length, archive: name }, null, 2),
       artifacts: [downloadArtifact(name, "application/zip", blob)],

@@ -182,7 +182,7 @@ function lineAt(source, index) {
 // the `]`, so the class closed early and the whole pattern became `<class-char>/]` —
 // three characters that never appear where one is tested, which silently disabled the
 // JSX text-node branch below while the run still printed success.
-const TAG_END = /[A-Za-z0-9_"'}\]\/]/;
+const TAG_END = /[A-Za-z0-9_"'}\]/]/;
 
 const findings = [];
 

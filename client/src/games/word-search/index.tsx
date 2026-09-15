@@ -21,7 +21,7 @@ const CELLS = SIZE * SIZE;
 const CANDIDATES = ["TIGER", "SNAKE", "WHALE", "EAGLE", "HORSE", "ZEBRA", "PANDA", "KOALA", "MONKEY", "GIRAFFE"];
 const WORD_COUNT = 6;
 
-const DIRECTIONS = [
+const DIRECTIONS: Array<[number, number]> = [
   [1, 0],
   [-1, 0],
   [0, 1],
@@ -65,7 +65,12 @@ function shuffle<T>(items: T[], random: () => number): T[] {
   const out = items.slice();
   for (let i = out.length - 1; i > 0; i -= 1) {
     const j = Math.floor(random() * (i + 1));
-    [out[i], out[j]] = [out[j], out[i]];
+    const a = out[i];
+    const b = out[j];
+    // Loop-bounded on both sides; the guard is type-level only.
+    if (a === undefined || b === undefined) continue;
+    out[i] = b;
+    out[j] = a;
   }
   return out;
 }
@@ -80,7 +85,10 @@ export function buildPuzzle(random: () => number = Math.random): { grid: string[
     for (const word of shuffle(words, random)) {
       let placed = false;
       for (let trial = 0; trial < 120 && !placed; trial += 1) {
-        const [dx, dy] = DIRECTIONS[Math.floor(random() * DIRECTIONS.length)];
+        const dir = DIRECTIONS[Math.floor(random() * DIRECTIONS.length)];
+        // Eight compass entries by construction; type-level only.
+        if (!dir) continue;
+        const [dx, dy] = dir;
         const r0 = Math.floor(random() * SIZE);
         const c0 = Math.floor(random() * SIZE);
         const cells: number[] = [];
@@ -101,7 +109,8 @@ export function buildPuzzle(random: () => number = Math.random): { grid: string[
         }
         if (fits) {
           cells.forEach((cell, i) => {
-            grid[cell] = word[i];
+            // `i` counts the word's own letters, so this always lands.
+            grid[cell] = word[i] ?? null;
           });
           placements.push({ word, cells });
           placed = true;
@@ -115,7 +124,7 @@ export function buildPuzzle(random: () => number = Math.random): { grid: string[
     if (ok) {
       const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
       return {
-        grid: grid.map((g) => g ?? letters[Math.floor(random() * letters.length)]),
+        grid: grid.map((g) => g ?? letters.charAt(Math.floor(random() * letters.length))),
         placements,
       };
     }

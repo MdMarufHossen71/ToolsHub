@@ -35,11 +35,15 @@ describe("renderShellHtml", () => {
   it("has exactly one h1 and does not skip heading levels", () => {
     expect(count(html, /<h1\b/g)).toBe(1);
     const levels = [...html.matchAll(/<h([1-6])\b/g)].map((match) => Number(match[1]));
-    for (let i = 1; i < levels.length; i += 1) expect(levels[i]).toBeLessThanOrEqual(levels[i - 1] + 1);
+    for (let i = 1; i < levels.length; i += 1) {
+      const current = levels[i] ?? 0;
+      const previous = levels[i - 1] ?? 1;
+      expect(current).toBeLessThanOrEqual(previous + 1);
+    }
   });
 
   it("embeds parseable JSON-LD and a hand-over script", () => {
-    const payload = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)![1];
+    const payload = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)?.[1] ?? "";
     expect(JSON.parse(payload)["@graph"][0]["@type"]).toBe("WebApplication");
     expect(html).toContain('<script>location.replace("/#/tools/reverse-text");</script>');
   });
