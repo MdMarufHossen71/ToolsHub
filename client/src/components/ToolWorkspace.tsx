@@ -1,11 +1,13 @@
 /** Cobalt Workshop design reminder: the workbench presents input, output and actions as a fast visual loop; every result is local and inspectable. */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type DragEvent } from "react";
 import { Check, Clipboard, Download, FileUp, History, Play, RotateCcw, ShieldCheck, Trash2, TriangleAlert, Wrench, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FavoriteButton } from "@/components/FavoriteButton";
+import { ResultView } from "@/components/ResultView";
 import { type Tool } from "@/data/tools";
 import { useToolInputMemory } from "@/hooks/useToolInputMemory";
 import { isToolImplemented, runHashFile, runTool, toolPlaceholder, type ToolResult } from "@/lib/toolOperations";
+import { copyTextForOutput, downloadForOutput } from "@/lib/resultView";
 import { defaultFieldValues, getToolSchema, type Field } from "@/lib/toolSchemas";
 import { resolveInputMode } from "@/lib/toolInputMode";
 import { MODE_TOOL_SLUGS } from "@/lib/toolGuide";
@@ -110,6 +112,38 @@ function FieldInput({
           aria-label={label}
         />
         <span className="form-hint" aria-hidden="true">{dateHint}</span>
+      </label>
+    );
+  }
+  if (field.type === "range") {
+    // Slider plus an exact number box, kept in sync: drag for feel, type for
+    // precision. Unbounded schemas cannot happen (every range has min/max), so
+    // the fallbacks below are type-level only.
+    const min = field.min ?? "0";
+    const max = field.max ?? "100";
+    return (
+      <label className="tool-field">
+        <span>{label} — {value || field.default || min}</span>
+        <span className="tool-range-row">
+          <input
+            type="range"
+            value={value || field.default || min}
+            min={min}
+            max={max}
+            step={field.step ?? "1"}
+            onChange={(event) => onChange(event.target.value)}
+            aria-label={label}
+          />
+          <Input
+            type="number"
+            value={value}
+            min={min}
+            max={max}
+            step={field.step}
+            onChange={(event) => onChange(event.target.value)}
+            aria-label={label}
+          />
+        </span>
       </label>
     );
   }
@@ -242,6 +276,38 @@ export function ToolWorkspace({ tool }: { tool: Tool }) {
     setFile(next);
     setNotice("");
   };
+  // Drag-and-drop for every input that takes files: the hash picker, schema file
+  // pickers, and the classic textarea (a dropped text file fills the input).
+  // Everything stays on this device; a drop is just a faster "choose".
+  const [dragOver, setDragOver] = useState(false);
+  const fillFromDrop = (files: File[]) => {
+    const first = files[0];
+    if (!first) return;
+    if (isFileHash) {
+      pickFile(first);
+      return;
+    }
+    if (formMode && schema?.accept) {
+      setPickedFiles(schema.multiple ? [...pickedFiles, ...files] : files.slice(0, 1));
+      setNotice("");
+      return;
+    }
+    if (!formMode && !isFileHash && first.size <= 1024 * 1024) {
+      first.text().then((text) => memory.setInput(text)).catch(() => undefined);
+    }
+  };
+  const dropProps = {
+    onDragOver: (event: DragEvent) => {
+      event.preventDefault();
+      setDragOver(true);
+    },
+    onDragLeave: () => setDragOver(false),
+    onDrop: (event: DragEvent) => {
+      event.preventDefault();
+      setDragOver(false);
+      fillFromDrop(Array.from(event.dataTransfer.files ?? []));
+    },
+  };
 
   const formatSize = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`;
@@ -268,7 +334,7 @@ export function ToolWorkspace({ tool }: { tool: Tool }) {
 
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(output.text);
+      await navigator.clipboard.writeText(copyTextForOutput(output, t("common.yes"), t("common.no")));
       setCopied(true);
       setNotice(t("tool.copied"));
     } catch {
@@ -278,12 +344,12 @@ export function ToolWorkspace({ tool }: { tool: Tool }) {
   };
 
   const download = () => {
-    const extension = output.html ? "html" : "txt";
-    const file = new Blob([output.text], { type: output.html ? "text/html" : "text/plain" });
+    const { filename, mime, content } = downloadForOutput(output, tool.slug);
+    const file = new Blob([content], { type: mime });
     const url = URL.createObjectURL(file);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `${tool.slug}-result.${extension}`;
+    anchor.download = filename;
     anchor.rel = "noopener";
     anchor.style.display = "none";
     document.body.appendChild(anchor);
@@ -358,7 +424,7 @@ export function ToolWorkspace({ tool }: { tool: Tool }) {
         </button>
       )}
       <div className="bench-grid">
-        <div className="bench-panel">
+        <div className={dragOver ? "bench-panel bench-drop-active" : "bench-panel"} {...dropProps}>
           <div className="bench-label">
             <span id="tool-input-label">{t("tool.input")}</span>
             {MODE_TOOL_SLUGS.has(tool.slug) && (
@@ -374,6 +440,7 @@ export function ToolWorkspace({ tool }: { tool: Tool }) {
           {isFileHash ? (
             <>
               <p className="tool-note">{t("tool.file.hashNote")}</p>
+              <p className="tool-hint">{t("tool.dropHint")}</p>
               <div className="bench-actions">
                 <Button size="sm" onClick={() => fileRef.current?.click()} disabled={busy}>
                   <FileUp className="mr-2 size-3.5" aria-hidden="true" />
@@ -431,6 +498,7 @@ export function ToolWorkspace({ tool }: { tool: Tool }) {
                       </Button>
                     )}
                   </div>
+                  <p className="tool-file-hint">{t("tool.dropHint")}</p>
                   <input
                     ref={pickerRef}
                     type="file"
@@ -511,6 +579,7 @@ export function ToolWorkspace({ tool }: { tool: Tool }) {
                   chars: memory.input.length,
                 })}
               </p>
+              <p className="tool-hint">{t("tool.shortcutHint")} {t("tool.dropTextHint")}</p>
               <div className="bench-actions">
                 <Button
                   size="sm"
@@ -538,51 +607,11 @@ export function ToolWorkspace({ tool }: { tool: Tool }) {
           <div className="bench-label">
             <span>{output.label ?? t("tool.output")}</span>
           </div>
-          {output.html ? (
-            <div className="tool-html-preview" dangerouslySetInnerHTML={{ __html: output.html }} />
-          ) : (
-            // `role="status"` so a recomputed result is announced, not just repainted.
-            // An untouched prompt renders muted so empty is never mistaken for output.
-            <pre
-              className={output.error ? "tool-output tool-output-error" : "tool-output"}
-              data-empty={!formMode && !isFileHash && memory.input.trim() === ""}
-              role="status"
-              aria-live="polite"
-            >
-              {output.text}
-            </pre>
-          )}
-          {output.image && (
-            <figure className="tool-image-figure">
-              <img src={output.image} alt="" className="tool-image-preview" />
-              <figcaption>{output.label ?? t("tool.output")}</figcaption>
-            </figure>
-          )}
-          {output.table && output.table.rows.length > 0 && (
-            <div className="tool-table-wrap">
-              <table className="tool-table">
-                <caption className="sr-only">{output.label ?? t("tool.output")}</caption>
-                <thead>
-                  <tr>
-                    {output.table.head.map((cell, j) => (
-                      <th key={`${j}-${cell}`} scope="col">
-                        {cell}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {output.table.rows.map((row, i) => (
-                    <tr key={i}>
-                      {row.map((cell, j) => (
-                        <td key={`${i}-${j}`}>{cell}</td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <ResultView
+            output={output}
+            empty={!formMode && !isFileHash && memory.input.trim() === ""}
+            emptyText={output.text}
+          />
           {output.artifacts && output.artifacts.length > 0 && (
             <div className="bench-actions">
               {output.artifacts.map((item) => (

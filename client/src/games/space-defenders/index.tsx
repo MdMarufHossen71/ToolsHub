@@ -21,6 +21,7 @@ import {
   type GameEvent,
 } from "@/games/engine";
 import type { GameModuleProps } from "@/games/registry";
+import { useTranslation } from "@/contexts/AppSettingsContext";
 
 const SPEC: ControlSpec = {
   actions: ["left", "right", "primary", "secondary"],
@@ -81,6 +82,7 @@ const startState = (): DefenderState => ({
 });
 
 export default function SpaceDefenders({ slug, title }: GameModuleProps) {
+  const { t } = useTranslation();
   const palette = useGamePalette();
   const state = useRef<DefenderState>(startState());
   // Last values already reported. `commit` re-renders, so calling it sixty
@@ -274,8 +276,12 @@ export default function SpaceDefenders({ slug, title }: GameModuleProps) {
     { labelKey: "game.resources" as const, value: session.run.resources ?? 3 },
   ];
 
+  // Announced on a level change only — a running commentary would talk over a
+  // screen-reader user for the whole run.
+  const announcement = (session.run.level ?? 1) > 1 ? `${t("game.level")} ${session.run.level}` : undefined;
+
   return (
-    <GameShell session={session} spec={SPEC} title={title} readouts={readouts} onEvent={onEvent}>
+    <GameShell session={session} spec={SPEC} title={title} readouts={readouts} announcement={announcement} onEvent={onEvent}>
       <canvas ref={canvasRef} className="game-canvas" />
     </GameShell>
   );

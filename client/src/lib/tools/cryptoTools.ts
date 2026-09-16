@@ -143,7 +143,18 @@ export const runCryptoTools: ToolRunner = async (slug, _input, _option, t, extra
     if (!/[A-Z]/.test(password)) tips.push("Add uppercase letters.");
     if (!/[0-9]/.test(password)) tips.push("Add digits.");
     if (!/[^A-Za-z0-9ঀ-৿]/.test(password)) tips.push("Add symbols.");
-    return { text: JSON.stringify({ length: password.length, charset, entropyBits: Number(bits.toFixed(1)), verdict, crackEstimate: secondsToWords(seconds), tips }, null, 2) };
+    return {
+      text: JSON.stringify({ length: password.length, charset, entropyBits: Number(bits.toFixed(1)), verdict, crackEstimate: secondsToWords(seconds), tips }, null, 2),
+      table: {
+        head: ["Check", "Result"],
+        rows: [
+          ["Strength", verdict],
+          ["Entropy", `${bits.toFixed(1)} bits`],
+          ["Crack estimate", secondsToWords(seconds)],
+          ...tips.map((tip): [string, string] => ["Tip", tip]),
+        ],
+      },
+    };
   }
   if (slug === "passphrase-generator") {
     const count = Math.min(Math.max(parseInt(F("words", "5"), 10) || 5, 3), 12);

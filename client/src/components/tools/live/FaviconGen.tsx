@@ -1,5 +1,5 @@
 /** Favicon generator: glyph or emoji in, multi-size PNG set out. */
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,7 @@ export function FaviconGen() {
   const [background, setBackground] = useState("#3264ff");
   const [urls, setUrls] = useState<string[]>([]);
 
-  const render = () => {
+  const render = useCallback(() => {
     const glyph = text.trim().slice(0, 4) || "•";
     const out: string[] = [];
     for (const size of SIZES) {
@@ -25,7 +25,10 @@ export function FaviconGen() {
       context.fillStyle = background;
       const radius = Math.round(size * 0.22);
       context.beginPath();
-      context.roundRect(0, 0, size, size, radius);
+      // `roundRect` is missing on older canvas implementations: fall back to a
+      // plain square instead of leaving an empty preview.
+      if (typeof context.roundRect === "function") context.roundRect(0, 0, size, size, radius);
+      else context.rect(0, 0, size, size);
       context.fill();
       context.fillStyle = "#ffffff";
       context.textAlign = "center";
@@ -35,7 +38,13 @@ export function FaviconGen() {
       out.push(canvas.toDataURL("image/png"));
     }
     setUrls(out);
-  };
+  }, [text, background]);
+
+  // A preview is the whole point of this page: render immediately and keep it
+  // live while typing, so the Run button is a fallback rather than a gate.
+  useEffect(() => {
+    render();
+  }, [render]);
 
   return (
     <div className="live-stage">

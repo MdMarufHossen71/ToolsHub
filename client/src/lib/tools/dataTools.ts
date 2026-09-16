@@ -96,7 +96,15 @@ export const runDataTools: ToolRunner = async (slug, input, _option, _t, extra) 
     }
     if (!Array.isArray(data)) throw new ToolError("tool.error.generic");
     const delimiter = F("mode", "csv") === "tsv" ? "\t" : ",";
-    return { text: Papa.unparse(data as Record<string, unknown>[], { delimiter }) };
+    const rows = data as Record<string, unknown>[];
+    const head = Array.from(new Set(rows.flatMap((row) => (row && typeof row === "object" ? Object.keys(row) : [])))).slice(0, 12);
+    return {
+      text: Papa.unparse(rows, { delimiter }),
+      table:
+        head.length > 0
+          ? { head, rows: rows.slice(0, 50).map((row) => head.map((key) => String(row[key] ?? ""))) }
+          : undefined,
+    };
   }
   if (slug === "csv-converter") {
     const { default: Papa } = await import("papaparse");
@@ -109,7 +117,14 @@ export const runDataTools: ToolRunner = async (slug, input, _option, _t, extra) 
       const rows = parsed.data.map((row) => `| ${fields.map((f) => row[f] ?? "").join(" | ")} |`);
       return { text: [`| ${fields.join(" | ")} |`, `| ${fields.map(() => "---").join(" | ")} |`, ...rows].join("\n") };
     }
-    return { text: JSON.stringify(parsed.data, null, 2) };
+    const fields = parsed.meta.fields ?? [];
+    return {
+      text: JSON.stringify(parsed.data, null, 2),
+      table:
+        fields.length > 0
+          ? { head: fields, rows: parsed.data.slice(0, 50).map((row) => fields.map((f) => row[f] ?? "")) }
+          : undefined,
+    };
   }
   if (slug === "csv-sorter") {
     const { default: Papa } = await import("papaparse");

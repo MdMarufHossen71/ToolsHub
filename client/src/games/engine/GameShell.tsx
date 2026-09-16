@@ -108,6 +108,13 @@ export function GameShell({ session, spec, title, readouts, announcement, onEven
     session.surfaceRef.current?.focus({ preventScroll: true });
   }, [session.surfaceRef]);
 
+  // When play starts or resumes, the keyboard belongs to the board again: the
+  // toolbar buttons and the on-screen controls otherwise keep click focus, and
+  // the next arrow press would do nothing until the player re-clicks the board.
+  useEffect(() => {
+    if (phase === "playing") session.surfaceRef.current?.focus({ preventScroll: true });
+  }, [phase, session.surfaceRef]);
+
   useEffect(() => {
     const onChange = () => setFullscreen(document.fullscreenElement === stageRef.current);
     document.addEventListener("fullscreenchange", onChange);
@@ -121,6 +128,33 @@ export function GameShell({ session, spec, title, readouts, announcement, onEven
     }
     void stageRef.current?.requestFullscreen().catch(() => undefined);
   }, []);
+
+  // Restart and Forget sit side by side, and Forget erases the high score while
+  // Restart keeps it. Both arm on first press and fire on the second, so a slip
+  // can never wipe a best. The label change is on the focused button, so it is
+  // announced; the arm expires after a few seconds.
+  const [confirming, setConfirming] = useState<"restart" | "forget" | null>(null);
+  useEffect(() => {
+    if (!confirming) return;
+    const timer = window.setTimeout(() => setConfirming(null), 3000);
+    return () => window.clearTimeout(timer);
+  }, [confirming]);
+  const askRestart = useCallback(() => {
+    if (confirming === "restart") {
+      setConfirming(null);
+      session.restart();
+    } else {
+      setConfirming("restart");
+    }
+  }, [confirming, session]);
+  const askForget = useCallback(() => {
+    if (confirming === "forget") {
+      setConfirming(null);
+      session.forget();
+    } else {
+      setConfirming("forget");
+    }
+  }, [confirming, session]);
 
   const bindings = useMemo(() => resolveBindings(spec), [spec]);
 
@@ -192,7 +226,9 @@ export function GameShell({ session, spec, title, readouts, announcement, onEven
           <div className="game-overlay" data-overlay={overlay.key}>
             <strong>{overlay.title}</strong>
             <p>{overlay.copy}</p>
-            <button type="button" className="game-overlay-action" tabIndex={-1} onClick={overlay.onAction}>
+            {/* Focusable and autofocused: the overlay is the game at this moment,
+                and Space/Enter also confirm — both paths do the same thing. */}
+            <button type="button" className="game-overlay-action" autoFocus onClick={overlay.onAction}>
               {overlay.action}
             </button>
           </div>
@@ -211,15 +247,15 @@ export function GameShell({ session, spec, title, readouts, announcement, onEven
             {phase === "paused" ? t("game.resume") : phase === "over" ? t("game.playAgain") : t("game.start")}
           </Button>
         )}
-        <Button variant="ghost" size="sm" onClick={session.restart}>
+        <Button variant="ghost" size="sm" onClick={askRestart}>
           <RotateCcw className="mr-2 size-4" aria-hidden="true" />
-          {t("game.restart")}
+          {confirming === "restart" ? t("game.sureRestart") : t("game.restart")}
         </Button>
         {/* Deleting the save is a separate action from restarting, because restarting
             keeps the high score and this does not. */}
-        <Button variant="ghost" size="sm" onClick={session.forget}>
+        <Button variant="ghost" size="sm" onClick={askForget}>
           <Trash2 className="mr-2 size-4" aria-hidden="true" />
-          {t("game.forget")}
+          {confirming === "forget" ? t("game.sureForget") : t("game.forget")}
         </Button>
         {fullscreenSupported() && (
           <Button variant="ghost" size="sm" onClick={toggleFullscreen} aria-pressed={fullscreen}>
@@ -310,6 +346,14 @@ function TouchControls({
 
   const buttonIds = spec.actions.filter((id) => !directionIds.includes(id) && !["up", "down", "left", "right"].includes(id));
 
+  // A tap must not steal the keyboard: after every on-screen press, focus goes
+  // back to the play surface so the next physical key still plays. `preventScroll`
+  // keeps the viewport where the player's thumbs already are.
+  const refocusSurface = (target: EventTarget | null) => {
+    if (!(target instanceof HTMLElement)) return;
+    target.closest(".game-stage")?.querySelector<HTMLElement>(".game-surface")?.focus({ preventScroll: true });
+  };
+
   const bind = (id: ActionId) => {
     const isHeld = heldSet.has(id);
     return {
@@ -324,6 +368,7 @@ function TouchControls({
         // `NotFoundError`, and losing the press because of a capture that was only ever
         // an optimisation would mean a tap that does nothing.
         pressAction(id, true);
+        refocusSurface(event.currentTarget);
         const target = event.currentTarget;
         try {
           target.setPointerCapture?.(event.pointerId);
@@ -379,6 +424,7 @@ function TouchControls({
               onPointerDown={(event) => {
                 event.preventDefault();
                 pressText(digit);
+                refocusSurface(event.currentTarget);
               }}
             >
               {digit}
@@ -392,6 +438,7 @@ function TouchControls({
             onPointerDown={(event) => {
               event.preventDefault();
               pressAction("erase", true);
+              refocusSurface(event.currentTarget);
             }}
           >
             <span aria-hidden="true">⌫</span>
@@ -410,6 +457,7 @@ function TouchControls({
               onPointerDown={(event) => {
                 event.preventDefault();
                 pressText(letter);
+                refocusSurface(event.currentTarget);
               }}
             >
               {letter}

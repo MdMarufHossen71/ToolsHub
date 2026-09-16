@@ -1,15 +1,34 @@
 /** Cobalt Workshop design reminder: search behaves like an instrument index — type, see the exact drawer, open it without leaving the page. */
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Search } from "lucide-react";
+import { Gamepad2, Search } from "lucide-react";
 import { useLocation } from "wouter";
 import { Kbd } from "@/components/ui/kbd";
 import { useTranslation } from "@/contexts/AppSettingsContext";
 import { getToolIcon } from "@/data/toolIcons";
+import { gameRegistry } from "@/data/games";
 import { resolveSearchEnter } from "@/lib/searchNav";
 import type { TranslationKey } from "@/i18n/translations";
 import type { Tool } from "@/data/tools";
+import type { ToolGroup } from "@/data/tools";
 
 type SearchEngine = (query: string, limit?: number) => Tool[];
+
+/** One suggestion row: a tool drawer or a game cartridge. Games ride along
+ * synchronously (32 tiny records) while tools keep their lazy ranked engine. */
+type Suggestion =
+  | { kind: "tool"; slug: string; name: string; href: string; tag: string; tagBn: string; group: ToolGroup }
+  | { kind: "game"; slug: string; name: string; href: string; tag: string; tagBn: string };
+
+function gameSuggestions(query: string, limit = 3): Suggestion[] {
+  const needle = query.trim().toLowerCase();
+  if (!needle) return [];
+  return gameRegistry
+    .filter((game) =>
+      `${game.name} ${game.genre} ${game.genreBn} ${game.description.en} ${game.description.bn}`.toLowerCase().includes(needle),
+    )
+    .slice(0, limit)
+    .map((game) => ({ kind: "game", slug: game.slug, name: game.name, href: `/games/${game.slug}`, tag: game.genre, tagBn: game.genreBn }));
+}
 
 /**
  * The ranking engine reaches the full tool registry — including the 283-tool bilingual
@@ -84,7 +103,13 @@ export function SearchBox({
     return () => { active = false; };
   }, [value, engine]);
 
-  const suggestions = useMemo(() => (engine ? engine(value) : []), [engine, value]);
+  const suggestions: Suggestion[] = useMemo(
+    () => [
+      ...(engine ? engine(value).map((tool): Suggestion => ({ kind: "tool", slug: tool.slug, name: tool.name, href: `/tools/${tool.slug}`, tag: tool.category, tagBn: tool.categoryBn, group: tool.group })) : []),
+      ...gameSuggestions(value),
+    ],
+    [engine, value],
+  );
   const listId = `${id}-suggestions`;
   const optionId = (index: number) => `${id}-option-${index}`;
   const panelOpen = open && suggestions.length > 0;
@@ -120,11 +145,11 @@ export function SearchBox({
 
   // The panel is absolutely positioned, so opening it never moves the page; blurring
   // the field before navigating avoids leaving focus inside a menu that is unmounting.
-  const openTool = (slug: string) => {
+  const openHref = (href: string) => {
     setOpen(false);
     setHighlight(-1);
     inputRef.current?.blur();
-    navigate(`/tools/${slug}`);
+    navigate(href);
   };
 
   /**
@@ -156,12 +181,18 @@ export function SearchBox({
     if (event.key === "Enter") {
       // A stale highlight past a shrunk suggestion list falls back to submit
       // instead of throwing on the missing row.
-      const highlightedSlug = panelOpen && highlight >= 0 ? (suggestions[highlight]?.slug ?? null) : null;
-      const action = resolveSearchEnter(value, highlightedSlug);
+      const highlighted = panelOpen && highlight >= 0 ? (suggestions[highlight] ?? null) : null;
+      if (highlighted?.kind === "game") {
+        // Games have no filtered directory of their own: open the cartridge.
+        event.preventDefault();
+        openHref(highlighted.href);
+        return;
+      }
+      const action = resolveSearchEnter(value, highlighted?.slug ?? null);
       if (action.type === "open-tool") {
         // Stop the key from also submitting the form: two navigations would race.
         event.preventDefault();
-        openTool(action.slug);
+        openHref(`/tools/${action.slug}`);
       } else if (action.type === "submit") {
         // The field has no submit button, so Enter is not reliably turned into a form
         // submission by the browser (and that implicit path is what let the hero drift
@@ -233,11 +264,11 @@ export function SearchBox({
       )}
       {panelOpen && (
         <ul id={listId} role="listbox" aria-label={t("search.suggestionsLabel")} className="search-suggestions">
-          {suggestions.map((tool, index) => {
-            const ToolIcon = getToolIcon(tool.group);
+          {suggestions.map((item, index) => {
+            const SuggestionIcon = item.kind === "game" ? Gamepad2 : getToolIcon(item.group);
             return (
               <li
-                key={tool.slug}
+                key={`${item.kind}-${item.slug}`}
                 id={optionId(index)}
                 role="option"
                 aria-selected={index === highlight}
@@ -247,13 +278,13 @@ export function SearchBox({
                 // lands; the click then navigates normally.
                 onMouseDown={(event) => event.preventDefault()}
                 onMouseEnter={() => setHighlight(index)}
-                onClick={() => openTool(tool.slug)}
+                onClick={() => openHref(item.href)}
               >
                 <span className="search-suggestion-icon" aria-hidden="true">
-                  <ToolIcon className="size-4" />
+                  <SuggestionIcon className="size-4" />
                 </span>
-                <span className="search-suggestion-name">{tool.name}</span>
-                <span className="search-suggestion-tag">{language === "bn" ? tool.categoryBn : tool.category}</span>
+                <span className="search-suggestion-name">{item.name}</span>
+                <span className="search-suggestion-tag">{language === "bn" ? item.tagBn : item.tag}</span>
               </li>
             );
           })}

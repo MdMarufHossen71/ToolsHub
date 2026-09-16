@@ -1,5 +1,5 @@
 /** Large high-contrast QR frame renderer: matrix drawn straight to canvas. */
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type QrGenerator = {
   addData: (data: string) => void;
@@ -17,15 +17,20 @@ async function loadQrGenerator(): Promise<(typeNumber: number, errorLevel: strin
 
 export function QrCanvas({ text, size = 320 }: { text: string; size?: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     const canvas = canvasRef.current;
     if (!canvas || !text) return;
+    setFailed(false);
     canvas.width = size;
     canvas.height = size;
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) {
+      setFailed(true);
+      return;
+    }
     // White background first: scanners need a quiet zone, not transparency.
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, size, size);
@@ -51,9 +56,9 @@ export function QrCanvas({ text, size = 320 }: { text: string; size?: number }) 
       })
       .catch(() => {
         if (cancelled) return;
-        ctx.fillStyle = "#000000";
-        ctx.font = "14px system-ui";
-        ctx.fillText("QR render failed", 16, size / 2);
+        // A canvas-drawn message is invisible to assistive tech and unstyled;
+        // surface a real, readable failure next to the frame instead.
+        setFailed(true);
       });
     return () => {
       cancelled = true;
@@ -61,13 +66,20 @@ export function QrCanvas({ text, size = 320 }: { text: string; size?: number }) 
   }, [text, size]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      width={size}
-      height={size}
-      style={{ width: `min(${size}px, 78vw)`, height: "auto", background: "#fff", borderRadius: 12 }}
-      role="img"
-      aria-label="QR transfer frame"
-    />
+    <>
+      <canvas
+        ref={canvasRef}
+        width={size}
+        height={size}
+        style={{ width: `min(${size}px, 78vw)`, height: "auto", background: "#fff", borderRadius: 12 }}
+        role="img"
+        aria-label="QR transfer frame"
+      />
+      {failed && (
+        <p className="tool-note tool-note-warning" role="alert">
+          This frame could not be drawn. Shorten the file or try a smaller chunk size.
+        </p>
+      )}
+    </>
   );
 }

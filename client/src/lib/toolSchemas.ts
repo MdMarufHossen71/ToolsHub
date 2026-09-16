@@ -9,7 +9,7 @@
  */
 import type { TranslationKey } from "@/i18n/translations";
 
-export type FieldType = "text" | "number" | "select" | "checkbox" | "color" | "date" | "textarea";
+export type FieldType = "text" | "number" | "range" | "select" | "checkbox" | "color" | "date" | "textarea";
 
 export type Bilingual = { en: string; bn: string };
 
@@ -271,7 +271,7 @@ const schemas: Record<string, ToolSchema> = {
         ],
         "sin",
       ),
-      { key: "angle", type: "number", label: t("Angle", "কোণ"), default: "30" },
+      { key: "angle", type: "range", label: t("Angle", "কোণ"), default: "30", min: "0", max: "360" },
       { key: "unit", type: "select", label: t("Unit", "একক"), default: "deg",
         options: [
           { value: "deg", label: t("Degrees", "ডিগ্রি") },
@@ -997,14 +997,14 @@ const schemas: Record<string, ToolSchema> = {
   "lighten-darken-color": {
     fields: [
       { key: "color", type: "color", label: t("Color", "রং"), default: "#3264ff" },
-      { key: "amount", type: "number", label: t("Amount % (-100…100)", "পরিমাণ %"), default: "20", min: "-100", max: "100" },
+      { key: "amount", type: "range", label: t("Amount % (-100…100)", "পরিমাণ %"), default: "20", min: "-100", max: "100" },
     ],
     example: {},
   },
   "saturation-shift": {
     fields: [
       { key: "color", type: "color", label: t("Color", "রং"), default: "#3264ff" },
-      { key: "amount", type: "number", label: t("Amount % (-100…100)", "পরিমাণ %"), default: "30", min: "-100", max: "100" },
+      { key: "amount", type: "range", label: t("Amount % (-100…100)", "পরিমাণ %"), default: "30", min: "-100", max: "100" },
     ],
     example: {},
   },
@@ -1019,7 +1019,7 @@ const schemas: Record<string, ToolSchema> = {
   "hue-shift-color": {
     fields: [
       { key: "color", type: "color", label: t("Color", "রং"), default: "#3264ff" },
-      { key: "degrees", type: "number", label: t("Degrees", "ডিগ্রি"), default: "90" },
+      { key: "degrees", type: "range", label: t("Degrees", "ডিগ্রি"), default: "90", min: "0", max: "360" },
     ],
     example: {},
   },
@@ -1046,7 +1046,7 @@ const schemas: Record<string, ToolSchema> = {
     fields: [
       { key: "a", type: "color", label: t("First", "প্রথম"), default: "#3264ff" },
       { key: "b", type: "color", label: t("Second", "দ্বিতীয়"), default: "#ff6b4a" },
-      { key: "amount", type: "number", label: t("Mix % toward second", "মিশ্রণ %"), default: "50", min: "0", max: "100" },
+      { key: "amount", type: "range", label: t("Mix % toward second", "মিশ্রণ %"), default: "50", min: "0", max: "100" },
     ],
     example: {},
   },
@@ -1054,7 +1054,7 @@ const schemas: Record<string, ToolSchema> = {
     fields: [
       { key: "a", type: "color", label: t("From", "থেকে"), default: "#3264ff" },
       { key: "b", type: "color", label: t("To", "পর্যন্ত"), default: "#22d3ee" },
-      { key: "angle", type: "number", label: t("Angle", "কোণ"), default: "135" },
+      { key: "angle", type: "range", label: t("Angle", "কোণ"), default: "135", min: "0", max: "360" },
     ],
     example: {},
   },
@@ -1062,7 +1062,7 @@ const schemas: Record<string, ToolSchema> = {
     fields: [
       { key: "a", type: "color", label: t("From", "থেকে"), default: "#3264ff" },
       { key: "b", type: "color", label: t("To", "পর্যন্ত"), default: "#22d3ee" },
-      { key: "steps", type: "number", label: t("Steps", "ধাপ"), default: "5", min: "2", max: "20" },
+      { key: "steps", type: "range", label: t("Steps", "ধাপ"), default: "5", min: "2", max: "20" },
     ],
     example: {},
   },
@@ -1080,7 +1080,7 @@ const schemas: Record<string, ToolSchema> = {
   "shades-tints-generator": {
     fields: [
       { key: "color", type: "color", label: t("Base", "মূল রং"), default: "#3264ff" },
-      { key: "steps", type: "number", label: t("Steps each way", "ধাপ"), default: "4", min: "1", max: "10" },
+      { key: "steps", type: "range", label: t("Steps each way", "ধাপ"), default: "4", min: "1", max: "10" },
     ],
     example: {},
   },
@@ -1242,7 +1242,7 @@ const schemas: Record<string, ToolSchema> = {
     accept: "application/pdf", multiple: false, example: {},
   },
   "pdf-rotate": {
-    fields: [{ key: "degrees", type: "number", label: t("Degrees", "ডিগ্রি"), default: "90", min: "0", max: "360", step: "90" }],
+    fields: [{ key: "degrees", type: "range", label: t("Degrees", "ডিগ্রি"), default: "90", min: "0", max: "360", step: "90" }],
     accept: "application/pdf", multiple: false, example: {},
   },
   "pdf-page-reorder": {
@@ -1323,13 +1323,13 @@ const schemas: Record<string, ToolSchema> = {
         ],
         "jpeg",
       ),
-      { key: "quality", type: "number", label: t("Quality %", "মান %"), default: "90", min: "1", max: "100" },
+      { key: "quality", type: "range", label: t("Quality %", "মান %"), default: "90", min: "1", max: "100" },
     ],
     accept: "image/*", multiple: false, example: {},
   },
   "image-compressor": {
     fields: [
-      { key: "quality", type: "number", label: t("Quality %", "মান %"), default: "80", min: "1", max: "100" },
+      { key: "quality", type: "range", label: t("Quality %", "মান %"), default: "80", min: "1", max: "100" },
       { key: "maxdim", type: "number", label: t("Max side px (0 = keep)", "সর্বোচ্চ পার্শ্ব"), default: "1600", min: "0", max: "4000" },
     ],
     accept: "image/*", multiple: false, example: {},
@@ -1409,7 +1409,7 @@ const schemas: Record<string, ToolSchema> = {
         ],
         "blur",
       ),
-      { key: "amount", type: "number", label: t("Amount 1…10", "পরিমাণ"), default: "3", min: "1", max: "10" },
+      { key: "amount", type: "range", label: t("Amount 1…10", "পরিমাণ"), default: "3", min: "1", max: "10" },
     ],
     accept: "image/*", multiple: false, example: {},
   },
@@ -1422,7 +1422,7 @@ const schemas: Record<string, ToolSchema> = {
         ],
         "pixelate",
       ),
-      { key: "amount", type: "number", label: t("Amount", "পরিমাণ"), default: "8", min: "1", max: "64" },
+      { key: "amount", type: "range", label: t("Amount", "পরিমাণ"), default: "8", min: "1", max: "64" },
     ],
     accept: "image/*", multiple: false, example: {},
   },
@@ -1449,7 +1449,7 @@ const schemas: Record<string, ToolSchema> = {
         ],
         "vignette",
       ),
-      { key: "strength", type: "number", label: t("Strength %", "তীব্রতা %"), default: "50", min: "0", max: "100" },
+      { key: "strength", type: "range", label: t("Strength %", "তীব্রতা %"), default: "50", min: "0", max: "100" },
     ],
     accept: "image/*", multiple: false, example: {},
   },
@@ -1470,7 +1470,7 @@ const schemas: Record<string, ToolSchema> = {
   "tilt-shift": {
     fields: [
       { key: "focus", type: "number", label: t("Focus band center %", "ফোকাস %"), default: "50", min: "0", max: "100" },
-      { key: "blur", type: "number", label: t("Blur", "ঝাপসা"), default: "4", min: "1", max: "12" },
+      { key: "blur", type: "range", label: t("Blur", "ঝাপসা"), default: "4", min: "1", max: "12" },
     ],
     accept: "image/*", multiple: false, example: {},
   },
@@ -1490,7 +1490,7 @@ const schemas: Record<string, ToolSchema> = {
   "blend-colors-into-image": {
     fields: [
       { key: "color", type: "color", label: t("Color", "রং"), default: "#3264ff" },
-      { key: "opacity", type: "number", label: t("Opacity %", "অস্বচ্ছতা %"), default: "30", min: "0", max: "100" },
+      { key: "opacity", type: "range", label: t("Opacity %", "অস্বচ্ছতা %"), default: "30", min: "0", max: "100" },
       MODE_FIELD(
         [
           { value: "multiply", en: "Multiply", bn: "মাল্টিপ্লাই" },
@@ -1518,7 +1518,7 @@ const schemas: Record<string, ToolSchema> = {
     fields: [
       { key: "x", type: "number", label: t("Offset X", "X অফসেট"), default: "20" },
       { key: "y", type: "number", label: t("Offset Y", "Y অফসেট"), default: "20" },
-      { key: "opacity", type: "number", label: t("Opacity %", "অস্বচ্ছতা %"), default: "80", min: "0", max: "100" },
+      { key: "opacity", type: "range", label: t("Opacity %", "অস্বচ্ছতা %"), default: "80", min: "0", max: "100" },
     ],
     accept: "image/*", multiple: true, example: {},
   },
@@ -1544,7 +1544,7 @@ const schemas: Record<string, ToolSchema> = {
     fields: [
       { key: "text", type: "text", label: t("Text", "লেখা"), default: "© ToolsHub" },
       { key: "size", type: "number", label: t("Size % of width", "সাইজ %"), default: "6", min: "2", max: "30" },
-      { key: "opacity", type: "number", label: t("Opacity %", "অস্বচ্ছতা %"), default: "60", min: "5", max: "100" },
+      { key: "opacity", type: "range", label: t("Opacity %", "অস্বচ্ছতা %"), default: "60", min: "5", max: "100" },
       MODE_FIELD(
         [
           { value: "bottom-right", en: "Bottom right", bn: "নিচে ডানে" },
@@ -1569,7 +1569,7 @@ const schemas: Record<string, ToolSchema> = {
     fields: [
       { key: "a", type: "color", label: t("From", "থেকে"), default: "#3264ff" },
       { key: "b", type: "color", label: t("To", "পর্যন্ত"), default: "#22d3ee" },
-      { key: "angle", type: "number", label: t("Angle", "কোণ"), default: "135" },
+      { key: "angle", type: "range", label: t("Angle", "কোণ"), default: "135", min: "0", max: "360" },
       { key: "w", type: "number", label: t("Width", "প্রস্থ"), default: "800", min: "16", max: "2000" },
       { key: "h", type: "number", label: t("Height", "উচ্চতা"), default: "600", min: "16", max: "2000" },
     ],
@@ -1587,12 +1587,12 @@ const schemas: Record<string, ToolSchema> = {
   "svg-png-converter": {
     fields: [
       { key: "text", type: "textarea", label: t("SVG", "SVG"), default: '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><circle cx="50" cy="50" r="40" fill="#3264ff"/></svg>' },
-      { key: "scale", type: "number", label: t("Scale ×", "স্কেল"), default: "2", min: "1", max: "8" },
+      { key: "scale", type: "range", label: t("Scale ×", "স্কেল"), default: "2", min: "1", max: "8" },
     ],
     example: {},
   },
   "blurred-background-frame": {
-    fields: [{ key: "blur", type: "number", label: t("Blur", "ঝাপসা"), default: "8", min: "1", max: "20" }],
+    fields: [{ key: "blur", type: "range", label: t("Blur", "ঝাপসা"), default: "8", min: "1", max: "20" }],
     accept: "image/*", multiple: false, example: {},
   },
   "image-censor": {
@@ -1601,7 +1601,7 @@ const schemas: Record<string, ToolSchema> = {
       { key: "y", type: "number", label: t("Top %", "উপর %"), default: "30", min: "0", max: "100" },
       { key: "w", type: "number", label: t("Width %", "প্রস্থ %"), default: "40", min: "1", max: "100" },
       { key: "h", type: "number", label: t("Height %", "উচ্চতা %"), default: "40", min: "1", max: "100" },
-      { key: "blocks", type: "number", label: t("Blocks", "ব্লক"), default: "12", min: "2", max: "60" },
+      { key: "blocks", type: "range", label: t("Blocks", "ব্লক"), default: "12", min: "2", max: "60" },
     ],
     accept: "image/*", multiple: false, example: {},
   },
@@ -1615,7 +1615,7 @@ const schemas: Record<string, ToolSchema> = {
   "background-remover": {
     fields: [
       { key: "color", type: "color", label: t("Key color", "মূল রং"), default: "#00ff00" },
-      { key: "threshold", type: "number", label: t("Tolerance", "সহনশীলতা"), default: "60", min: "1", max: "200" },
+      { key: "threshold", type: "range", label: t("Tolerance", "সহনশীলতা"), default: "60", min: "1", max: "200" },
     ],
     accept: "image/*", multiple: false, example: {},
   },

@@ -129,7 +129,10 @@ export const runMathTools: ToolRunner = async (slug, input, _option, _t, extra) 
       months += 12;
     }
     const totalDays = Math.floor((now.getTime() - dob.getTime()) / 86400000);
-    return { text: JSON.stringify({ years, months, days, totalDays, totalMonths: years * 12 + months }, null, 2) };
+    return {
+      text: JSON.stringify({ years, months, days, totalDays, totalMonths: years * 12 + months }, null, 2),
+      table: { head: ["Measure", "Value"], rows: [["Years", String(years)], ["Months", String(months)], ["Days", String(days)], ["Total days", String(totalDays)]] },
+    };
   }
   if (slug === "date-difference-calculator") {
     const from = new Date(`${F("from", "2026-01-01")}T00:00:00`);
@@ -143,7 +146,10 @@ export const runMathTools: ToolRunner = async (slug, input, _option, _t, extra) 
     const percent = num(F("percent", "10"));
     const people = Math.max(1, Math.floor(num(F("people", "2"))));
     const tip = (bill * percent) / 100;
-    return { text: JSON.stringify({ tip: Number(tip.toFixed(2)), total: Number((bill + tip).toFixed(2)), perPerson: Number(((bill + tip) / people).toFixed(2)) }, null, 2) };
+    return {
+      text: JSON.stringify({ tip: Number(tip.toFixed(2)), total: Number((bill + tip).toFixed(2)), perPerson: Number(((bill + tip) / people).toFixed(2)) }, null, 2),
+      table: { head: ["Measure", "Value"], rows: [["Tip", tip.toFixed(2)], ["Total", (bill + tip).toFixed(2)], [`Each of ${people}`, ((bill + tip) / people).toFixed(2)]] },
+    };
   }
   if (slug === "ratio-calculator") {
     const a = num(F("a", "3"));

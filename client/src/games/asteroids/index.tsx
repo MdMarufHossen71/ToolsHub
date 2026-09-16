@@ -21,6 +21,7 @@ import {
   type GameEvent,
 } from "@/games/engine";
 import type { GameModuleProps } from "@/games/registry";
+import { useTranslation } from "@/contexts/AppSettingsContext";
 
 const SPEC: ControlSpec = {
   actions: ["left", "right", "up", "primary", "secondary"],
@@ -101,6 +102,7 @@ function wrap(value: number): number {
 }
 
 export default function Asteroids({ slug, title }: GameModuleProps) {
+  const { t } = useTranslation();
   const palette = useGamePalette();
   const state = useRef<RockState>({ ...startState(), rocks: startWave(1, WORLD / 2, WORLD / 2) });
   const lastSync = useRef({ score: -1, level: -1, lives: -1 });
@@ -323,8 +325,12 @@ export default function Asteroids({ slug, title }: GameModuleProps) {
     { labelKey: "game.level" as const, value: session.run.level ?? 1 },
   ];
 
+  // Announced on a level change only — a running commentary would talk over a
+  // screen-reader user for the whole run.
+  const announcement = (session.run.level ?? 1) > 1 ? `${t("game.level")} ${session.run.level}` : undefined;
+
   return (
-    <GameShell session={session} spec={SPEC} title={title} readouts={readouts} onEvent={onEvent}>
+    <GameShell session={session} spec={SPEC} title={title} readouts={readouts} announcement={announcement} onEvent={onEvent}>
       <canvas ref={canvasRef} className="game-canvas" />
     </GameShell>
   );

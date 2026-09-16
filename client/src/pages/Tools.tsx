@@ -82,12 +82,12 @@ export default function Tools() {
               `h2` sits above them. This page has no such section heading, so without
               this the outline jumped straight from `h1` to `h3`. It carries nothing a
               sighted user needs, so it is exposed to assistive technology only — and it
-              sits outside the grid, because an extra grid child would shift the
-              `:nth-child` rhythm that sets which cards span two columns. */}
+              sits outside the grid, because an extra grid child would disturb the
+              featured-card rhythm. */}
           <h2 className="sr-only">{t("tools.resultsHeading")}</h2>
           <div className="tool-grid directory-grid">
             {results.map((tool) => (
-              <ToolCard key={tool.slug} tool={tool} />
+              <ToolCard key={tool.slug} tool={tool} featured={group === "all" && !query.trim() && tool.featured} />
             ))}
           </div>
         </>

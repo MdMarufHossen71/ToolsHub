@@ -1,7 +1,7 @@
 /** Cobalt Workshop design reminder: navigation resembles a responsive workbench rail—dense enough for utility, calm enough for everyday use. */
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Gamepad2, Languages, Menu, Moon, Sun, Wrench, X } from "lucide-react";
+import { Gamepad2, Link2, Menu, Moon, Sparkles, Sun, Wrench, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SearchBox } from "@/components/SearchBox";
 import { InstallPrompt } from "@/components/InstallPrompt";
@@ -14,10 +14,9 @@ import { useSettings } from "@/contexts/AppSettingsContext";
 const navItems = [
   { href: "/tools", label: "nav.tools" as const, icon: Wrench },
   { href: "/games", label: "nav.games" as const, icon: Gamepad2 },
-  { href: "/ai", label: "nav.ai" as const, icon: SparklesPlaceholder },
-  { href: "/links", label: "nav.links" as const, icon: Languages },
+  { href: "/ai", label: "nav.ai" as const, icon: Sparkles },
+  { href: "/links", label: "nav.links" as const, icon: Link2 },
 ];
-function SparklesPlaceholder({ className }: { className?: string }) { return <span className={className}>✦</span>; }
 
 /** Below this the CSS collapses the header search into the drawer (see workbench-overrides.css). */
 const HEADER_SEARCH_QUERY = "(min-width: 901px)";

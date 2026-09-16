@@ -284,11 +284,24 @@ async function dispatchTool(slug: string, input: string, option = "default", t: 
   try {
     if (slug === "word-counter") {
       const tokens = words(input); const frequency = Object.entries(tokens.reduce<Record<string, number>>((memo, word) => { const key = word.toLowerCase(); memo[key] = (memo[key] ?? 0) + 1; return memo; }, {})).sort((a, b) => b[1] - a[1]).slice(0, 12);
-      return { text: JSON.stringify({ words: tokens.length, characters: input.length, charactersNoSpace: input.replace(/\s/g, "").length, lines: input ? input.split(/\r?\n/).length : 0, bytes: new TextEncoder().encode(input).length, readingMinutes: Number((tokens.length / 200).toFixed(2)), speakingMinutes: Number((tokens.length / 130).toFixed(2)), topWords: Object.fromEntries(frequency) }, null, 2), label: t("tool.result.stats") };
+      return {
+        text: JSON.stringify({ words: tokens.length, characters: input.length, charactersNoSpace: input.replace(/\s/g, "").length, lines: input ? input.split(/\r?\n/).length : 0, bytes: new TextEncoder().encode(input).length, readingMinutes: Number((tokens.length / 200).toFixed(2)), speakingMinutes: Number((tokens.length / 130).toFixed(2)), topWords: Object.fromEntries(frequency) }, null, 2),
+        label: t("tool.result.stats"),
+        table: frequency.length > 0 ? { head: ["Word", "Count"], rows: frequency.map(([word, count]) => [word, String(count)]) } : undefined,
+      };
     }
     if (slug === "case-converter") {
       const title = input.toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase());
-      return { text: JSON.stringify({ UPPERCASE: input.toUpperCase(), lowercase: input.toLowerCase(), "Title Case": title, camelCase: toCamel(input), snake_case: textToSlug(input).replace(/-/g, "_"), "kebab-case": textToSlug(input), "Alternating cAsE": Array.from(input).map((char, index) => index % 2 ? char.toLowerCase() : char.toUpperCase()).join("") }, null, 2) };
+      const variants: Array<[string, string]> = [
+        ["UPPERCASE", input.toUpperCase()],
+        ["lowercase", input.toLowerCase()],
+        ["Title Case", title],
+        ["camelCase", toCamel(input)],
+        ["snake_case", textToSlug(input).replace(/-/g, "_")],
+        ["kebab-case", textToSlug(input)],
+        ["Alternating cAsE", Array.from(input).map((char, index) => index % 2 ? char.toLowerCase() : char.toUpperCase()).join("")],
+      ];
+      return { text: JSON.stringify(Object.fromEntries(variants), null, 2), table: { head: ["Style", "Text"], rows: variants } };
     }
     // `Array.from` (not `split("")`) keeps surrogate pairs / emoji intact when reversing.
     if (slug === "reverse-text") return { text: option === "words" ? input.split(/(\s+)/).reverse().join("") : option === "lines" ? input.split(/\r?\n/).reverse().join("\n") : Array.from(input).reverse().join("") };
@@ -344,8 +357,8 @@ async function dispatchTool(slug: string, input: string, option = "default", t: 
     if (slug === "xml-formatter") { const { XMLBuilder, XMLParser } = await loadXml(); const parsed = new XMLParser({ ignoreAttributes: false }).parse(input); return { text: new XMLBuilder({ format: true, ignoreAttributes: false }).build(parsed) }; }
     if (slug === "yaml-json-toml-xml-converter") { const [yaml, { XMLBuilder }] = await Promise.all([loadYaml(), loadXml()]); const parsed = clean.startsWith("{") ? JSON.parse(input) : yaml.load(input); return { text: option === "xml" ? new XMLBuilder({ format: true }).build(parsed) : option === "yaml" ? yaml.dump(parsed) : JSON.stringify(parsed, null, 2) }; }
     if (slug === "sql-formatter") { const { format: formatSql } = await loadSqlFormatter(); return { text: formatSql(input) }; }
-    if (slug === "url-parser") { const url = new URL(clean); return { text: JSON.stringify({ protocol: url.protocol, host: url.host, hostname: url.hostname, port: url.port, pathname: url.pathname, parameters: Object.fromEntries(url.searchParams), hash: url.hash }, null, 2) }; }
-    if (slug === "keyword-density-analyzer") { const tokens = words(input); const counts = tokens.reduce<Record<string, number>>((memo, word) => { const key = word.toLowerCase(); memo[key] = (memo[key] ?? 0) + 1; return memo; }, {}); return { text: JSON.stringify(Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 25).map(([word, count]) => ({ word, count, percentage: `${((count / Math.max(tokens.length, 1)) * 100).toFixed(1)}%` })), null, 2) }; }
+    if (slug === "url-parser") { const url = new URL(clean); const params = Object.fromEntries(url.searchParams); const rows: Array<[string, string]> = [["Protocol", url.protocol], ["Host", url.host], ["Path", url.pathname || "/"], ...(url.port ? [["Port", url.port] as [string, string]] : []), ...Object.entries(params).map(([key, value]) => [`? ${key}`, value] as [string, string]), ...(url.hash ? [["Fragment", url.hash] as [string, string]] : [])]; return { text: JSON.stringify({ protocol: url.protocol, host: url.host, hostname: url.hostname, port: url.port, pathname: url.pathname, parameters: params, hash: url.hash }, null, 2), table: { head: ["Part", "Value"], rows } }; }
+    if (slug === "keyword-density-analyzer") { const tokens = words(input); const counts = tokens.reduce<Record<string, number>>((memo, word) => { const key = word.toLowerCase(); memo[key] = (memo[key] ?? 0) + 1; return memo; }, {}); const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 25).map(([word, count]) => ({ word, count, percentage: `${((count / Math.max(tokens.length, 1)) * 100).toFixed(1)}%` })); return { text: JSON.stringify(top, null, 2), table: { head: ["Word", "Count", "Density"], rows: top.map((row) => [row.word, String(row.count), row.percentage]) } }; }
     if (slug === "chmod-calculator") { if (!/^[0-7]{3,4}$/.test(clean)) throw new ToolError("tool.error.octal"); const parts = clean.slice(-3).split("").map((digit) => [Number(digit) & 4 ? "r" : "-", Number(digit) & 2 ? "w" : "-", Number(digit) & 1 ? "x" : "-"].join("")); return { text: JSON.stringify({ octal: clean, symbolic: `${parts[0]}${parts[1]}${parts[2]}`, decimal: Number.parseInt(clean, 8) }, null, 2) }; }
     if (slug === "math-evaluator" || slug === "basic-calculator" || slug === "scientific-calculator") {
       // Parsed by a dedicated arithmetic evaluator; user input is never executed.
@@ -356,8 +369,8 @@ async function dispatchTool(slug: string, input: string, option = "default", t: 
         throw error;
       }
     }
-    if (slug === "percentage-calculator") { const [x = NaN, y = NaN] = clean.split(/[ ,]+/).map(Number); if (!Number.isFinite(x) || !Number.isFinite(y)) throw new ToolError("tool.error.number"); return { text: JSON.stringify({ [`${x}% of ${y}`]: (x / 100) * y, [`${x} is what % of ${y}`]: y ? (x / y) * 100 : null, change: y ? ((x - y) / y) * 100 : null }, null, 2) }; }
-    if (slug === "bmi-calculator") { const [weight = NaN, height = NaN] = clean.split(/[ ,]+/).map(Number); if (!Number.isFinite(weight) || !Number.isFinite(height) || height <= 0) throw new ToolError("tool.error.number"); const bmi = weight / (height / 100) ** 2; return { text: JSON.stringify({ bmi: Number(bmi.toFixed(1)), status: bmi < 18.5 ? t("tool.bmi.underweight") : bmi < 25 ? t("tool.bmi.healthy") : bmi < 30 ? t("tool.bmi.overweight") : t("tool.bmi.obese") }, null, 2) }; }
+    if (slug === "percentage-calculator") { const [x = NaN, y = NaN] = clean.split(/[ ,]+/).map(Number); if (!Number.isFinite(x) || !Number.isFinite(y)) throw new ToolError("tool.error.number"); const of = (x / 100) * y; const is = y ? (x / y) * 100 : null; const change = y ? ((x - y) / y) * 100 : null; return { text: JSON.stringify({ [`${x}% of ${y}`]: of, [`${x} is what % of ${y}`]: is, change }, null, 2), table: { head: ["Question", "Answer"], rows: [[`${x}% of ${y}`, String(of)], [`${x} is what % of ${y}`, is === null ? "—" : `${is}`], ["Change", change === null ? "—" : `${change}%`]] } }; }
+    if (slug === "bmi-calculator") { const [weight = NaN, height = NaN] = clean.split(/[ ,]+/).map(Number); if (!Number.isFinite(weight) || !Number.isFinite(height) || height <= 0) throw new ToolError("tool.error.number"); const bmi = weight / (height / 100) ** 2; const status = bmi < 18.5 ? t("tool.bmi.underweight") : bmi < 25 ? t("tool.bmi.healthy") : bmi < 30 ? t("tool.bmi.overweight") : t("tool.bmi.obese"); return { text: JSON.stringify({ bmi: Number(bmi.toFixed(1)), status }, null, 2), table: { head: ["Measure", "Value"], rows: [["BMI", bmi.toFixed(1)], ["Status", status]] } }; }
     if (slug === "random-number-generator") { const parsed = clean.split(/[ ,]+/).filter(Boolean).map(Number); if (parsed.some((value) => !Number.isFinite(value))) throw new ToolError("tool.error.number"); const [low = 1, high = 100] = parsed; const min = Math.min(low, high); const span = Math.abs(high - low) + 1; return { text: Array.from({ length: option === "bulk" ? 10 : 1 }, () => min + randomInt(span)).join("\n") }; }
     if (slug === "random-string-generator") { const length = Math.min(Math.max(Number(clean) || 16, 1), 512); const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789"; return { text: Array.from({ length }, () => chars[randomInt(chars.length)]).join("") }; }
     if (slug === "email-validator") return { text: JSON.stringify({ email: clean, valid: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean) }, null, 2) };

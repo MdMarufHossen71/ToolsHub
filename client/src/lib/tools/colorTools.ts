@@ -127,8 +127,19 @@ export const runColorTools: ToolRunner = async (slug, _input, _option, _t, extra
     const a = validHex(F("a", "#0a1025"));
     const b = validHex(F("b", "#f7f6f1"));
     const ratio = contrastRatio(a, b);
+    const verdict = (ok: boolean) => (ok ? "✓ Pass" : "✕ Fail");
     return {
       text: JSON.stringify({ ratio: Number(ratio.toFixed(2)), aaNormal: ratio >= 4.5, aaLarge: ratio >= 3, aaaNormal: ratio >= 7 }, null, 2),
+      table: {
+        head: ["Check", "Result"],
+        rows: [
+          ["Contrast ratio", `${ratio.toFixed(2)} : 1`],
+          ["AA normal text (4.5)", verdict(ratio >= 4.5)],
+          ["AA large text (3.0)", verdict(ratio >= 3)],
+          ["AAA normal text (7.0)", verdict(ratio >= 7)],
+        ],
+      },
+      image: swatchImage([a, b]),
     };
   }
   if (slug === "color-blindness-simulator") {

@@ -12,26 +12,26 @@
 /* `--label-instrument-tray` is set from the translation dictionary by the language
    effect in AppSettingsContext, because a `content:` string cannot read it. The
    empty fallback means the label simply disappears rather than printing a key. */
-.directory-grid { background:linear-gradient(90deg,var(--border) 1px,transparent 1px); }.directory-grid .tool-card:nth-child(11n+1),.directory-grid .tool-card:nth-child(11n+6) { grid-column:span 2; background:linear-gradient(110deg,color-mix(in srgb,var(--primary) 8%,var(--card)),var(--card)); }/* The label used to sit in the card's top-right corner. The favorite star owns that
+.directory-grid { background:linear-gradient(90deg,var(--border) 1px,transparent 1px); }.directory-grid .tool-card-featured { grid-column:span 2; background:linear-gradient(110deg,color-mix(in srgb,var(--primary) 8%,var(--card)),var(--card)); }/* The label used to sit in the card's top-right corner. The favorite star owns that
    corner now (it has to be a sibling of the link, so it cannot live inside the card's
    own top row), so the label steps left of the arrow instead of colliding with it. */
-.directory-grid .tool-card:nth-child(11n+1)::before,.directory-grid .tool-card:nth-child(11n+6)::before { content:var(--label-instrument-tray,""); position:absolute; right:72px; top:13px; color:var(--primary-text); font:9px var(--font-code); letter-spacing:.1em; }
+.directory-grid .tool-card-featured::before { content:var(--label-instrument-tray,""); position:absolute; right:72px; top:13px; color:var(--primary-text); font:9px var(--font-code); letter-spacing:.1em; }
 /* The wash behind a game card was overridden to an organic blob
    (`border-radius:38% 62% 60% 40%`), which read as a different design language from
    everything else. The override is gone, so the plain circle in index.css applies. */
-.game-card:nth-child(5n+2)::before,.game-card:nth-child(5n+4)::before { background:var(--accent); opacity:.14; transform:rotate(25deg); }.game-card:nth-child(5n+3) .game-icon,.game-card:nth-child(5n+2) .game-icon { background:var(--accent); }.game-card:nth-child(9n+1) { grid-column:span 2; background:linear-gradient(120deg,var(--background),var(--surface)); color:var(--foreground); border-color:var(--primary); }.game-card:nth-child(9n+1) p,.game-card:nth-child(9n+1) .game-card-top { color:var(--muted-foreground); }.game-card:hover { transform:translateY(-3px) rotate(-.3deg); }
+.game-card:nth-child(5n+2)::before,.game-card:nth-child(5n+4)::before { background:var(--accent); opacity:.14; transform:rotate(25deg); }.game-card:nth-child(5n+3) .game-icon,.game-card:nth-child(5n+2) .game-icon { background:var(--accent); }.game-card-featured { grid-column:span 2; background:linear-gradient(120deg,var(--background),var(--surface)); color:var(--foreground); border-color:var(--primary); }.game-card-featured p,.game-card-featured .game-card-top { color:var(--muted-foreground); }.game-card:hover { transform:translateY(-3px) rotate(-.3deg); }
 /* Search collapses into the drawer at 900px, so the drawer and its trigger have to
    appear at 900px as well. Previously the drawer only appeared at 640px, which left
    every viewport between 641px and 900px with no way to reach search at all. */
 @media (max-width:900px) {
   .header-search { display:none; }
-  .directory-grid .tool-card:nth-child(11n+1),.directory-grid .tool-card:nth-child(11n+6) { grid-column:span 2; }
+  .directory-grid .tool-card-featured { grid-column:span 2; }
   .mobile-drawer { display:block; padding:12px 14px 17px; background:var(--background); border-top:1px solid var(--border); }
   .mobile-drawer .header-search { display:flex; max-width:none; margin:0 0 9px; }
   .mobile-drawer nav { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:7px; }
   .mobile-drawer a { padding:11px; background:var(--card); border:1px solid var(--border-strong); border-radius:var(--radius-md); font-size:13px; }
 }
-@media (max-width:640px) { .mobile-drawer nav { grid-template-columns:1fr 1fr; }.directory-grid .tool-card:nth-child(11n+1),.directory-grid .tool-card:nth-child(11n+6),.game-card:nth-child(9n+1) { grid-column:span 1; } }
+@media (max-width:640px) { .mobile-drawer nav { grid-template-columns:1fr 1fr; }.directory-grid .tool-card-featured,.game-card-featured { grid-column:span 1; } }
 
 /* --- Favorites ------------------------------------------------------------ */
 /* The card is a plain relative shell: the link fills it and the star floats over the

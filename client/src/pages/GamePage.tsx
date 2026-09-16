@@ -2,7 +2,7 @@
 import { Suspense } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Link, useRoute } from "wouter";
-import { findGame, type Game } from "@/data/games";
+import { findGame, gameRegistry, type Game } from "@/data/games";
 import { useTranslation } from "@/contexts/AppSettingsContext";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { displaySlug, safeSlug } from "@/lib/slug";
@@ -35,6 +35,8 @@ function GameArena({ game }: { game: Game }) {
   usePageMeta("games.title", "games.copy", game.name);
   const Icon = game.icon;
   const Game = loadGame(game.slug);
+  // Same shelf, other cartridges: the genre the player already likes.
+  const related = gameRegistry.filter((other) => other.genre === game.genre && other.slug !== game.slug).slice(0, 3);
 
   return (
     <div className="site-frame page-space">
@@ -73,6 +75,41 @@ function GameArena({ game }: { game: Game }) {
           <ComingSoon />
         )}
       </section>
+      {related.length > 0 && (
+        <section className="tool-related" aria-labelledby="game-related-title">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">{t("tool.guide.relatedEyebrow")}</p>
+              <h2 id="game-related-title">{t("tool.guide.relatedTitle")}</h2>
+            </div>
+            <Link href="/games" className="text-link">
+              {t("home.viewAll")} <span aria-hidden="true">→</span>
+            </Link>
+          </div>
+          <div className="game-grid">
+            {related.map((other) => {
+              const OtherIcon = other.icon;
+              return (
+                <Link key={other.slug} href={`/games/${other.slug}`} className="game-card">
+                  <div className="game-card-top">
+                    <span className="game-icon" aria-hidden="true">
+                      <OtherIcon className="size-5" />
+                    </span>
+                    <span>{language === "bn" ? other.genreBn : other.genre}</span>
+                  </div>
+                  <div>
+                    <h2>{other.name}</h2>
+                    <p>{other.description[language]}</p>
+                    <span className="game-play-label">
+                      {t("games.playableBadge")} <span aria-hidden="true">→</span>
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

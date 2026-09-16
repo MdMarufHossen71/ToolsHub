@@ -8,13 +8,13 @@ import { FavoriteButton } from "@/components/FavoriteButton";
 /**
  * The star is a sibling of the link, not a child of it: a `<button>` inside an `<a>` is
  * invalid HTML and breaks keyboard and screen-reader behaviour. The outer element stays
- * the single grid child carrying `tool-card`, so the `directory-grid` `:nth-child`
- * rhythm is untouched, while the link fills the card and the star floats over its
- * corner.
+ * the single grid child carrying `tool-card` (plus `tool-card-featured` for wide
+ * cards, set explicitly by the caller), while the link fills the card and the star
+ * floats over its corner.
  */
-export function ToolCard({ tool }: { tool: Tool }) {
+export function ToolCard({ tool, featured }: { tool: Tool; featured?: boolean | undefined }) {
   const { language } = useSettings(); const Icon = getToolIcon(tool.group);
-  return <div className="tool-card group">
+  return <div className={featured ? "tool-card group tool-card-featured" : "tool-card group"}>
     <Link href={`/tools/${tool.slug}`} className="tool-card-link">
       <div className="tool-card-top flex items-start justify-between gap-3"><span className="tool-icon"><Icon className="size-4" /></span><ArrowUpRight className="size-4 text-muted-foreground transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary" /></div>
       <div className="mt-auto"><p className="mb-2 text-[11px] font-semibold uppercase tracking-[.13em] text-muted-foreground">{language === "bn" ? tool.categoryBn : tool.category}</p><h3 className="font-display text-[17px] font-semibold tracking-[-.025em]">{tool.name}</h3><p className="mt-1.5 text-sm leading-5 text-muted-foreground">{tool.description[language]}</p></div>
