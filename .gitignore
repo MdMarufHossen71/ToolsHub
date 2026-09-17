@@ -49,6 +49,9 @@ pids
 coverage/
 *.lcov
 
+# Lighthouse CI results
+.lighthouseci/
+
 # nyc test coverage
 .nyc_output
 
