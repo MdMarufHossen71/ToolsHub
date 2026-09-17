@@ -57,7 +57,7 @@
     "marked": "^18.0.9",
     "nanoid": "^5.1.16",
     "otpauth": "^9.5.1",
-    "papaparse": "^5.6.0",
+    "papaparse": "^5.7.0",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^6.3.289",
     "qr-code-styling": "^1.9.2",
