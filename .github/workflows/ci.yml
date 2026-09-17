@@ -17,6 +17,7 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: corepack pnpm install --frozen-lockfile
+      - run: corepack pnpm run audit:security
       - run: corepack pnpm run check
       - run: corepack pnpm run lint
       - run: corepack pnpm run test:coverage

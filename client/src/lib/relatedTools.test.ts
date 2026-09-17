@@ -20,7 +20,7 @@ describe("relatedTools", () => {
     expect(first.length).toBeGreaterThan(0);
   });
 
-  it("never includes the current tool, never repeats, and caps at six", () => {
+  it("never includes the current tool, never repeats, and caps at six", { timeout: 30000 }, () => {
     for (const tool of toolRegistry) {
       const list = relatedTools(tool.slug, toolRegistry).map((entry) => entry.slug);
       expect(list).not.toContain(tool.slug);

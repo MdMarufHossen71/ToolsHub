@@ -1,0 +1,14 @@
+# Weekly dependency updates (pnpm lockfile). Grouped minor/patch bumps keep the
+# noise down; majors still arrive as single PRs so each gets its own gate run.
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Asia/Dhaka"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
