@@ -54,7 +54,7 @@
     "jsbarcode": "^3.12.3",
     "jszip": "^3.10.1",
     "libphonenumber-js": "^1.13.11",
-    "lucide-react": "^0.453.0",
+    "lucide-react": "^1.45.0",
     "marked": "^18.0.9",
     "nanoid": "^5.1.16",
     "otpauth": "^9.5.1",
