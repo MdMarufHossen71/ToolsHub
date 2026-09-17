@@ -13,6 +13,8 @@ import { FaviconGen } from "./FaviconGen";
 import { Wysiwyg } from "./Wysiwyg";
 import { CameraRecorder, ScreenRecorder } from "./Recorders";
 import { QrFileTransfer } from "./QrFileTransfer";
+import { SpeechToText } from "./SpeechToText";
+import { TextToSpeech } from "./TextToSpeech";
 
 const liveTools: Record<string, ComponentType> = {
   "countdown-timer": CountdownTimer,
@@ -34,6 +36,8 @@ const liveTools: Record<string, ComponentType> = {
   "camera-recorder": CameraRecorder,
   "screen-audio-recorder": ScreenRecorder,
   "qr-file-transfer": QrFileTransfer,
+  "speech-to-text": SpeechToText,
+  "text-to-speech": TextToSpeech,
 };
 
 function DecisionWheelView() {

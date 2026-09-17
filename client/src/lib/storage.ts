@@ -38,6 +38,21 @@ export const MAX_BUNDLE_KEYS = 2000;
 export const toolMemoryKey = (slug: string) => `${STORAGE_PREFIX}tool:${slug}:input`;
 export const gameStateKey = (slug: string) => `${STORAGE_PREFIX}game:${slug}:state`;
 export const settingsKey = (name: string) => `${STORAGE_PREFIX}settings:${name}`;
+
+/**
+ * The visitor's own AI provider key. It lives in localStorage so it never
+ * leaves the device, but it must never travel: backups are files people mail
+ * to themselves, so exporting a raw secret would turn every backup into a leak.
+ */
+export const AI_SECRET_KEY = `${STORAGE_PREFIX}ai:secret`;
+
+/** Keys that must never be exported or imported. */
+const SECRET_KEYS: ReadonlySet<string> = new Set([AI_SECRET_KEY]);
+
+/** True when `key` holds a secret that must not travel in bundles. */
+export function isSecretKey(key: string) {
+  return SECRET_KEYS.has(key);
+}
 const SCHEMA_KEY = `${STORAGE_PREFIX}meta:schema`;
 
 /** True when `key` belongs to this application. */
@@ -155,6 +170,8 @@ export function exportLocalData(): DataBundle {
   const data: Record<string, string> = {};
   for (const key of listAppKeys()) {
     if (key === SCHEMA_KEY) continue;
+    // Secrets never leave the device, not even inside the visitor's own backup.
+    if (isSecretKey(key)) continue;
     try {
       const value = localStorage.getItem(key);
       if (value !== null && byteLength(value) <= MAX_VALUE_BYTES) data[key] = value;
@@ -231,6 +248,9 @@ export function parseDataBundle(text: string): StorageResult<DataBundle> {
     // Version 1 bundles used hyphenated settings keys; accept and upgrade them.
     const upgraded = LEGACY_KEY_MAP[key] ?? key;
     if (!isAppKey(upgraded)) return { ok: false, error: "namespace" };
+    // A bundle carrying a secret is either hand-edited or from a build that did
+    // not exclude secrets: refuse it rather than writing a raw key to storage.
+    if (isSecretKey(upgraded)) return { ok: false, error: "shape" };
     normalized[upgraded] = value;
   }
 
@@ -265,6 +285,7 @@ export function applyDataBundle(bundle: DataBundle, mode: ImportMode): StorageRe
   // Dry run: every key must be ours and within limits before a single write.
   for (const [key, value] of incoming) {
     if (!isAppKey(key)) return { ok: false, error: "namespace" };
+    if (isSecretKey(key)) return { ok: false, error: "shape" };
     if (typeof value !== "string") return { ok: false, error: "shape" };
     if (byteLength(value) > MAX_VALUE_BYTES) return { ok: false, error: "size" };
   }

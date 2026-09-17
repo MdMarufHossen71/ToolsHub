@@ -1711,6 +1711,116 @@ const schemas: Record<string, ToolSchema> = {
     ],
     example: { fields: { subject: "Monthly update is here" } },
   },
+  // -- AI tools: browser-direct calls with the visitor's own key ------------
+  "ai-chat-assistant": {
+    fields: [
+      { key: "text", type: "textarea", label: t("Message", "বার্তা"), default: "Explain photosynthesis in two sentences." },
+    ],
+    example: { fields: { text: "Explain photosynthesis in two sentences." } },
+  },
+  "ai-paraphraser": {
+    fields: [
+      { key: "text", type: "textarea", label: t("Text", "টেক্সট"), default: "The quick brown fox jumps over the lazy dog." },
+      {
+        key: "tone", type: "select", label: t("Tone", "ভঙ্গি"), default: "same",
+        options: [
+          { value: "same", label: t("Keep tone", "ভঙ্গি একই রাখুন") },
+          { value: "formal", label: t("Formal", "আনুষ্ঠানিক") },
+          { value: "casual", label: t("Casual", "সহজ") },
+        ],
+      },
+    ],
+    example: { fields: { tone: "same" } },
+  },
+  "ai-summarizer": {
+    fields: [
+      { key: "text", type: "textarea", label: t("Text", "টেক্সট"), default: "Paste a long article here to condense it." },
+      {
+        key: "shape", type: "select", label: t("Shape", "আকার"), default: "short",
+        options: [
+          { value: "short", label: t("Short paragraph", "ছোট অনুচ্ছেদ") },
+          { value: "bullets", label: t("Bullet points", "বুলেট পয়েন্ট") },
+        ],
+      },
+    ],
+    example: { fields: { shape: "short" } },
+  },
+  "ai-grammar-fixer": {
+    fields: [
+      { key: "text", type: "textarea", label: t("Text", "টেক্সট"), default: "She go to market yesterday." },
+    ],
+    example: { fields: { text: "She go to market yesterday." } },
+  },
+  "ai-translator": {
+    fields: [
+      { key: "text", type: "textarea", label: t("Text", "টেক্সট"), default: "Good morning, how are you?" },
+      {
+        key: "target", type: "select", label: t("Translate to", "অনুবাদ করুন"), default: "bn",
+        options: [
+          { value: "bn", label: t("Bangla", "বাংলা") },
+          { value: "en", label: t("English", "ইংরেজি") },
+        ],
+      },
+    ],
+    example: { fields: { target: "bn" } },
+  },
+  "ai-tone-changer": {
+    fields: [
+      { key: "text", type: "textarea", label: t("Message", "বার্তা"), default: "Send me the report now." },
+      {
+        key: "tone", type: "select", label: t("Tone", "ভঙ্গি"), default: "formal",
+        options: [
+          { value: "formal", label: t("Formal", "আনুষ্ঠানিক") },
+          { value: "friendly", label: t("Friendly", "বন্ধুত্বপূর্ণ") },
+          { value: "concise", label: t("Concise", "সংক্ষিপ্ত") },
+        ],
+      },
+    ],
+    example: { fields: { tone: "formal" } },
+  },
+  "ai-code-helper": {
+    fields: [
+      { key: "code", type: "textarea", label: t("Code", "কোড"), default: "function add(a, b) {\n  return a + b;\n}" },
+      {
+        key: "task", type: "select", label: t("Task", "কাজ"), default: "explain",
+        options: [
+          { value: "explain", label: t("Explain", "ব্যাখ্যা করুন") },
+          { value: "review", label: t("Review", "রিভিউ করুন") },
+          { value: "refactor", label: t("Refactor", "রিফ্যাক্টর করুন") },
+        ],
+      },
+    ],
+    example: { fields: { task: "explain" } },
+  },
+  "ai-image-generator": {
+    fields: [
+      { key: "prompt", type: "textarea", label: t("Image description", "ছবির বর্ণনা"), default: "A red fishing boat at sunrise, flat illustration." },
+      { key: "model", type: "text", label: t("Image model", "ইমেজ মডেল"), default: "gpt-image-1" },
+      {
+        key: "size", type: "select", label: t("Size", "সাইজ"), default: "1024x1024",
+        options: [
+          { value: "1024x1024", label: t("Large (1024)", "বড় (1024)") },
+          { value: "512x512", label: t("Small (512)", "ছোট (512)") },
+        ],
+      },
+    ],
+    example: { fields: { prompt: "A red fishing boat at sunrise, flat illustration.", size: "1024x1024" } },
+  },
+  "ai-image-editor": {
+    fields: [
+      { key: "prompt", type: "textarea", label: t("Change to make", "যা বদলাবেন"), default: "Add a seagull in the sky." },
+      { key: "model", type: "text", label: t("Image model", "ইমেজ মডেল"), default: "gpt-image-1" },
+    ],
+    accept: "image/*", multiple: false,
+    example: { fields: { prompt: "Add a seagull in the sky." } },
+  },
+  "pdf-q-a": {
+    fields: [
+      { key: "question", type: "textarea", label: t("Question", "প্রশ্ন"), default: "What is this document about?" },
+    ],
+    accept: ".pdf,application/pdf", multiple: false,
+    example: { fields: { question: "What is this document about?" } },
+  },
 };
 
 export function getToolSchema(slug: string): ToolSchema | null {

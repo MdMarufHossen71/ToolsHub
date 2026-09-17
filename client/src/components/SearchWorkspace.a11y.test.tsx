@@ -38,9 +38,21 @@ describe("search + workspace accessibility", () => {
   });
 
   it("ToolWorkspace unavailable state has no axe violations", async () => {
-    const tool = findTool("ai-chat-assistant");
-    expect(tool).toBeDefined();
-    const { container } = renderWithProviders(<ToolWorkspace tool={tool!} />);
+    // A catalogue entry with no implementation yet: the honest "not built"
+    // panel, kept working for whatever the next tool wave adds.
+    const { container } = renderWithProviders(
+      <ToolWorkspace
+        tool={{
+          name: "Future Tool",
+          slug: "future-tool-not-built",
+          category: "Misc",
+          categoryBn: "বিবিধ",
+          group: "misc",
+          description: { en: "Not built yet.", bn: "এখনো তৈরি হয়নি।" },
+          keywords: ["future"],
+        }}
+      />,
+    );
     expect(screen.getByRole("note")).toBeInTheDocument();
     const results = await axe.run(container);
     expect(results.violations).toEqual([]);

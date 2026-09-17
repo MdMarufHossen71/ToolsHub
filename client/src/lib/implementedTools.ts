@@ -99,4 +99,9 @@ export const IMPLEMENTED_TOOLS: ReadonlySet<string> = new Set([
   // SEO & web
   "htaccess-redirect-generator", "html-entity-table", "seo-word-counter",
   "twitter-card-info", "website-text-extractor",
+  // AI tools (bring your own key; browser calls the provider directly)
+  "ai-chat-assistant", "ai-paraphraser", "ai-summarizer", "ai-grammar-fixer",
+  "ai-translator", "ai-tone-changer", "ai-code-helper",
+  "ai-image-generator", "ai-image-editor", "pdf-q-a",
+  "speech-to-text", "text-to-speech",
 ]);

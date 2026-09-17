@@ -13,7 +13,7 @@
 import { findTool } from "@/data/tools";
 
 /** Categories whose inputs are treated as secrets without exception. */
-const SENSITIVE_GROUPS = new Set(["crypto"]);
+const SENSITIVE_GROUPS = new Set(["crypto", "ai"]);
 
 /**
  * Substrings that mark a tool as secret-handling regardless of its category.

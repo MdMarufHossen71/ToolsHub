@@ -27,6 +27,8 @@ export const LIVE_TOOL_SLUGS: ReadonlySet<string> = new Set([
   "camera-recorder",
   "screen-audio-recorder",
   "qr-file-transfer",
+  "speech-to-text",
+  "text-to-speech",
 ]);
 
 export function isLiveTool(slug: string): boolean {

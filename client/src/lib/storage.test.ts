@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  AI_SECRET_KEY,
   BUNDLE_SOURCE,
   MAX_BUNDLE_BYTES,
   MAX_VALUE_BYTES,
@@ -136,6 +137,14 @@ describe("namespacing / export filtering", () => {
     expect(bundle.localStorage["tgb:tool:big:input"]).toBeUndefined();
   });
 
+  it("exportLocalData never exports the AI secret", () => {
+    safeSet(AI_SECRET_KEY, "sk-test");
+    safeSet("tgb:settings:a", 1);
+    const bundle = exportLocalData();
+    expect(bundle.localStorage[AI_SECRET_KEY]).toBeUndefined();
+    expect(Object.keys(bundle.localStorage)).toContain("tgb:settings:a");
+  });
+
   it("bundleFileName is date-prefixed", () => {
     expect(bundleFileName(new Date("2026-01-02T00:00:00Z"))).toBe("toolshub-data-2026-01-02.json");
   });
@@ -207,6 +216,15 @@ describe("parseDataBundle validation", () => {
     const parsed = parseDataBundle(legacy);
     expect(parsed.ok).toBe(true);
     if (parsed.ok) expect(parsed.value.localStorage["tgb:settings:language"]).toBe('"bn"');
+  });
+
+  it("refuses bundles carrying the AI secret", () => {
+    const tainted = JSON.stringify({
+      version: SCHEMA_VERSION,
+      source: BUNDLE_SOURCE,
+      localStorage: { "tgb:settings:a": "1", [AI_SECRET_KEY]: '"sk-test"' },
+    });
+    expect(parseDataBundle(tainted)).toEqual({ ok: false, error: "shape" });
   });
 });
 
