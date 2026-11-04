@@ -15,7 +15,7 @@
         { "key": "Permissions-Policy", "value": "camera=(self), microphone=(), geolocation=()" },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-f+5/MSA2CfyLTRHbmbaHbKai9uvW23Q9dP4udbPVwmM='; style-src 'self' 'sha256-bpypoTR0KUXHrm1UCbUNNlgfw8WeEcXfhVy7yFGmKgE='; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'"
+          "value": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'sha256-f+5/MSA2CfyLTRHbmbaHbKai9uvW23Q9dP4udbPVwmM='; style-src 'self' 'sha256-bpypoTR0KUXHrm1UCbUNNlgfw8WeEcXfhVy7yFGmKgE='; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self' https://speed.cloudflare.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'"
         }
       ]
     },

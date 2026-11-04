@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#07111d">
+<title>Data Waster Pro — Bandwidth Test Tool | ToolsHub</title>
+<meta name="description" content="A browser-based bandwidth consumption test with live response-byte counters, throughput chart, session limits, and local history.">
+<link rel="canonical" href="https://tools-hub-71.vercel.app/data-waster/">
+<link rel="stylesheet" href="./app.css">
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div class="brand"><div class="logo" aria-hidden="true">◈</div><div><h1>Data Waster <span>Pro</span></h1><p>Real HTTP downloads · Live response-byte telemetry</p></div></div>
+  <div class="top-right"><span class="pill" id="networkInfo">Network estimate unavailable</span><span class="pill" id="status">Idle</span></div>
+</header>
+
+<div class="intro"><strong>⚠ Data usage warning:</strong> This tool downloads real data from Cloudflare's public speed-test endpoint. It can use your mobile or broadband allowance. A hard limit of <strong>1 GB per session</strong> is enforced; there is no unlimited mode. The counter measures response-body bytes read by this browser, not your ISP's exact billed usage.</div>
+
+<main>
+<div class="layout">
+<section class="panel">
+  <h2>Choose your data target</h2><p class="sub">Decimal units · 1 MB = 1,000,000 bytes · Maximum 1 GB per session</p>
+  <div class="targets" id="targets">
+    <button class="target" data-mb="10">10 MB<small>10 million bytes</small></button>
+    <button class="target" data-mb="50">50 MB<small>50 million bytes</small></button>
+    <button class="target active" data-mb="100">100 MB<small>100 million bytes</small></button>
+    <button class="target" data-mb="250">250 MB<small>250 million bytes</small></button>
+    <button class="target" data-mb="500">500 MB<small>500 million bytes</small></button>
+    <button class="target" data-mb="1000">1 GB<small>1 billion bytes</small></button>
+  </div>
+  <div class="custom">
+    <div class="field"><label for="customAmount">Custom amount (MB)</label><input id="customAmount" type="number" min="1" max="1000" step="1" placeholder="Enter 1–1000"></div>
+    <button id="applyCustom" class="btn">Set target</button>
+    <button id="resetTarget" class="btn ghost">Reset</button>
+  </div>
+  <div class="helper" id="customHint">Select a preset or enter a custom amount.</div>
+  <div class="controls">
+    <button id="start" class="btn primary">▶ Start download</button>
+    <button id="pause" class="btn" disabled>Ⅱ Pause</button>
+    <button id="resume" class="btn" disabled>▶ Resume</button>
+    <button id="stop" class="btn danger" disabled>■ Stop</button>
+  </div>
+  <div class="target-note" id="targetSummary">Target: <strong>100 MB</strong> · 100,000,000 bytes</div>
+  <details class="advanced">
+    <summary>Endpoint diagnostics</summary>
+    <div class="advanced-inner">
+      <button id="testEndpoint" class="btn">Test Cloudflare endpoint</button>
+      <span class="helper">Uses a small 32 KB request only.</span>
+    </div>
+    <div id="health" class="health">Not tested yet.</div>
+  </details>
+</section>
+
+<section class="panel">
+  <h2>Live session dashboard</h2><p class="sub">Measured from real streamed HTTP response chunks</p>
+  <div class="dashboard">
+    <article class="metric primary"><label>Response data received</label><div class="value cyan" id="downloaded">0 B</div><small id="downloadedSub">No data transferred</small></article>
+    <article class="metric"><label>Current throughput</label><div class="value" id="speed">—</div><small id="speedSub">Waiting for session</small></article>
+    <article class="metric"><label>Average throughput</label><div class="value green" id="average">—</div><small>Since active session start</small></article>
+    <article class="metric"><label>Elapsed active time</label><div class="value" id="elapsed">00:00</div><small id="elapsedSub">Not started</small></article>
+    <article class="metric"><label>Remaining data</label><div class="value amber" id="remaining">100 MB</div><small id="remainingSub">Of selected target</small></article>
+    <article class="metric"><label>Estimated time left</label><div class="value" id="eta">—</div><small>Based on current average</small></article>
+  </div>
+  <div class="progress-panel">
+    <div class="progress-head"><span>Session progress</span><span id="percent">0.0%</span></div>
+    <div class="track" role="progressbar" id="progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="fill" id="fill"></div></div>
+    <div class="progress-foot"><span id="progressBytes">0 B of 100 MB</span><span id="requests">0 requests</span></div>
+  </div>
+  <div class="chart">
+    <div class="chart-head"><div><h3>Live throughput</h3><p>Rolling 60-second history</p></div><div class="chart-current"><span id="chartSpeed">—</span><small>Current speed</small></div></div>
+    <div class="chart-wrap"><canvas id="chart" aria-label="Live download throughput chart"></canvas><div class="chart-empty" id="chartEmpty">Waiting for network data…</div></div>
+  </div>
+</section>
+</div>
+
+<div class="below">
+<section class="panel">
+  <h2>Session history</h2><p class="sub">Stored only in this browser on this device</p>
+  <div class="controls compact"><button id="exportHistory" class="btn ghost">Export JSON</button><button id="clearHistory" class="btn danger">Clear history</button></div>
+  <div id="history" class="history"><div class="empty">No sessions yet.</div></div>
+</section>
+<section class="panel">
+  <h2>How this tool works</h2><p class="sub">Read before starting a large transfer</p>
+  <ul class="explainer-list">
+    <li>It requests test data from <code>speed.cloudflare.com</code> over HTTPS and counts readable response-body bytes.</li>
+    <li>One download stream is used to make the byte target more predictable and reduce excess in-flight traffic.</li>
+    <li>Requests use small chunks; pause, resume and stop controls abort the current stream.</li>
+    <li>A 20-second stalled request is stopped automatically. Each session is capped at 1 GB.</li>
+    <li>No response data is saved to disk or uploaded to this website. Session history stays in local browser storage.</li>
+  </ul>
+  <div class="health note">Important: Browser payload counters exclude HTTP headers, TLS overhead, retransmissions and other network traffic. Your mobile operator or ISP may report a different amount. Do not use this with a metered connection unless you accept the cost.</div>
+</section>
+</div>
+</main>
+
+<footer class="footer"><strong>Data Waster Pro</strong> · A ToolsHub utility<br>Public endpoint availability and CORS rules are controlled by Cloudflare. Use responsibly. Downloaded test data is discarded in memory.</footer>
+</div>
+
+<div id="modal" class="modal-backdrop" hidden><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><h2 id="modalTitle">Confirm data download</h2><p id="modalText"></p><div class="modal-actions"><button id="cancelStart" class="btn ghost">Cancel</button><button id="confirmStart" class="btn primary">I understand — start</button></div></div></div>
+<div id="toast" class="toast" hidden role="status" aria-live="polite"></div>
+
+
+
+<script src="./app.js" defer></script>
+</body>
+</html>
