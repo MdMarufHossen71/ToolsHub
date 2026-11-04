@@ -4,3 +4,6 @@
 
 /* Minor layout helpers */
 .controls.compact{margin:0 0 10px}
+
+.explainer-list{padding-left:18px;margin:0;color:#b8c9d9;font-size:11px;line-height:1.8}
+.health.note{margin-top:13px}
