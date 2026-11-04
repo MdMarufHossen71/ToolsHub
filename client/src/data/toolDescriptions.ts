@@ -387,4 +387,9 @@ export const toolDescriptions: Record<string, { en: string; bn: string }> = {
   "Social Media Image Sizes": { en: "Look up a small local reference list of commonly used social image dimensions.", bn: "সাধারণ সোশ্যাল ইমেজ মাপের ছোট লোকাল রেফারেন্স তালিকা দেখুন।" },
   "Social Media Character Limits": { en: "Compare your text length with common platform character limits; limits can change.", bn: "লেখার দৈর্ঘ্য প্রচলিত প্ল্যাটফর্ম সীমার সঙ্গে তুলনা করুন; সীমা বদলাতে পারে।" },
   "Docker Run to Compose": { en: "Convert common docker run flags into a basic Compose service; review the output before use.", bn: "সাধারণ docker run flag থেকে Compose service বানান; ব্যবহারের আগে ফল দেখুন।" },
+  "Quick Reference Library": { en: "Search compact local shortcut, command, regex, Markdown, ASCII and upload-spec references; app details can vary by version.", bn: "লোকাল shortcut, command, regex, Markdown, ASCII ও upload-spec রেফারেন্স খুঁজুন; অ্যাপের সংস্করণে তথ্য বদলাতে পারে।" },
+  "SVG Editor": { en: "Paste SVG markup, validate and sanitize it, preview the result and download a cleaned SVG.", bn: "SVG markup পেস্ট করে যাচাই ও নিরাপদ করুন, প্রিভিউ দেখুন এবং পরিষ্কার SVG নামান।" },
+  "Canadian Mortgage Calculator": { en: "Estimate payments from your own Canadian-dollar mortgage inputs; local tax, insurance and lender rules are not included.", bn: "নিজের mortgage তথ্য দিয়ে পেমেন্টের অনুমান করুন; স্থানীয় কর, বীমা ও lender-এর নিয়ম এতে নেই।" },
+  "Signature Generator": { en: "Create a decorative text-signature SVG locally; it is not identity verification or an authenticated e-signature.", bn: "লোকালেই সাজানো text-signature SVG বানান; এটি পরিচয় যাচাই বা authenticated e-signature নয়।" },
+  "Voice Recorder": { en: "Record microphone audio with the browser and save the original supported format to this device.", bn: "ব্রাউজারে মাইক্রোফোনের অডিও রেকর্ড করে সমর্থিত মূল format এই ডিভাইসে সেভ করুন।" },
 };

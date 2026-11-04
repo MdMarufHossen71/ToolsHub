@@ -1905,6 +1905,43 @@ const schemas: Record<string, ToolSchema> = {
     fields: [{ key: "text", type: "textarea", label: t("Checklist — mark completed items with [x]", "চেকলিস্ট — সম্পন্ন আইটেমে [x] দিন"), default: "[ ] We have a clear use case\n[ ] Data access is documented\n[ ] A person reviews important outputs\n[ ] Privacy and retention are considered\n[ ] We measure quality and cost" }],
     example: {},
   },
+  "quick-reference-library": {
+    fields: [
+      MODE_FIELD([
+        { value: "windows", en: "Windows shortcuts", bn: "Windows shortcut" }, { value: "mac", en: "Mac shortcuts", bn: "Mac shortcut" },
+        { value: "comparison", en: "Windows vs Mac", bn: "Windows বনাম Mac" }, { value: "alt", en: "Alt codes", bn: "Alt code" },
+        { value: "ascii", en: "ASCII table", bn: "ASCII টেবিল" }, { value: "search", en: "Google search operators", bn: "Google search operator" },
+        { value: "gmail", en: "Gmail shortcuts", bn: "Gmail shortcut" }, { value: "video", en: "Social video specs", bn: "সোশ্যাল ভিডিওর মাপ" },
+        { value: "regex", en: "Regex", bn: "Regex" }, { value: "markdown", en: "Markdown", bn: "Markdown" },
+        { value: "linux", en: "Linux commands", bn: "Linux command" }, { value: "shells", en: "CMD / PowerShell / Bash", bn: "CMD / PowerShell / Bash" },
+        { value: "excel", en: "Excel shortcuts", bn: "Excel shortcut" }, { value: "sheets", en: "Google Sheets shortcuts", bn: "Google Sheets shortcut" },
+        { value: "vscode", en: "VS Code shortcuts", bn: "VS Code shortcut" }, { value: "chromebook", en: "Chromebook shortcuts", bn: "Chromebook shortcut" },
+        { value: "claude", en: "Claude Code quick reference", bn: "Claude Code quick reference" },
+      ], "windows"),
+      { key: "query", type: "text", label: t("Filter entries", "তথ্য খুঁজুন"), default: "" },
+    ],
+    example: { fields: { mode: "windows", query: "copy" } },
+  },
+  "svg-editor": { fields: [{ key: "text", type: "textarea", label: t("SVG markup", "SVG markup"), default: '<svg xmlns="http://www.w3.org/2000/svg" width="240" height="120"><rect width="240" height="120" rx="16" fill="#0f766e"/><text x="120" y="68" text-anchor="middle" fill="white" font-size="22">Hello SVG</text></svg>' }], example: {} },
+  "signature-generator": {
+    fields: [
+      { key: "name", type: "text", label: t("Name for decorative signature", "সাজানো স্বাক্ষরের নাম"), default: "Your Name" },
+      MODE_FIELD([{ value: "cursive", en: "Cursive", bn: "Cursive" }, { value: "serif", en: "Serif", bn: "Serif" }, { value: "sans", en: "Sans serif", bn: "Sans serif" }], "cursive"),
+      { key: "color", type: "color", label: t("Ink colour", "কালির রং"), default: "#183153" },
+      { key: "size", type: "number", label: t("Text size", "লেখার আকার"), default: "42", min: "18", max: "96" },
+    ],
+    example: { fields: { name: "Your Name", mode: "cursive", color: "#183153", size: "42" } },
+  },
+  "canadian-mortgage-calculator": {
+    fields: [
+      { key: "homePrice", type: "number", label: t("Home price (CAD)", "বাড়ির দাম (CAD)"), default: "600000", min: "1", step: "1000" },
+      { key: "downPayment", type: "number", label: t("Down payment (CAD)", "Down payment (CAD)"), default: "120000", min: "0", step: "1000" },
+      { key: "annualRate", type: "number", label: t("Annual interest rate (%)", "বার্ষিক সুদের হার (%)"), default: "5", min: "0", step: "0.01" },
+      { key: "amortizationYears", type: "number", label: t("Amortization (years)", "Amortization (বছর)"), default: "25", min: "1", max: "40" },
+      { key: "monthlyExtras", type: "number", label: t("Other monthly housing costs (CAD)", "অন্যান্য মাসিক আবাসন খরচ (CAD)"), default: "0", min: "0", step: "0.01" },
+    ],
+    example: { fields: { homePrice: "600000", downPayment: "120000", annualRate: "5", amortizationYears: "25", monthlyExtras: "0" } },
+  },
   "invoice-generator": BUSINESS_DOCUMENT_SCHEMA,
   "quote-generator": BUSINESS_DOCUMENT_SCHEMA,
   "receipt-generator": BUSINESS_DOCUMENT_SCHEMA,

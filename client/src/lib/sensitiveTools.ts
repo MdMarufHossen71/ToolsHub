@@ -55,7 +55,7 @@ const SENSITIVE_PATTERNS = [
  */
 const SENSITIVE_SLUGS = new Set([
   "bip39-mnemonic-generator", "rsa-key-pair-generator", "pii-redactor", "mcp-config-generator",
-  "curl-to-code", "docker-run-to-compose", "chatgpt-to-word", "invoice-generator", "quote-generator", "receipt-generator", "purchase-order-generator",
+  "curl-to-code", "docker-run-to-compose", "chatgpt-to-word", "invoice-generator", "quote-generator", "receipt-generator", "purchase-order-generator", "signature-generator",
 ]);
 
 /** True when this tool's input must never be written to storage. */

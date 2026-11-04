@@ -197,6 +197,86 @@ function mindMap(source: string) {
   return makeSvgArtifact(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="#020617"/>${edges}${shapes}</svg>`, "mind-map.svg");
 }
 
+const quickReferences: Record<string, Array<[string, string]>> = {
+  windows: [["Copy / paste", "Ctrl+C / Ctrl+V"], ["Undo / redo", "Ctrl+Z / Ctrl+Y"], ["Select all", "Ctrl+A"], ["Find", "Ctrl+F"], ["Switch apps", "Alt+Tab"], ["Lock PC", "Win+L"], ["File Explorer", "Win+E"], ["Task Manager", "Ctrl+Shift+Esc"], ["Screenshot", "Win+Shift+S"]],
+  mac: [["Copy / paste", "⌘C / ⌘V"], ["Undo / redo", "⌘Z / ⇧⌘Z"], ["Select all", "⌘A"], ["Find", "⌘F"], ["Switch apps", "⌘Tab"], ["Lock Mac", "Control+⌘+Q"], ["Screenshot selection", "⇧⌘4"], ["Force quit", "Option+⌘+Esc"]],
+  comparison: [["Copy / paste", "Windows Ctrl+C / Ctrl+V · Mac ⌘C / ⌘V"], ["Undo / redo", "Windows Ctrl+Z / Ctrl+Y · Mac ⌘Z / ⇧⌘Z"], ["Select all", "Windows Ctrl+A · Mac ⌘A"], ["Find", "Windows Ctrl+F · Mac ⌘F"], ["Switch apps", "Windows Alt+Tab · Mac ⌘Tab"], ["Screenshots", "Windows Win+Shift+S · Mac ⇧⌘4"]],
+  alt: [["© Copyright", "Alt+0169 (numeric keypad)"], ["® Registered", "Alt+0174 (numeric keypad)"], ["™ Trademark", "Alt+0153 (numeric keypad)"], ["° Degree", "Alt+0176 (numeric keypad)"], ["± Plus/minus", "Alt+0177 (numeric keypad)"], ["€ Euro", "Alt+0128 (numeric keypad)"], ["£ Pound", "Alt+0163 (numeric keypad)"], ["— Em dash", "Alt+0151 (numeric keypad)"]],
+  search: [["Exact phrase", '"exact phrase"'], ["Exclude a word", "jaguar -car"], ["Search one site", "site:example.com topic"], ["Find a file type", "filetype:pdf topic"], ["Match either term", "cats OR dogs"], ["Before a date", "topic before:2025-01-01"], ["After a date", "topic after:2024-01-01"]],
+  gmail: [["Compose", "C (enable keyboard shortcuts first)"], ["Search", "/"], ["Reply", "R"], ["Reply all", "A"], ["Forward", "F"], ["Archive", "E"], ["Delete", "#"], ["Next / previous message", "J / K"], ["Mark unread", "Shift+U"]],
+  video: [["YouTube video thumbnail", "3840 × 2160 recommended, 16:9; at least 640 px wide"], ["YouTube Shorts thumbnail", "2160 × 3840 recommended, 9:16"], ["LinkedIn video resolution", "256 × 144 to 4096 × 2304"], ["LinkedIn aspect ratio", "1:2.4 to 2.4:1 (placement and format can vary)"], ["LinkedIn frame rate", "10–60 fps supported"], ["LinkedIn file size", "75 KB–5 GB supported"]],
+  regex: [["Digit / non-digit", "\\d / \\D"], ["Word character / non-word", "\\w / \\W"], ["Whitespace / non-whitespace", "\\s / \\S"], ["Start / end of string", "^ / $"], ["One or more / zero or more", "+ / *"], ["Optional", "?"], ["Capture group", "( ... )"], ["Character set", "[abc] or [a-z]"], ["Alternative", "cat|dog"], ["Word boundary", "\\b"]],
+  markdown: [["Heading", "# Heading"], ["Bold / italic", "**bold** / *italic*"], ["Link", "[label](https://example.com)"], ["Image", "![alt](image.png)"], ["Bulleted list", "- item"], ["Numbered list", "1. item"], ["Inline code", "`code`"], ["Code block", "```lang … ```"], ["Block quote", "> quoted text"], ["Task list", "- [ ] task"]],
+  linux: [["List files", "ls -la"], ["Change directory", "cd path"], ["Print current directory", "pwd"], ["Copy / move", "cp source destination · mv source destination"], ["Create directory", "mkdir -p path"], ["Search text", "grep -R 'text' path"], ["Find files", "find path -name 'pattern'"], ["Disk space", "df -h"], ["Processes", "ps aux"], ["Permissions", "chmod 644 file"]],
+  shells: [["List directory", "PowerShell: Get-ChildItem · CMD: dir · Bash: ls -la"], ["Current directory", "PowerShell: Get-Location · CMD: cd · Bash: pwd"], ["Copy file", "PowerShell: Copy-Item a b · CMD: copy a b · Bash: cp a b"], ["Move file", "PowerShell: Move-Item a b · CMD: move a b · Bash: mv a b"], ["Remove file", "PowerShell: Remove-Item a · CMD: del a · Bash: rm a"], ["Make directory", "PowerShell: New-Item -ItemType Directory · CMD: mkdir · Bash: mkdir -p"], ["Search text", "PowerShell: Select-String · CMD: findstr · Bash: grep"]],
+  excel: [["Edit cell", "F2"], ["Format cells", "Ctrl+1"], ["AutoSum", "Alt+= (Windows)"], ["Current date", "Ctrl+;"], ["Insert row/column", "Ctrl+Shift++"], ["Toggle filters", "Ctrl+Shift+L"], ["New line in cell", "Alt+Enter (Windows)"], ["Move to edge of data", "Ctrl+Arrow key"]],
+  sheets: [["Find", "Ctrl+F (Windows/ChromeOS) · ⌘+F (Mac)"], ["Fill down", "Ctrl+D / ⌘+D"], ["Fill right", "Ctrl+R / ⌘+R"], ["Insert link", "Ctrl+K / ⌘+K"], ["Show formulas", "Ctrl+`"], ["Current date", "Ctrl+;"], ["Select column", "Ctrl+Space"], ["Select row", "Shift+Space"]],
+  vscode: [["Command Palette", "Ctrl+Shift+P / ⌘⇧P"], ["Quick Open", "Ctrl+P / ⌘P"], ["Find", "Ctrl+F / ⌘F"], ["Toggle terminal", "Ctrl+`"], ["Go to line", "Ctrl+G / ⌃G"], ["Format document", "Shift+Alt+F / ⇧⌥F"], ["Rename symbol", "F2"], ["Toggle comment", "Ctrl+/ / ⌘/"], ["Multi-cursor", "Alt+Click / Option+Click"]],
+  chromebook: [["Take screenshot", "Ctrl+Show windows"], ["Screenshot selection", "Ctrl+Shift+Show windows"], ["Lock screen", "Search+L"], ["Open launcher", "Search"], ["Open Files", "Shift+Alt+M"], ["Caps Lock", "Alt+Search"], ["Task manager", "Search+Esc"]],
+  claude: [["Start interactive session", "claude"], ["One-shot prompt", "claude -p \"your prompt\""], ["Show help", "claude --help or /help"], ["Clear conversation", "/clear"], ["Compact context", "/compact"], ["Change model", "/model"], ["Configure settings", "/config"], ["Review permissions", "/permissions"], ["Manage MCP servers", "/mcp"]],
+};
+
+const quickReferenceModes = new Set([...Object.keys(quickReferences), "ascii"]);
+
+function quickReference(mode: string, query: string) {
+  if (!quickReferenceModes.has(mode)) throw new ToolError("tool.error.generic");
+  const rows = mode === "ascii"
+    ? Array.from({ length: 95 }, (_, index): [string, string] => {
+        const code = index + 32;
+        return [String(code), code === 32 ? "SPACE" : String.fromCharCode(code)];
+      })
+    : mode === "alt"
+      ? quickReferences.alt ?? []
+      : quickReferences[mode] ?? [];
+  const filtered = rows.filter(([key, value]) => `${key} ${value}`.toLowerCase().includes(query.trim().toLowerCase()));
+  const notes: Record<string, string> = {
+    windows: "Common Windows shortcuts; some keys depend on device and Windows version.",
+    mac: "Common macOS shortcuts; some keys depend on keyboard and macOS version.",
+    comparison: "Common defaults; apps, keyboard layouts and OS versions can change shortcuts.",
+    alt: "Alt codes generally require a numeric keypad and may vary by Windows app or layout.",
+    ascii: "Printable basic ASCII characters (decimal 32–126).",
+    search: "Search operators may evolve; use the search provider's current help for edge cases.",
+    gmail: "Gmail keyboard shortcuts must be enabled in Gmail settings; availability depends on focus and context.",
+    video: "Quick reference, not a guarantee for every upload placement. Check current platform help before exporting.",
+    claude: "Common Claude Code commands; options can change by version. Review commands before using them.",
+  };
+  const note = notes[mode] ?? "Common defaults only; application, version, OS and keyboard layout can change these details.";
+  return { text: `${filtered.map(([key, value]) => `${key}: ${value}`).join("\n") || "No matching reference found."}\n\n${note}`, table: { head: ["Item", "Shortcut / reference"], rows: filtered } };
+}
+
+async function cleanSvg(source: string) {
+  if (source.length > 250_000) throw new ToolError("tool.error.generic");
+  const { default: DOMPurify } = await import("dompurify");
+  const sanitized = String(DOMPurify.sanitize(source, {
+    USE_PROFILES: { svg: true, svgFilters: true },
+    FORBID_TAGS: ["foreignObject", "script", "style", "image", "iframe", "audio", "video"],
+    FORBID_ATTR: ["style"],
+  }));
+  const parsed = new DOMParser().parseFromString(sanitized, "image/svg+xml");
+  const root = parsed.documentElement;
+  if (parsed.querySelector("parsererror") || root.localName.toLowerCase() !== "svg") throw new ToolError("tool.error.generic");
+  [root, ...root.querySelectorAll("*")].forEach((element) => {
+    for (const attribute of [...element.attributes]) {
+      if ((/^(?:href|xlink:href)$/i.test(attribute.name) && !attribute.value.trim().startsWith("#")) || /url\(\s*["']?(?!#)/i.test(attribute.value)) element.removeAttribute(attribute.name);
+    }
+  });
+  root.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  const result = new XMLSerializer().serializeToString(root);
+  if (!result.startsWith("<svg") && !result.startsWith("<svg ") && !result.startsWith("<svg:")) throw new ToolError("tool.error.generic");
+  return makeSvgArtifact(result, "cleaned.svg");
+}
+
+function signatureSvg(name: string, font: string, color: string, size: number) {
+  const cleanName = name.trim().slice(0, 100);
+  if (!cleanName || !/^#[0-9a-f]{6}$/i.test(color)) throw new ToolError("tool.error.generic");
+  const family = font === "serif" ? "Georgia,serif" : font === "sans" ? "Arial,sans-serif" : "cursive";
+  const fontSize = clamp(size, 18, 96);
+  const width = Math.max(320, Math.ceil(cleanName.length * fontSize * 0.7 + 60));
+  const height = Math.ceil(fontSize * 1.7);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="#fff"/><text x="${width / 2}" y="${Math.round(height * 0.68)}" text-anchor="middle" fill="${color}" font-family="${family}" font-size="${fontSize}" font-style="italic">${escapeXml(cleanName)}</text></svg>`;
+  return { ...makeSvgArtifact(svg, "decorative-signature.svg"), text: "Decorative signature artwork ready. It is not identity verification or an authenticated e-signature." };
+}
+
 const documentTitles: Record<string, string> = {
   "invoice-generator": "Invoice", "quote-generator": "Quote", "receipt-generator": "Receipt", "purchase-order-generator": "Purchase Order",
 };
@@ -229,6 +309,25 @@ export const runReferenceTools: ToolRunner = async (slug, input, _option, _t, ex
   const F = (key: string, fallback = "") => read(extra, key, fallback);
   const source = field(extra, "text", input);
 
+  if (slug === "quick-reference-library") return quickReference(F("mode", "windows"), F("query"));
+  if (slug === "svg-editor") return cleanSvg(source);
+  if (slug === "signature-generator") return signatureSvg(F("name"), F("mode", "cursive"), F("color", "#183153"), finite(F("size", "42")));
+  if (slug === "canadian-mortgage-calculator") {
+    const price = finite(F("homePrice", "600000"));
+    const down = finite(F("downPayment", "120000"));
+    const annualRate = finite(F("annualRate", "5"));
+    const years = finite(F("amortizationYears", "25"));
+    const monthlyExtras = finite(F("monthlyExtras", "0"));
+    if (price <= 0 || down < 0 || down >= price || annualRate < 0 || years <= 0 || years > 40 || monthlyExtras < 0) throw new ToolError("tool.error.number");
+    const principal = price - down;
+    const periods = Math.round(years * 12);
+    // Canadian fixed mortgage quotes conventionally use nominal annual interest
+    // compounded semi-annually, converted here to an equivalent monthly rate.
+    const monthlyRate = (1 + annualRate / 200) ** (1 / 6) - 1;
+    const payment = monthlyRate === 0 ? principal / periods : principal * monthlyRate / (1 - (1 + monthlyRate) ** -periods);
+    const currency = (F("currency", "CAD").toUpperCase().match(/^[A-Z]{3}$/)?.[0] ?? "CAD");
+    return { text: JSON.stringify({ mortgagePrincipal: round(principal), monthlyMortgagePayment: round(payment), monthlyExtras: round(monthlyExtras), estimatedMonthlyHousingTotal: round(payment + monthlyExtras), totalMortgagePayments: round(payment * periods), estimatedInterestOverAmortization: round(payment * periods - principal), currency, note: "Estimate using a Canadian semi-annual compounding convention. Excludes mortgage default insurance, fees, property-specific rules and lender adjustments." }, null, 2) };
+  }
   if (slug === "er-diagram-maker") return erDiagram(source || "users: id (PK), name, email\nposts: id (PK), user_id (FK), title\nusers.id -> posts.user_id");
   if (slug === "mind-map-maker") return mindMap(source || "Project\n  Research\n  Design\n  Build\n    Frontend\n    Backend\n  Launch");
   if (slug === "json-to-typescript") {

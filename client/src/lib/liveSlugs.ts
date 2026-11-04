@@ -26,6 +26,7 @@ export const LIVE_TOOL_SLUGS: ReadonlySet<string> = new Set([
   "html-wysiwyg-editor",
   "camera-recorder",
   "screen-audio-recorder",
+  "voice-recorder",
   "qr-file-transfer",
   "speech-to-text",
   "text-to-speech",

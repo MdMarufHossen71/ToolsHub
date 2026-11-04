@@ -45,7 +45,7 @@ export const IMPLEMENTED_TOOLS: ReadonlySet<string> = new Set([
   "ipv6-ula-generator", "eta-calculator", "svg-placeholder-generator",
   "docker-run-converter", "crontab-generator",
   "er-diagram-maker", "mind-map-maker", "json-to-typescript", "curl-to-code", "gitignore-generator",
-  "docker-run-to-compose", "llm-api-cost-calculator", "llm-vram-calculator", "mcp-config-generator",
+  "docker-run-to-compose", "llm-api-cost-calculator", "llm-vram-calculator", "mcp-config-generator", "quick-reference-library",
   "html-beautifier", "css-beautifier-minifier", "javascript-beautifier-minifier",
   "code-syntax-highlighter", "json-schema-validator", "html-minifier", "css-minifier",
   "js-minifier", "xlsx-json-converter",
@@ -59,7 +59,7 @@ export const IMPLEMENTED_TOOLS: ReadonlySet<string> = new Set([
   "color-blindness-simulator", "shades-tints-generator",
   // Calculators
   "basic-calculator", "scientific-calculator", "percentage-calculator", "bmi-calculator",
-  "area-calculator", "rule-of-three", "trigonometry-calculator", "radians-degrees-converter",
+  "area-calculator", "rule-of-three", "trigonometry-calculator", "radians-degrees-converter", "canadian-mortgage-calculator",
   "age-calculator", "date-difference-calculator", "tip-calculator", "ratio-calculator",
   "unit-converter", "temperature-converter", "fibonacci-generator", "prime-checker-generator",
   "number-base-converter", "binary-hex-octal-converter", "roman-numeral-converter",
@@ -97,12 +97,12 @@ export const IMPLEMENTED_TOOLS: ReadonlySet<string> = new Set([
   "image-gradient-generator", "random-bitmap-generator", "svg-png-converter",
   "blurred-background-frame", "image-censor", "gif-toolkit", "video-thumbnail-extractor",
   "background-remover", "batch-image-processing", "screenshot-capture", "meme-generator",
-  "favicon-multi-size", "image-base64", "palette-extractor",
+  "favicon-multi-size", "image-base64", "palette-extractor", "svg-editor",
   // Misc
   "notes-pad",
   "age-in-seconds", "dog-cat-years-converter", "love-calculator",
   "aspect-ratio-calculator", "aspect-ratio-cropper", "event-countdown",
-  "screen-resolution-detector",
+  "screen-resolution-detector", "signature-generator", "voice-recorder",
   "typing-speed-test", "reaction-time-test", "decision-wheel",
   "screen-ruler", "fullscreen-dead-pixel-test", "whiteboard", "pomodoro-timer",
   // SEO & web

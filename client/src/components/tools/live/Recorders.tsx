@@ -1,6 +1,6 @@
 /** Camera and screen recorders: permission-gated capture with cleanup. */
 import { useEffect, useRef, useState } from "react";
-import { Download, Square, Video } from "lucide-react";
+import { Download, Mic, Square, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/contexts/AppSettingsContext";
 
@@ -151,4 +151,102 @@ export function CameraRecorder() {
 export function ScreenRecorder() {
   const { startScreen, ...rest } = useRecorder();
   return <RecorderPanel fileName="screen.webm" onAllow={() => void startScreen()} recorder={rest} />;
+}
+
+/** Browser-native audio capture; it uses the original MediaRecorder format without transcoding. */
+export function VoiceRecorder() {
+  const { t } = useTranslation();
+  const streamRef = useRef<MediaStream | null>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const objectUrlRef = useRef<string | null>(null);
+  const disposedRef = useRef(false);
+  const [live, setLive] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [denied, setDenied] = useState(false);
+  const [download, setDownload] = useState<{ url: string; name: string } | null>(null);
+
+  useEffect(() => {
+    disposedRef.current = false;
+    return () => {
+      disposedRef.current = true;
+      if (recorderRef.current?.state === "recording") recorderRef.current.stop();
+      streamRef.current?.getTracks().forEach((track) => track.stop());
+      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+    };
+  }, []);
+
+  const revokeDownload = () => {
+    if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+    objectUrlRef.current = null;
+    setDownload(null);
+  };
+
+  const allowMicrophone = async () => {
+    setDenied(false);
+    revokeDownload();
+    try {
+      if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") throw new Error("unsupported");
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (disposedRef.current) { stream.getTracks().forEach((track) => track.stop()); return; }
+      streamRef.current = stream;
+      setLive(true);
+    } catch {
+      if (!disposedRef.current) setDenied(true);
+    }
+  };
+
+  const toggleRecord = () => {
+    const stream = streamRef.current;
+    if (!stream) return;
+    if (recording) {
+      recorderRef.current?.stop();
+      stream.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+      setLive(false);
+      setRecording(false);
+      return;
+    }
+    chunksRef.current = [];
+    const types = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg;codecs=opus"];
+    const mimeType = types.find((type) => MediaRecorder.isTypeSupported(type));
+    try {
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      recorder.ondataavailable = (event) => { if (event.data.size > 0) chunksRef.current.push(event.data); };
+      recorder.onstop = () => {
+        if (disposedRef.current) return;
+        const blob = new Blob(chunksRef.current, { type: recorder.mimeType || "application/octet-stream" });
+        if (!blob.size) { setDenied(true); return; }
+        const extension = blob.type.includes("mp4") ? "m4a" : blob.type.includes("ogg") ? "ogg" : "webm";
+        const url = URL.createObjectURL(blob);
+        objectUrlRef.current = url;
+        setDownload({ url, name: `voice-recording.${extension}` });
+      };
+      recorderRef.current = recorder;
+      recorder.start(250);
+      setRecording(true);
+    } catch {
+      setDenied(true);
+    }
+  };
+
+  return (
+    <div className="live-stage">
+      <div className="bench-actions bench-actions-center">
+        {!live ? (
+          <Button size="sm" onClick={() => void allowMicrophone()}>
+            <Mic className="mr-2 size-3.5" aria-hidden="true" />{t("tool.live.allow")}
+          </Button>
+        ) : (
+          <Button size="sm" variant={recording ? "destructive" : "default"} onClick={toggleRecord}>
+            {recording ? <Square className="mr-2 size-3.5" aria-hidden="true" /> : <Mic className="mr-2 size-3.5" aria-hidden="true" />}
+            {recording ? t("tool.live.stop") : t("game.start")}
+          </Button>
+        )}
+        {download && <a href={download.url} download={download.name} rel="noopener" className="file-download" aria-label={`${t("common.download")} ${download.name}`}><Download className="size-3.5" aria-hidden="true" /><span>{download.name}</span></a>}
+      </div>
+      {recording && <p role="status">{t("tool.live.text")}: {t("tool.live.recording")}</p>}
+      {denied && <p className="form-error" role="alert">{t("tool.live.allow")}</p>}
+    </div>
+  );
 }

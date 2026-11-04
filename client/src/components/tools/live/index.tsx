@@ -11,7 +11,7 @@ import { KeycodeInfo } from "./KeycodeInfo";
 import { BenchmarkBuilder } from "./Benchmark";
 import { FaviconGen } from "./FaviconGen";
 import { Wysiwyg } from "./Wysiwyg";
-import { CameraRecorder, ScreenRecorder } from "./Recorders";
+import { CameraRecorder, ScreenRecorder, VoiceRecorder } from "./Recorders";
 import { QrFileTransfer } from "./QrFileTransfer";
 import { SpeechToText } from "./SpeechToText";
 import { TextToSpeech } from "./TextToSpeech";
@@ -35,6 +35,7 @@ const liveTools: Record<string, ComponentType> = {
   "html-wysiwyg-editor": Wysiwyg,
   "camera-recorder": CameraRecorder,
   "screen-audio-recorder": ScreenRecorder,
+  "voice-recorder": VoiceRecorder,
   "qr-file-transfer": QrFileTransfer,
   "speech-to-text": SpeechToText,
   "text-to-speech": TextToSpeech,
