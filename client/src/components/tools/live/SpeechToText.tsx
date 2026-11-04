@@ -139,9 +139,9 @@ export function SpeechToText() {
         <label className="tool-field">
           <span>{t("tool.live.language")}</span>
           <select value={lang} onChange={(event) => setLang(event.target.value)} aria-label={t("tool.live.language")} disabled={listening}>
-            <option value="en-US">English (US)</option>
-            <option value="en-GB">English (UK)</option>
-            <option value="bn-BD">বাংলা (BD)</option>
+            <option value="en-US">{t("tool.live.languageEnglishUS")}</option>
+            <option value="en-GB">{t("tool.live.languageEnglishUK")}</option>
+            <option value="bn-BD">{t("tool.live.languageBanglaBD")}</option>
           </select>
         </label>
       </div>

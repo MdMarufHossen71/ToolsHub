@@ -1,5 +1,6 @@
 /** Large high-contrast QR frame renderer: matrix drawn straight to canvas. */
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "@/contexts/AppSettingsContext";
 
 type QrGenerator = {
   addData: (data: string) => void;
@@ -16,6 +17,7 @@ async function loadQrGenerator(): Promise<(typeNumber: number, errorLevel: strin
 }
 
 export function QrCanvas({ text, size = 320 }: { text: string; size?: number }) {
+  const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [failed, setFailed] = useState(false);
 
@@ -73,11 +75,11 @@ export function QrCanvas({ text, size = 320 }: { text: string; size?: number }) 
         height={size}
         style={{ width: `min(${size}px, 78vw)`, height: "auto", background: "#fff", borderRadius: 12 }}
         role="img"
-        aria-label="QR transfer frame"
+        aria-label={t("tool.live.qrTransferFrame")}
       />
       {failed && (
         <p className="tool-note tool-note-warning" role="alert">
-          This frame could not be drawn. Shorten the file or try a smaller chunk size.
+          {t("tool.live.qrFrameFailed")}
         </p>
       )}
     </>

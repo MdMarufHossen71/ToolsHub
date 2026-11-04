@@ -8,13 +8,13 @@
 
 | Area | What is included |
 |---|---|
-| Tools | A searchable browser-side directory across text, crypto, developer, image, color, calculator, time, file, SEO, and generator categories. 271 tools fully implemented (12 AI tools excluded by design — no network tools); the rest show an honest “Not built yet” state instead of fake output. |
+| Tools | A searchable directory of 300 implemented tools across text, crypto, developer, image, color, calculator, time, file, SEO, generator, and AI categories. The 9 optional AI tools use a provider key you supply. |
 | Games | 32 playable games with keyboard + touch controls and local high-score persistence. |
 | Localization | **Default language is English; full Bangla UI is available via the language toggle.** Tool names remain in English for familiar search and SEO, while descriptions are supplied in both English and Bangla. |
 | Appearance | Light, Dark, and 10 developer-inspired presets, plus a six-token custom-theme builder with import, export, edit, and delete controls. |
-| Privacy | No account requirement, server-side tool processing, user tracking, or third-party font request — fonts are self-hosted and everything else runs locally. |
+| Privacy | No account or usage tracking. Regular tools run in your browser; AI requests go to the provider you configure when you run them, and Data Waster sends traffic only to the endpoint you choose. Fonts are self-hosted. |
 | PWA | Installable (shortcuts, share target), offline-capable via a precached app shell + same-origin cache-first service worker. |
-| SEO | 647 prerendered shells (EN + BN under `/bn`, hreflang paired) + sitemap + robots, generated at build time; per-route meta/OG/Twitter/JSON-LD in the app too. |
+| SEO | 681 prerendered shells (EN + BN under `/bn`, hreflang paired) + sitemap with 683 URLs + robots, generated at build time; per-route meta/OG/Twitter/JSON-LD in the app too. |
 
 ## Your data stays in your browser
 
@@ -158,7 +158,7 @@ restart, and persist best score locally.
 - Self-hosted fonts (Fontsource: Noto Sans Bengali, Space Grotesk, DM Mono)
 - Service worker (precache + cache-first, no third-party requests)
 - Browser-native storage, file, and Web Crypto APIs
-- Vitest: 57 files / 314 tests (logic + jsdom component + axe a11y) with a v8 coverage gate; CI also runs lint, shell/SEO, i18n, contrast, CSP-hash, and bundle-budget audits
+- Vitest: 65 files / 362 tests (logic + jsdom component + axe a11y) with a v8 coverage gate; CI also runs lint, shell/SEO, i18n, contrast, CSP-hash, and bundle-budget audits
 
 ## License
 
