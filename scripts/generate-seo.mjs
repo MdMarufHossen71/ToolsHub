@@ -202,11 +202,17 @@ if (written !== perLocale * LOCALES.length + 1) {
 // --- sitemap.xml + robots.txt ---------------------------------------------------
 const enPaths = [
   "/",
+  "/data-waster/",
   ...SECTION_ROUTES.map((route) => route.path),
   ...toolRegistry.map((tool) => `/tools/${tool.slug}/`),
   ...gameRegistry.map((game) => `/games/${game.slug}/`),
 ];
-const urls = [...enPaths.map((p) => canonicalUrl(p)), ...enPaths.filter((p) => p !== "/").map((p) => localizedUrl(p, "bn")), canonicalUrl("/bn/")];
+const englishOnlyPaths = new Set(["/data-waster/"]);
+const urls = [
+  ...enPaths.map((p) => canonicalUrl(p)),
+  ...enPaths.filter((p) => p !== "/" && !englishOnlyPaths.has(p)).map((p) => localizedUrl(p, "bn")),
+  canonicalUrl("/bn/"),
+];
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls
   .map((url) => `  <url><loc>${url}</loc><lastmod>${LAST_MOD}</lastmod></url>`)
   .join("\n")}\n</urlset>\n`;

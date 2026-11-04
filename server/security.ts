@@ -11,9 +11,9 @@
 import helmet from "helmet";
 
 /** sha256 of the inline `<style>` block in `client/public/404.html`. */
-export const CSP_STYLE_404_HASH = "sha256-bpypoTR0KUXHrm1UCbUNNlgfw8WeEcXfhVy7yFGmKgE=";
+export const CSP_STYLE_404_HASH = "sha256-BGDcb46zCRU5rJnoKj1wXtatLNW2x6HbrzeEckz7KR8=";
 /** sha256 of the inline `<script>` block in `client/public/404.html`. */
-export const CSP_SCRIPT_404_HASH = "sha256-f+5/MSA2CfyLTRHbmbaHbKai9uvW23Q9dP4udbPVwmM=";
+export const CSP_SCRIPT_404_HASH = "sha256-dxoochAej0b6SOanassAQcyuGnxPoYrH/Q2ZRCnvTrI=";
 
 /** Mirrors the `Strict-Transport-Security` value in `vercel.json`. */
 export const HSTS_VALUE = "max-age=63072000; includeSubDomains";
@@ -28,7 +28,7 @@ export const CSP_DIRECTIVES = {
   "style-src": ["'self'", `'${CSP_STYLE_404_HASH}'`],
   "font-src": ["'self'", "data:"],
   "img-src": ["'self'", "data:", "blob:"],
-  "connect-src": ["'self'"],
+  "connect-src": ["'self'", "https://speed.cloudflare.com"],
   "worker-src": ["'self'", "blob:"],
   "object-src": ["'none'"],
   "base-uri": ["'self'"],

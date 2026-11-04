@@ -58,7 +58,8 @@ for (const file of files) {
   }
   if (!/<link rel="canonical" href="https:\/\/[^"]+"/.test(html)) fail(file, "missing canonical link");
   if (!/<link rel="alternate" hreflang="en" href="https:\/\/[^"]+"/.test(html)) fail(file, "missing hreflang=en alternate");
-  if (!/<link rel="alternate" hreflang="bn" href="https:\/\/[^"]+"/.test(html)) fail(file, "missing hreflang=bn alternate");
+  // The separately served Data Waster page is English-only and has no Bangla twin.
+  if (relative !== "data-waster/index.html" && !/<link rel="alternate" hreflang="bn" href="https:\/\/[^"]+"/.test(html)) fail(file, "missing hreflang=bn alternate");
   if (!/<link rel="alternate" hreflang="x-default" href="https:\/\/[^"]+"/.test(html)) fail(file, "missing hreflang=x-default alternate");
   if (!/<meta property="og:url"/.test(html)) fail(file, "missing og:url");
   if (!/<meta name="twitter:card" content="summary_large_image"/.test(html)) fail(file, "missing twitter:card");
