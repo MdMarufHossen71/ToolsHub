@@ -25,19 +25,19 @@
   <div class="top-right"><span class="pill" id="networkInfo">Network estimate unavailable</span><span class="pill" id="status">Idle</span></div>
 </header>
 
-<div class="intro"><strong>⚠ Data usage warning:</strong> This tool downloads real data from Cloudflare's public speed-test endpoint. It can use your mobile or broadband allowance. A hard limit of <strong>1 GB per session</strong> is enforced; there is no unlimited mode. The counter measures response-body bytes read by this browser, not your ISP's exact billed usage.</div>
+<div class="intro"><strong>⚠ Data usage warning:</strong> This tool downloads real data from Cloudflare's public speed-test endpoint. It can use your mobile or broadband allowance. Finite targets are capped at <strong>1 GB</strong>; Unlimited mode runs until you press Stop. The counter measures response-body bytes read by this browser, not your ISP's exact billed usage.</div>
 
 <main>
 <div class="layout">
 <section class="panel">
-  <h2>Choose your data target</h2><p class="sub">Decimal units · 1 MB = 1,000,000 bytes · Maximum 1 GB per session</p>
+  <h2>Choose your data target</h2><p class="sub">Decimal units · 1 MB = 1,000,000 bytes · Presets and custom targets up to 1 GB, or Unlimited until you stop</p>
   <div class="targets" id="targets">
     <button class="target" data-mb="10">10 MB<small>10 million bytes</small></button>
     <button class="target" data-mb="50">50 MB<small>50 million bytes</small></button>
     <button class="target active" data-mb="100">100 MB<small>100 million bytes</small></button>
     <button class="target" data-mb="250">250 MB<small>250 million bytes</small></button>
     <button class="target" data-mb="500">500 MB<small>500 million bytes</small></button>
-    <button class="target" data-mb="1000">1 GB<small>1 billion bytes</small></button>
+    <button class="target" data-mb="1000">1 GB<small>1 billion bytes</small></button><button id="unlimitedTarget" class="target" type="button">Unlimited<small>Stop manually</small></button>
   </div>
   <div class="custom">
     <div class="field"><label for="customAmount">Custom amount (MB)</label><input id="customAmount" type="number" min="1" max="1000" step="1" placeholder="Enter 1–1000"></div>
@@ -96,7 +96,7 @@
     <li>It requests test data from <code>speed.cloudflare.com</code> over HTTPS and counts readable response-body bytes.</li>
     <li>One download stream is used to make the byte target more predictable and reduce excess in-flight traffic.</li>
     <li>Requests use small chunks; pause, resume and stop controls abort the current stream.</li>
-    <li>A 20-second stalled request is stopped automatically. Each session is capped at 1 GB.</li>
+    <li>A stalled request is stopped after 20 seconds. Finite targets cap at 1 GB; Unlimited mode continues until you press Stop.</li>
     <li>No response data is saved to disk or uploaded to this website. Session history stays in local browser storage.</li>
   </ul>
   <div class="health note">Important: Browser payload counters exclude HTTP headers, TLS overhead, retransmissions and other network traffic. Your mobile operator or ISP may report a different amount. Do not use this with a metered connection unless you accept the cost.</div>
