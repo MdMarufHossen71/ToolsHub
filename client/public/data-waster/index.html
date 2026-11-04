@@ -84,14 +84,14 @@
 </section>
 <section class="panel">
   <h2>How this tool works</h2><p class="sub">Read before starting a large transfer</p>
-  <ul style="padding-left:18px;margin:0;color:#b8c9d9;font-size:11px;line-height:1.8">
+  <ul class="explainer-list">
     <li>It requests test data from <code>speed.cloudflare.com</code> over HTTPS and counts readable response-body bytes.</li>
     <li>One download stream is used to make the byte target more predictable and reduce excess in-flight traffic.</li>
     <li>Requests use small chunks; pause, resume and stop controls abort the current stream.</li>
     <li>A 20-second stalled request is stopped automatically. Each session is capped at 1 GB.</li>
     <li>No response data is saved to disk or uploaded to this website. Session history stays in local browser storage.</li>
   </ul>
-  <div class="health" style="margin-top:13px">Important: Browser payload counters exclude HTTP headers, TLS overhead, retransmissions and other network traffic. Your mobile operator or ISP may report a different amount. Do not use this with a metered connection unless you accept the cost.</div>
+  <div class="health note">Important: Browser payload counters exclude HTTP headers, TLS overhead, retransmissions and other network traffic. Your mobile operator or ISP may report a different amount. Do not use this with a metered connection unless you accept the cost.</div>
 </section>
 </div>
 </main>
