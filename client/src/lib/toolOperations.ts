@@ -16,6 +16,7 @@ import { runRandomTools } from "@/lib/tools/randomTools";
 import { runFileTools } from "@/lib/tools/fileTools";
 import { runImageTools } from "@/lib/tools/imageTools";
 import { runAiTools } from "@/lib/tools/aiTools";
+import { runReferenceTools } from "@/lib/tools/referenceTools";
 import { isLiveTool } from "@/lib/liveSlugs";
 import { IMPLEMENTED_TOOLS } from "@/lib/implementedTools";
 
@@ -379,7 +380,7 @@ async function dispatchTool(slug: string, input: string, option = "default", t: 
     if (slug === "notes-pad") return { text: input, label: t("tool.result.notesHint") };
     // Wave runners: each returns a result or null when the slug is not theirs.
     // They throw ToolError like the branches above; the catch below localizes.
-    for (const runner of [runTextTools, runMathTools, runTimeTools, runSeoTools, runMiscTools, runCryptoTools, runDataTools, runColorTools, runRandomTools, runFileTools, runImageTools, runAiTools]) {
+    for (const runner of [runTextTools, runMathTools, runTimeTools, runSeoTools, runMiscTools, runCryptoTools, runDataTools, runColorTools, runRandomTools, runFileTools, runImageTools, runAiTools, runReferenceTools]) {
       const result = await runner(slug, input, option, t, extra);
       if (result) return result;
     }

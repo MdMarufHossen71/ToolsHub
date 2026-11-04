@@ -23,6 +23,8 @@ export const IMPLEMENTED_TOOLS: ReadonlySet<string> = new Set([
   "gmail-alias-variations", "email-syntax-advisor", "email-extractor", "email-pattern-builder",
   "mailto-link-builder", "email-size-estimator", "email-signature-builder",
   "spam-wording-advisor", "subject-line-advisor",
+  "readability-checker", "token-counter", "invisible-character-remover", "prompt-template-builder",
+  "midjourney-prompt-generator", "social-media-character-limits", "pii-redactor",
   // Crypto & security
   "hash-generator", "uuid-generator", "ulid-generator", "nanoid-generator", "secure-token-generator",
   "jwt-decoder-debugger",
@@ -42,6 +44,8 @@ export const IMPLEMENTED_TOOLS: ReadonlySet<string> = new Set([
   "ipv4-subnet-calculator", "ipv4-address-converter", "ipv4-range-expander",
   "ipv6-ula-generator", "eta-calculator", "svg-placeholder-generator",
   "docker-run-converter", "crontab-generator",
+  "er-diagram-maker", "mind-map-maker", "json-to-typescript", "curl-to-code", "gitignore-generator",
+  "docker-run-to-compose", "llm-api-cost-calculator", "llm-vram-calculator", "mcp-config-generator",
   "html-beautifier", "css-beautifier-minifier", "javascript-beautifier-minifier",
   "code-syntax-highlighter", "json-schema-validator", "html-minifier", "css-minifier",
   "js-minifier", "xlsx-json-converter",
@@ -61,6 +65,10 @@ export const IMPLEMENTED_TOOLS: ReadonlySet<string> = new Set([
   "number-base-converter", "binary-hex-octal-converter", "roman-numeral-converter",
   "average-min-max", "number-list-generator", "number-to-words", "percentage-fraction-decimal",
   "gpa-calculator", "discount-calculator", "loan-emi-calculator", "bangla-calendar-converter",
+  "ai-roi-calculator", "website-cost-calculator", "break-even-calculator", "meeting-cost-calculator",
+  "profit-margin-calculator", "sales-tax-calculator", "salary-to-hourly-calculator", "time-card-calculator",
+  "freelance-rate-calculator", "cpm-calculator", "roas-calculator", "ab-test-calculator",
+  "final-grade-calculator", "engagement-rate-calculator", "box-shadow-generator",
   // Date & time
   "add-subtract-date", "unix-timestamp-converter", "date-formatter", "julian-date",
   "days-between-dates", "working-days-calculator", "timezone-converter",
@@ -74,9 +82,10 @@ export const IMPLEMENTED_TOOLS: ReadonlySet<string> = new Set([
   // File
   "file-hash-calculator",
   "split-file", "join-files", "qr-file-transfer", "file-type-detector", "file-size-converter",
-  "batch-file-rename", "text-to-file-download", "zip-creator-extractor",
+  "batch-file-rename", "text-to-file-download", "zip-creator-extractor", "chatgpt-to-word",
   "pdf-merge", "pdf-split", "pdf-rotate", "pdf-page-reorder", "pdf-watermark",
-  "images-to-pdf", "svg-optimizer", "exif-viewer", "pdf-to-images", "compress-pdf",
+  "images-to-pdf", "svg-optimizer", "exif-viewer", "pdf-to-images", "compress-pdf", "pdf-to-word",
+  "invoice-generator", "quote-generator", "receipt-generator", "purchase-order-generator",
   // Image Studio
   "image-resize", "image-crop", "image-rotate", "image-flip", "image-format-converter",
   "image-compressor", "brightness-contrast", "saturation-vibrance", "exposure-gamma",
@@ -98,7 +107,8 @@ export const IMPLEMENTED_TOOLS: ReadonlySet<string> = new Set([
   "screen-ruler", "fullscreen-dead-pixel-test", "whiteboard", "pomodoro-timer",
   // SEO & web
   "htaccess-redirect-generator", "html-entity-table", "seo-word-counter",
-  "twitter-card-info", "website-text-extractor",
+  "twitter-card-info", "website-text-extractor", "security-txt-generator", "schema-markup-generator",
+  "serp-preview", "open-graph-preview", "ai-readiness-assessment", "llms-txt-generator", "social-media-image-sizes",
   // AI tools (bring your own key; browser calls the provider directly)
   "ai-chat-assistant", "ai-paraphraser", "ai-summarizer", "ai-grammar-fixer",
   "ai-translator", "ai-tone-changer", "ai-code-helper",

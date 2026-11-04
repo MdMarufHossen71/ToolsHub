@@ -53,7 +53,10 @@ const SENSITIVE_PATTERNS = [
  * Slugs that are sensitive but neither in a sensitive category nor matched by a
  * pattern. Kept explicit so the reason stays visible.
  */
-const SENSITIVE_SLUGS = new Set(["bip39-mnemonic-generator", "rsa-key-pair-generator"]);
+const SENSITIVE_SLUGS = new Set([
+  "bip39-mnemonic-generator", "rsa-key-pair-generator", "pii-redactor", "mcp-config-generator",
+  "curl-to-code", "docker-run-to-compose", "chatgpt-to-word", "invoice-generator", "quote-generator", "receipt-generator", "purchase-order-generator",
+]);
 
 /** True when this tool's input must never be written to storage. */
 export function isSensitiveTool(slug: string) {

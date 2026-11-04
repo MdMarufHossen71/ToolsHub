@@ -50,6 +50,23 @@ const MODE_FIELD = (options: Array<{ value: string; en: string; bn: string }>, d
   options: options.map((o) => ({ value: o.value, label: t(o.en, o.bn) })),
 });
 
+const BUSINESS_DOCUMENT_SCHEMA: ToolSchema = {
+  fields: [
+    { key: "business", type: "text", label: t("Business / seller", "ব্যবসা / বিক্রেতা"), default: "Northstar Studio" },
+    { key: "businessContact", type: "text", label: t("Seller contact", "বিক্রেতার যোগাযোগ"), default: "hello@example.com" },
+    { key: "client", type: "text", label: t("Client / buyer", "গ্রাহক / ক্রেতা"), default: "Example Client" },
+    { key: "clientContact", type: "text", label: t("Client contact", "গ্রাহকের যোগাযোগ"), default: "" },
+    { key: "number", type: "text", label: t("Document number", "নথি নম্বর"), default: "001" },
+    { key: "date", type: "date", label: t("Date", "তারিখ"), default: "" },
+    { key: "due", type: "date", label: t("Due date", "শেষ তারিখ"), default: "" },
+    { key: "currency", type: "text", label: t("Currency code", "মুদ্রার কোড"), default: "USD" },
+    { key: "tax", type: "number", label: t("Tax rate (%)", "কর হার (%)"), default: "0", min: "0", max: "100", step: "0.01" },
+    { key: "items", type: "textarea", label: t("Items: description | quantity | unit price", "পণ্য: বিবরণ | পরিমাণ | একক মূল্য"), default: "Design work | 2 | 150\nHosting | 1 | 20" },
+    { key: "notes", type: "textarea", label: t("Notes", "নোট"), default: "Thank you for your business." },
+  ],
+  example: { fields: { number: "001", items: "Design work | 2 | 150\nHosting | 1 | 20" } },
+};
+
 const schemas: Record<string, ToolSchema> = {
   // -- Text & String -------------------------------------------------------
   "text-repeater": {
@@ -1821,6 +1838,126 @@ const schemas: Record<string, ToolSchema> = {
     accept: ".pdf,application/pdf", multiple: false,
     example: { fields: { question: "What is this document about?" } },
   },
+  // -- Browser-local tools mapped from the reference page -----------------
+  "er-diagram-maker": {
+    fields: [{ key: "text", type: "textarea", label: t("Tables and references", "টেবিল ও রেফারেন্স"), default: "users: id (PK), name, email\nposts: id (PK), user_id (FK), title\nusers.id -> posts.user_id" }],
+    example: { fields: { text: "users: id (PK), name, email\nposts: id (PK), user_id (FK), title\nusers.id -> posts.user_id" } },
+  },
+  "mind-map-maker": {
+    fields: [{ key: "text", type: "textarea", label: t("Indented outline", "ইনডেন্ট করা আউটলাইন"), default: "Project\n  Research\n  Design\n  Build\n    Frontend\n    Backend\n  Launch" }],
+    example: { fields: { text: "Project\n  Research\n  Design\n  Build\n    Frontend\n    Backend\n  Launch" } },
+  },
+  "json-to-typescript": {
+    fields: [{ key: "text", type: "textarea", label: t("JSON sample", "JSON নমুনা"), default: '{"name":"Arifa","active":true,"scores":[10,20]}' }],
+    example: { fields: { text: '{"name":"Arifa","active":true,"scores":[10,20]}' } },
+  },
+  "curl-to-code": {
+    fields: [
+      { key: "text", type: "textarea", label: t("curl command", "curl কমান্ড"), default: 'curl -X POST https://api.example.com/items -H "Content-Type: application/json" -d "{\\"name\\":\\"sample\\"}"' },
+      { key: "language", type: "select", label: t("Output language", "আউটপুট ভাষা"), default: "javascript", options: [{ value: "javascript", label: t("JavaScript fetch", "JavaScript fetch") }, { value: "python", label: t("Python requests", "Python requests") }] },
+    ],
+    example: { fields: { language: "javascript" } },
+  },
+  "gitignore-generator": {
+    fields: [{ key: "profiles", type: "text", label: t("Profiles, comma-separated", "প্রোফাইল, কমা দিয়ে আলাদা"), default: "node,windows,macos,vscode" }],
+    example: { fields: { profiles: "node,windows,macos,vscode" } },
+  },
+  "docker-run-to-compose": {
+    fields: [{ key: "text", type: "textarea", label: t("docker run command", "docker run কমান্ড"), default: "docker run -d --name web -p 8080:80 -e NODE_ENV=production nginx:alpine" }],
+    example: {},
+  },
+  "security-txt-generator": {
+    fields: [
+      { key: "contact", type: "text", label: t("Contact email or URL", "যোগাযোগ ইমেইল বা URL"), default: "mailto:security@example.com" },
+      { key: "expires", type: "date", label: t("Expiry date (optional)", "মেয়াদ শেষের তারিখ (ঐচ্ছিক)"), default: "" },
+      { key: "encryption", type: "text", label: t("Encryption key URL (optional)", "Encryption key URL (ঐচ্ছিক)"), default: "" },
+      { key: "languages", type: "text", label: t("Preferred languages", "পছন্দের ভাষা"), default: "en" },
+      { key: "policy", type: "text", label: t("Policy URL (optional)", "নীতি URL (ঐচ্ছিক)"), default: "" },
+    ],
+    example: { fields: { contact: "mailto:security@example.com" } },
+  },
+  "schema-markup-generator": {
+    fields: [
+      { key: "type", type: "select", label: t("Schema type", "স্কিমার ধরন"), default: "Organization", options: ["Organization", "WebSite", "Product", "Article", "FAQPage"].map((value) => ({ value, label: t(value, value) })) },
+      { key: "name", type: "text", label: t("Name or headline", "নাম বা শিরোনাম"), default: "Example Studio" },
+      { key: "url", type: "text", label: t("Canonical URL", "Canonical URL"), default: "https://example.com" },
+      { key: "description", type: "textarea", label: t("Description", "বিবরণ"), default: "A short description." },
+      { key: "author", type: "text", label: t("Article author", "লেখক"), default: "" },
+      { key: "price", type: "number", label: t("Product price", "পণ্যের মূল্য"), default: "19.99", min: "0", step: "0.01" },
+      { key: "currency", type: "text", label: t("Currency code", "মুদ্রার কোড"), default: "USD" },
+      { key: "text", type: "textarea", label: t("FAQ pairs, one Question | Answer per line", "FAQ জোড়া, প্রতি লাইনে প্রশ্ন | উত্তর"), default: "How does it work? | It runs locally in your browser." },
+    ],
+    example: { fields: { type: "Organization", url: "https://example.com" } },
+  },
+  "serp-preview": {
+    fields: [{ key: "title", type: "text", label: t("Page title", "পেজ শিরোনাম"), default: "Example page title" }, { key: "url", type: "text", label: t("Page URL", "পেজ URL"), default: "https://example.com/page" }, { key: "description", type: "textarea", label: t("Description", "বিবরণ"), default: "A concise description of this page." }],
+    example: {},
+  },
+  "open-graph-preview": {
+    fields: [{ key: "title", type: "text", label: t("Page title", "পেজ শিরোনাম"), default: "Example page title" }, { key: "url", type: "text", label: t("Page URL", "পেজ URL"), default: "https://example.com/page" }, { key: "description", type: "textarea", label: t("Description", "বিবরণ"), default: "A concise description of this page." }],
+    example: {},
+  },
+  "website-cost-calculator": {
+    fields: [{ key: "pages", type: "number", label: t("Number of pages", "পৃষ্ঠার সংখ্যা"), default: "5", min: "1" }, { key: "complexity", type: "number", label: t("Complexity factor (1–3)", "জটিলতার গুণক (১–৩)"), default: "1", min: "1", max: "3" }, { key: "features", type: "number", label: t("Feature hours", "ফিচারের ঘণ্টা"), default: "12", min: "0" }, { key: "hourlyRate", type: "number", label: t("Hourly rate", "ঘণ্টাপ্রতি রেট"), default: "35", min: "0", step: "0.01" }],
+    example: {},
+  },
+  "ai-readiness-assessment": {
+    fields: [{ key: "text", type: "textarea", label: t("Checklist — mark completed items with [x]", "চেকলিস্ট — সম্পন্ন আইটেমে [x] দিন"), default: "[ ] We have a clear use case\n[ ] Data access is documented\n[ ] A person reviews important outputs\n[ ] Privacy and retention are considered\n[ ] We measure quality and cost" }],
+    example: {},
+  },
+  "invoice-generator": BUSINESS_DOCUMENT_SCHEMA,
+  "quote-generator": BUSINESS_DOCUMENT_SCHEMA,
+  "receipt-generator": BUSINESS_DOCUMENT_SCHEMA,
+  "purchase-order-generator": BUSINESS_DOCUMENT_SCHEMA,
+  "break-even-calculator": {
+    fields: [{ key: "fixedCosts", type: "number", label: t("Fixed costs", "স্থায়ী খরচ"), default: "5000", min: "0", step: "0.01" }, { key: "price", type: "number", label: t("Price per unit", "প্রতি ইউনিটের দাম"), default: "50", min: "0", step: "0.01" }, { key: "variableCost", type: "number", label: t("Variable cost per unit", "প্রতি ইউনিট পরিবর্তনশীল খরচ"), default: "20", min: "0", step: "0.01" }],
+    example: {},
+  },
+  "meeting-cost-calculator": {
+    fields: [{ key: "participants", type: "number", label: t("Participants", "অংশগ্রহণকারী"), default: "5", min: "1" }, { key: "minutes", type: "number", label: t("Minutes", "মিনিট"), default: "60", min: "0" }, { key: "averageHourlyCost", type: "number", label: t("Average hourly cost", "গড় ঘণ্টাপ্রতি খরচ"), default: "30", min: "0", step: "0.01" }],
+    example: {},
+  },
+  "readability-checker": { fields: [{ key: "text", type: "textarea", label: t("English text", "ইংরেজি লেখা"), default: "Clear writing helps readers understand an idea with less effort." }], example: {} },
+  "token-counter": { fields: [{ key: "text", type: "textarea", label: t("Text", "টেক্সট"), default: "Tokens are estimated in this browser." }], example: {} },
+  "llm-api-cost-calculator": {
+    fields: [{ key: "promptTokens", type: "number", label: t("Input tokens", "ইনপুট টোকেন"), default: "1000", min: "0" }, { key: "completionTokens", type: "number", label: t("Output tokens", "আউটপুট টোকেন"), default: "500", min: "0" }, { key: "inputRate", type: "number", label: t("Input cost per 1M tokens (USD)", "১০ লক্ষ ইনপুট টোকেনের খরচ (USD)"), default: "1", min: "0", step: "0.0001" }, { key: "outputRate", type: "number", label: t("Output cost per 1M tokens (USD)", "১০ লক্ষ আউটপুট টোকেনের খরচ (USD)"), default: "3", min: "0", step: "0.0001" }],
+    example: {},
+  },
+  "llm-vram-calculator": {
+    fields: [{ key: "parameters", type: "number", label: t("Model parameters (billions)", "মডেল প্যারামিটার (বিলিয়ন)"), default: "7", min: "0.1", step: "0.1" }, { key: "bytesPerParameter", type: "select", label: t("Bytes per parameter", "প্রতি প্যারামিটারে বাইট"), default: "2", options: [{ value: "0.5", label: t("4-bit (0.5 byte)", "4-bit (0.5 বাইট)") }, { value: "1", label: t("8-bit (1 byte)", "8-bit (1 বাইট)") }, { value: "2", label: t("16-bit (2 bytes)", "16-bit (2 বাইট)") }, { value: "4", label: t("32-bit (4 bytes)", "32-bit (4 বাইট)") }] }, { key: "overheadPercent", type: "number", label: t("Extra memory overhead (%)", "অতিরিক্ত মেমরি overhead (%)"), default: "25", min: "0", max: "300" }],
+    example: {},
+  },
+  "pii-redactor": { fields: [{ key: "text", type: "textarea", label: t("Text to scan", "যে লেখা পরীক্ষা করবেন"), default: "Contact me at arifa@example.com or +1 (555) 123-4567." }], example: {} },
+  "midjourney-prompt-generator": {
+    fields: [{ key: "subject", type: "text", label: t("Subject", "বিষয়"), default: "A quiet mountain lake at sunrise" }, { key: "style", type: "text", label: t("Style", "স্টাইল"), default: "cinematic landscape photography" }, { key: "lighting", type: "text", label: t("Lighting", "আলো"), default: "soft golden-hour light" }, { key: "details", type: "text", label: t("Details", "বিস্তারিত"), default: "mist, reflections, fine detail" }, { key: "ratio", type: "text", label: t("Aspect ratio", "অনুপাত"), default: "16:9" }, { key: "negative", type: "text", label: t("Exclude", "বাদ দিন"), default: "text, watermark" }],
+    example: {},
+  },
+  "mcp-config-generator": {
+    fields: [{ key: "name", type: "text", label: t("Server name", "সার্ভারের নাম"), default: "local-server" }, { key: "command", type: "text", label: t("Command", "কমান্ড"), default: "npx" }, { key: "args", type: "textarea", label: t("Arguments, one per line", "আর্গুমেন্ট, প্রতি লাইনে একটি"), default: "-y\n@modelcontextprotocol/server-filesystem\n/tmp" }, { key: "envName", type: "text", label: t("Environment variable name", "Environment variable-এর নাম"), default: "API_TOKEN" }, { key: "envValue", type: "text", label: t("Environment variable value", "Environment variable-এর মান"), default: "" }],
+    example: {},
+  },
+  "llms-txt-generator": {
+    fields: [{ key: "site", type: "text", label: t("Site name", "সাইটের নাম"), default: "Example Site" }, { key: "description", type: "textarea", label: t("Description", "বিবরণ"), default: "A short overview of this website." }, { key: "text", type: "textarea", label: t("Page URLs, one per line", "পেজ URL, প্রতি লাইনে একটি"), default: "https://example.com/about\nhttps://example.com/docs" }],
+    example: {},
+  },
+  "prompt-template-builder": { fields: [{ key: "template", type: "textarea", label: t("Template", "টেমপ্লেট"), default: "Write a {{format}} about {{topic}} for {{audience}}." }, { key: "variables", type: "textarea", label: t("Values, one key=value per line", "মান, প্রতি লাইনে key=value"), default: "topic=browser privacy\naudience=beginners\nformat=short guide" }], example: {} },
+  "invisible-character-remover": { fields: [{ key: "text", type: "textarea", label: t("Text", "টেক্সট"), default: "Paste text that may contain invisible formatting characters." }], example: {} },
+  "profit-margin-calculator": { fields: [{ key: "revenue", type: "number", label: t("Revenue", "আয়"), default: "1000", min: "0", step: "0.01" }, { key: "cost", type: "number", label: t("Cost", "খরচ"), default: "650", min: "0", step: "0.01" }], example: {} },
+  "sales-tax-calculator": { fields: [{ key: "amount", type: "number", label: t("Subtotal", "উপমোট"), default: "100", min: "0", step: "0.01" }, { key: "rate", type: "number", label: t("Tax rate (%)", "কর হার (%)"), default: "8.25", min: "0", max: "100", step: "0.01" }], example: {} },
+  "salary-to-hourly-calculator": { fields: [{ key: "annualSalary", type: "number", label: t("Annual salary", "বার্ষিক বেতন"), default: "60000", min: "0", step: "0.01" }, { key: "hoursPerWeek", type: "number", label: t("Hours per week", "সপ্তাহে ঘণ্টা"), default: "40", min: "0.1", step: "0.5" }, { key: "weeksPerYear", type: "number", label: t("Work weeks per year", "বছরে কাজের সপ্তাহ"), default: "52", min: "1", max: "52" }], example: {} },
+  "time-card-calculator": { fields: [{ key: "start", type: "text", label: t("Start time (HH:MM)", "শুরুর সময় (HH:MM)"), default: "09:00" }, { key: "end", type: "text", label: t("End time (HH:MM)", "শেষের সময় (HH:MM)"), default: "17:00" }, { key: "breakMinutes", type: "number", label: t("Unpaid break (minutes)", "বিনা বেতনের বিরতি (মিনিট)"), default: "30", min: "0" }, { key: "hourlyRate", type: "number", label: t("Hourly rate", "ঘণ্টাপ্রতি রেট"), default: "20", min: "0", step: "0.01" }], example: {} },
+  "freelance-rate-calculator": { fields: [{ key: "annualIncome", type: "number", label: t("Target annual income", "লক্ষ্য বার্ষিক আয়"), default: "60000", min: "0" }, { key: "monthlyExpenses", type: "number", label: t("Monthly business expenses", "মাসিক ব্যবসায়িক খরচ"), default: "500", min: "0" }, { key: "hoursPerWeek", type: "number", label: t("Work hours per week", "সপ্তাহে কাজের ঘণ্টা"), default: "30", min: "0.1" }, { key: "billablePercent", type: "number", label: t("Billable share (%)", "Billable সময় (%)"), default: "60", min: "1", max: "100" }, { key: "weeksPerYear", type: "number", label: t("Work weeks per year", "বছরে কাজের সপ্তাহ"), default: "48", min: "1", max: "52" }], example: {} },
+  "cpm-calculator": { fields: [{ key: "spend", type: "number", label: t("Ad spend", "বিজ্ঞাপন খরচ"), default: "250", min: "0", step: "0.01" }, { key: "impressions", type: "number", label: t("Impressions", "Impression সংখ্যা"), default: "50000", min: "1" }, { key: "currency", type: "text", label: t("Currency code", "মুদ্রার কোড"), default: "USD" }], example: {} },
+  "roas-calculator": { fields: [{ key: "revenue", type: "number", label: t("Revenue attributed to ads", "বিজ্ঞাপনের সঙ্গে যুক্ত আয়"), default: "2500", min: "0", step: "0.01" }, { key: "adSpend", type: "number", label: t("Ad spend", "বিজ্ঞাপন খরচ"), default: "500", min: "0.01", step: "0.01" }], example: {} },
+  "ab-test-calculator": { fields: [{ key: "visitorsA", type: "number", label: t("Variant A visitors", "A সংস্করণের ভিজিটর"), default: "1000", min: "1" }, { key: "conversionsA", type: "number", label: t("Variant A conversions", "A সংস্করণের conversion"), default: "100", min: "0" }, { key: "visitorsB", type: "number", label: t("Variant B visitors", "B সংস্করণের ভিজিটর"), default: "1000", min: "1" }, { key: "conversionsB", type: "number", label: t("Variant B conversions", "B সংস্করণের conversion"), default: "120", min: "0" }], example: {} },
+  "final-grade-calculator": { fields: [{ key: "currentGrade", type: "number", label: t("Current weighted grade (%)", "বর্তমান weighted grade (%)"), default: "82", min: "0", max: "100" }, { key: "completedWeight", type: "number", label: t("Course weight already completed (%)", "সম্পন্ন কোর্সের ওজন (%)"), default: "70", min: "0", max: "100" }, { key: "targetGrade", type: "number", label: t("Target final grade (%)", "লক্ষ্য final grade (%)"), default: "85", min: "0", max: "100" }], example: {} },
+  "engagement-rate-calculator": { fields: [{ key: "followers", type: "number", label: t("Followers", "Follower সংখ্যা"), default: "10000", min: "1" }, { key: "interactions", type: "number", label: t("Interactions", "Interaction সংখ্যা"), default: "850", min: "0" }], example: {} },
+  "box-shadow-generator": { fields: [{ key: "x", type: "number", label: t("Horizontal offset (px)", "অনুভূমিক offset (px)"), default: "0" }, { key: "y", type: "number", label: t("Vertical offset (px)", "উল্লম্ব offset (px)"), default: "8" }, { key: "blur", type: "number", label: t("Blur (px)", "Blur (px)"), default: "24", min: "0" }, { key: "spread", type: "number", label: t("Spread (px)", "Spread (px)"), default: "0" }, { key: "color", type: "color", label: t("Colour", "রং"), default: "#000000" }], example: {} },
+  "social-media-image-sizes": { fields: [{ key: "query", type: "text", label: t("Filter platform or format", "প্ল্যাটফর্ম বা ধরন খুঁজুন"), default: "" }], example: {} },
+  "social-media-character-limits": { fields: [{ key: "text", type: "textarea", label: t("Text to compare", "যে লেখা তুলনা করবেন"), default: "Write a short post here." }], example: {} },
+  "ai-roi-calculator": { fields: [{ key: "hoursSaved", type: "number", label: t("Hours saved per month", "মাসে সাশ্রয় হওয়া ঘণ্টা"), default: "20", min: "0" }, { key: "hourlyRate", type: "number", label: t("Hourly value", "ঘণ্টাপ্রতি মূল্য"), default: "30", min: "0", step: "0.01" }, { key: "monthlyCost", type: "number", label: t("Monthly tool cost", "মাসিক টুল খরচ"), default: "100", min: "0", step: "0.01" }], example: {} },
+  "chatgpt-to-word": { fields: [{ key: "text", type: "textarea", label: t("Text to save", "যে লেখা সেভ করবেন"), default: "Paste a ChatGPT conversation or any text here." }], example: {} },
+  "pdf-to-word": { fields: [], accept: ".pdf,application/pdf", multiple: false, example: {} },
 };
 
 export function getToolSchema(slug: string): ToolSchema | null {

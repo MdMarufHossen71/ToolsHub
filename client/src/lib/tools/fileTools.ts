@@ -23,6 +23,22 @@ function downloadArtifact(name: string, mime: string, bytes: Uint8Array): { name
   return { name, mime, dataUrl: `data:${mime};base64,${btoa(binary)}` };
 }
 
+async function makeDocxArtifact(name: string, paragraphs: string[]) {
+  const xml = (value: string) => Array.from(value).filter((char) => {
+    const point = char.codePointAt(0) ?? 0;
+    return point === 0x09 || point === 0x0a || point === 0x0d || point >= 0x20;
+  }).join("").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+  const body = paragraphs.map((line) => line ? `<w:p><w:r><w:t xml:space="preserve">${xml(line)}</w:t></w:r></w:p>` : "<w:p/>").join("");
+  const documentXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${body}<w:sectPr><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/></w:sectPr></w:body></w:document>`;
+  const { default: JSZip } = await import("jszip");
+  const zip = new JSZip();
+  zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>`);
+  zip.file("_rels/.rels", `<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`);
+  zip.file("word/document.xml", documentXml);
+  const bytes = await zip.generateAsync({ type: "uint8array", compression: "DEFLATE" });
+  return downloadArtifact(name, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", bytes);
+}
+
 /** 1-based page ranges like "1-3,5" against a page count. Pure. */
 export function parseRanges(spec: string, pages: number): number[] {
   const out: number[] = [];
@@ -59,6 +75,13 @@ const MAGIC: Array<[string, number[], string]> = [
 
 export const runFileTools: ToolRunner = async (slug, input, _option, _t, extra) => {
   const F = (key: string, fallback = "") => field(extra, key, fallback);
+
+  if (slug === "chatgpt-to-word") {
+    const text = F("text", input);
+    if (!text.trim()) return { text: _t("tool.result.needsInput") };
+    const artifact = await makeDocxArtifact("chatgpt-conversation.docx", text.replace(/\r\n?/g, "\n").split("\n"));
+    return { text: "Your text is ready as a simple Word document.", artifacts: [artifact] };
+  }
 
   if (slug === "split-file") {
     const [file] = needFiles(extra, 1);
@@ -319,6 +342,40 @@ export const runFileTools: ToolRunner = async (slug, input, _option, _t, extra) 
       text: JSON.stringify({ file: file.name, pages: count, of: doc.numPages }, null, 2),
       image: previews[0],
       artifacts,
+    };
+  }
+  if (slug === "pdf-to-word") {
+    const [file] = needFiles(extra, 1, "application/pdf");
+    const pdfjs = await import("pdfjs-dist");
+    const workerUrl = (await import("pdfjs-dist/build/pdf.worker.min.mjs?url")).default as string;
+    pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+    let doc;
+    try {
+      doc = await pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+    } catch {
+      throw new ToolError("tool.error.generic");
+    }
+    if (doc.numPages > 200) throw new ToolError("tool.error.generic");
+    const paragraphs: string[] = [];
+    for (let pageNumber = 1; pageNumber <= doc.numPages; pageNumber += 1) {
+      const page = await doc.getPage(pageNumber);
+      const content = await page.getTextContent();
+      let line = "";
+      for (const item of content.items) {
+        if ("str" in item) {
+          line += item.str;
+          if (item.hasEOL) { paragraphs.push(line); line = ""; }
+        }
+      }
+      if (line.trim()) paragraphs.push(line);
+      paragraphs.push("");
+    }
+    if (!paragraphs.some((line) => line.trim())) throw new ToolError("tool.error.generic");
+    const baseName = file.name.replace(/\.pdf$/i, "") || "document";
+    const artifact = await makeDocxArtifact(`${baseName}.docx`, paragraphs);
+    return {
+      text: `Extracted selectable text from ${doc.numPages} page(s) into a simple Word document. Scanned pages and original layout are not preserved.`,
+      artifacts: [artifact],
     };
   }
   if (slug === "compress-pdf") {
