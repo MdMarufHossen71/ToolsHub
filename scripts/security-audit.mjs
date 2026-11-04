@@ -18,6 +18,22 @@ const EXCEPTIONS = [
       "runs browser-local on files the visitor picks on their own device — " +
       "nothing reaches a server. Re-evaluate if upstream ships a fix.",
   },
+  {
+    package: "extract-zip",
+    reason:
+      "No upstream patch exists (patched: null). This is only pulled in by " +
+      "Lighthouse/Puppeteer developer tooling; the app does not process archives, " +
+      "and CI points Lighthouse at the runner's installed Chrome. Re-evaluate " +
+      "when the tooling no longer includes it or upstream ships a fix.",
+  },
+  {
+    package: "zod",
+    reason:
+      "The patched Zod 4 release is incompatible with the pinned " +
+      "eslint-plugin-react-compiler, which requires Zod 3 and crashes at startup " +
+      "when overridden to Zod 4. This copy is used only by developer tooling, " +
+      "not the app runtime. Re-evaluate when the plugin supports a patched Zod.",
+  },
 ];
 
 // Fixed command string (no interpolation), so `shell: true` is safe here. The

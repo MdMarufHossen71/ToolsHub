@@ -34,6 +34,17 @@ export default tseslint.config(
     },
   },
   {
+    // Standalone browser tool served directly from public/ rather than bundled by Vite.
+    files: ["client/public/data-waster/app.js"],
+    languageOptions: {
+      globals: { ...globals.browser },
+    },
+    rules: {
+      "@typescript-eslint/no-unused-vars": ["error", { caughtErrors: "none" }],
+      "no-empty": ["error", { allowEmptyCatch: true }],
+    },
+  },
+  {
     files: ["scripts/**/*.mjs", "server/**/*.ts", "vite.config.ts", "vitest.config.ts", "eslint.config.mjs"],
     languageOptions: {
       globals: { ...globals.node },
