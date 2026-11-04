@@ -25,12 +25,13 @@
   <div class="top-right"><span class="pill" id="networkInfo">Network estimate unavailable</span><span class="pill" id="status">Idle</span></div>
 </header>
 
-<div class="intro"><strong>⚠ Data usage warning:</strong> This tool downloads real data from Cloudflare's public speed-test endpoint. It can use your mobile or broadband allowance. Finite targets are capped at <strong>1 GB</strong>; Unlimited mode runs until you press Stop. The counter measures response-body bytes read by this browser, not your ISP's exact billed usage.</div>
+<div class="intro"><strong>⚠ Data usage warning:</strong> This tool downloads real data from the selected public endpoint and can use your mobile or broadband allowance. Finite targets are capped at <strong>1 GB</strong>; Unlimited mode runs until you press Stop. Speeed has fair-use limits and a 512 MB per-request cap, so Unlimited is only available on Cloudflare. The counter measures response-body bytes read by this browser, not your ISP's exact billed usage.</div>
 
 <main>
 <div class="layout">
 <section class="panel">
   <h2>Choose your data target</h2><p class="sub">Decimal units · 1 MB = 1,000,000 bytes · Presets and custom targets up to 1 GB, or Unlimited until you stop</p>
+  <div class="field endpoint-field"><label for="endpointSelect">Download server</label><select id="endpointSelect" aria-describedby="endpointNote"><option value="cloudflare">Cloudflare · global</option><option value="speeed">Speeed · free public endpoint</option></select></div><p id="endpointNote" class="helper endpoint-note">Cloudflare public speed-test endpoint. Unlimited mode is available.</p>
   <div class="targets" id="targets">
     <button class="target" data-mb="10">10 MB<small>10 million bytes</small></button>
     <button class="target" data-mb="50">50 MB<small>50 million bytes</small></button>
@@ -55,7 +56,7 @@
   <details class="advanced">
     <summary>Endpoint diagnostics</summary>
     <div class="advanced-inner">
-      <button id="testEndpoint" class="btn">Test Cloudflare endpoint</button>
+      <button id="testEndpoint" class="btn">Test selected endpoint</button>
       <span class="helper">Uses a small 32 KB request only.</span>
     </div>
     <div id="health" class="health">Not tested yet.</div>
@@ -93,7 +94,7 @@
 <section class="panel">
   <h2>How this tool works</h2><p class="sub">Read before starting a large transfer</p>
   <ul class="explainer-list">
-    <li>It requests test data from <code>speed.cloudflare.com</code> over HTTPS and counts readable response-body bytes.</li>
+    <li>It requests test data from the selected provider over HTTPS and counts readable response-body bytes.</li>
     <li>One download stream is used to make the byte target more predictable and reduce excess in-flight traffic.</li>
     <li>Requests use small chunks; pause, resume and stop controls abort the current stream.</li>
     <li>A stalled request is stopped after 20 seconds. Finite targets cap at 1 GB; Unlimited mode continues until you press Stop.</li>
