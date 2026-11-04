@@ -8,6 +8,7 @@ export const referenceAliasesByTarget: Record<string, string[]> = {
     "linux-commands-cheat-sheet", "cmd-vs-powershell-vs-bash", "excel-shortcuts", "google-sheets-shortcuts",
     "vs-code-shortcuts", "chromebook-shortcuts", "claude-code-cheat-sheet",
   ],
+  "particles-js-playground": ["particles-js-playground"],
   "image-format-converter": ["image-converter"],
   "svg-editor": ["svg-editor"],
   "image-crop": ["image-cropper"],

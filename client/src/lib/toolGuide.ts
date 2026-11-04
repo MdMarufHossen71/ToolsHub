@@ -80,6 +80,7 @@ const LIVE_STEPS: Record<string, GuideStep[]> = {
   "camera-recorder": [say("allow"), say("s.recorder"), say("stop"), step("tool.guide.step.copyDownload")],
   "screen-audio-recorder": [say("allow"), say("s.recorder"), say("stop"), step("tool.guide.step.copyDownload")],
   "voice-recorder": [say("allow"), say("s.recorder"), say("stop"), step("tool.guide.step.copyDownload")],
+  "particles-js-playground": [say("s.particles"), say("adjust"), say("watch"), say("explore")],
   "qr-file-transfer": [say("allow"), say("start"), say("watch"), say("stop")],
 };
 

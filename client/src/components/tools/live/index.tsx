@@ -15,6 +15,7 @@ import { CameraRecorder, ScreenRecorder, VoiceRecorder } from "./Recorders";
 import { QrFileTransfer } from "./QrFileTransfer";
 import { SpeechToText } from "./SpeechToText";
 import { TextToSpeech } from "./TextToSpeech";
+import { ParticlesPlayground } from "./ParticlesPlayground";
 
 const liveTools: Record<string, ComponentType> = {
   "countdown-timer": CountdownTimer,
@@ -36,6 +37,7 @@ const liveTools: Record<string, ComponentType> = {
   "camera-recorder": CameraRecorder,
   "screen-audio-recorder": ScreenRecorder,
   "voice-recorder": VoiceRecorder,
+  "particles-js-playground": ParticlesPlayground,
   "qr-file-transfer": QrFileTransfer,
   "speech-to-text": SpeechToText,
   "text-to-speech": TextToSpeech,

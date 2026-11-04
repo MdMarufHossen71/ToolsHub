@@ -50,7 +50,7 @@ export const IMPLEMENTED_TOOLS: ReadonlySet<string> = new Set([
   "code-syntax-highlighter", "json-schema-validator", "html-minifier", "css-minifier",
   "js-minifier", "xlsx-json-converter",
   "keycode-info", "benchmark-builder", "favicon-generator", "html-wysiwyg-editor",
-  "camera-recorder", "screen-audio-recorder",
+  "camera-recorder", "screen-audio-recorder", "particles-js-playground",
   // Colour
   "hex-rgb-hsl-hsv-converter", "color-picker",
   "css-named-colors", "lighten-darken-color", "saturation-shift", "greyscale-color",
