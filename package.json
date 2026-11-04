@@ -101,7 +101,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "globals": "^17.12.0",
     "jsdom": "^30.0.1",
-    "pnpm": "^10.34.5",
+    "pnpm": "^11.27.0",
     "postcss": "^8.5.23",
     "prettier": "^3.6.2",
     "tailwindcss": "^4.1.14",
@@ -113,24 +113,9 @@
     "vite-plugin-manus-runtime": "^0.0.58",
     "vitest": "^4.1.11"
   },
-  "packageManager": "pnpm@10.4.1+sha512.c753b6c3ad7afa13af388fa6d808035a008e30ea9993f58c6663e2bc5ff21679aa834db094987129aa4d488b86df57f7b634981b2f827cdcacc698cc0cfb88af",
+  "packageManager": "pnpm@11.27.0+sha512.5cde925b4f075f725eb71fbae18a42ffe784524789f19b61c731cb8721ec28aaee160e01a8d5af4fedb2a42cdbf300efe23db356b0d4a17b4d63e11f8ab7c956",
   "engines": {
     "node": ">=24",
-    "pnpm": ">=10.4.1"
-  },
-  "pnpm": {
-    "patchedDependencies": {
-      "wouter@3.7.1": "patches/wouter@3.7.1.patch"
-    },
-    "overrides": {
-      "tailwindcss>nanoid": "^3.3.18",
-      "browserslist": "^4.28.7",
-      "picomatch@4.0.3": "4.0.4",
-      "rollup": "^4.59.0",
-      "tar": "^7.5.21",
-      "body-parser": "^1.20.6",
-      "qs": "^6.16.0",
-      "express>path-to-regexp": "0.1.13"
-    }
+    "pnpm": ">=11.0.0"
   }
 }

@@ -1,0 +1,23 @@
+# pnpm v11+ reads project configuration from here, not from package.json#pnpm.
+# Single-package repo: the only workspace member is the root itself.
+packages:
+  - .
+
+# Install scripts are blocked by default in v11. These two first-party packages
+# only fetch their own prebuilt platform binaries; everything else stays blocked.
+allowBuilds:
+  "@tailwindcss/oxide": true
+  esbuild: true
+
+patchedDependencies:
+  wouter@3.7.1: patches/wouter@3.7.1.patch
+
+overrides:
+  tailwindcss>nanoid: ^3.3.18
+  browserslist: ^4.28.7
+  picomatch@4.0.3: 4.0.4
+  rollup: ^4.59.0
+  tar: ^7.5.21
+  body-parser: ^1.20.6
+  qs: ^6.16.0
+  express>path-to-regexp: 0.1.13
