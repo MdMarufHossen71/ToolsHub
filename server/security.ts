@@ -28,7 +28,7 @@ export const CSP_DIRECTIVES = {
   "style-src": ["'self'", `'${CSP_STYLE_404_HASH}'`],
   "font-src": ["'self'", "data:"],
   "img-src": ["'self'", "data:", "blob:"],
-  "connect-src": ["'self'", "https://speed.cloudflare.com", "https://speeed.com.br"],
+  "connect-src": ["'self'", "https:"],
   "worker-src": ["'self'", "blob:"],
   "object-src": ["'none'"],
   "base-uri": ["'self'"],
