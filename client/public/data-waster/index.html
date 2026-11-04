@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#07111d">
+<title>Data Waster Pro — Bandwidth Test Tool | ToolsHub</title>
+<meta name="description" content="A browser-based bandwidth consumption test with live response-byte counters, throughput chart, session limits, and local history.">
+<link rel="canonical" href="https://tools-hub-71.vercel.app/data-waster/">
+<style>
+:root{color-scheme:dark;--bg:#07111d;--panel:#101d2d;--panel2:#0b1725;--line:#26374a;--text:#e8f1fb;--muted:#9aacc0;--cyan:#42d8ed;--green:#5ce0ae;--amber:#ffd16a;--red:#ff8294;--radius:18px;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;color:var(--text);background:radial-gradient(950px 600px at 5% -15%,#11344b 0,transparent 60%),radial-gradient(750px 500px at 100% 0,#1b2447 0,transparent 60%),var(--bg);line-height:1.5}button,input,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}a{color:var(--cyan);text-decoration:none}a:hover{text-decoration:underline}.wrap{max-width:1160px;margin:auto;padding:24px 20px 44px}.top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:22px}.brand{display:flex;align-items:center;gap:13px}.logo{width:46px;height:46px;display:grid;place-items:center;border-radius:14px;border:1px solid #347083;background:linear-gradient(135deg,#163e50,#153a34);color:var(--cyan);font-size:25px}.brand h1{font-size:22px;letter-spacing:-.04em;margin:0}.brand h1 span{color:var(--green)}.brand p{font-size:11px;color:var(--muted);margin:2px 0 0}.top-right{display:flex;align-items:center;gap:10px}.pill{padding:6px 11px;border:1px solid var(--line);border-radius:20px;font-size:11px;color:var(--muted);background:#091522}.pill.live{color:#a6f6e0;border-color:#286c60;background:#0b2a28}.pill.live:before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:7px}.pill.warn{color:var(--amber);border-color:#69542a}.intro{padding:17px 19px;border:1px solid #31566a;background:#0b2130;border-radius:15px;margin-bottom:18px;font-size:12px;color:#c0d8e7}.intro strong{color:#fff}.layout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(320px,.9fr);gap:17px}.panel{background:linear-gradient(160deg,rgba(17,31,48,.96),rgba(10,22,35,.96));border:1px solid var(--line);border-radius:var(--radius);padding:20px;box-shadow:0 18px 50px #0003;min-width:0}.panel h2{font-size:14px;margin:0 0 4px}.sub{font-size:11px;color:var(--muted);margin:0 0 16px}.targets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.target{border:1px solid var(--line);background:#0a1725;color:var(--text);border-radius:12px;padding:11px 7px;text-align:center;font-size:13px;font-weight:750}.target small{display:block;font-size:9px;color:var(--muted);font-weight:500;margin-top:2px}.target.active{border-color:#39b8c8;background:#0d2c39;box-shadow:inset 0 0 0 1px #39b8c833}.custom{display:grid;grid-template-columns:1fr auto auto;gap:8px;margin-top:15px;align-items:end}.field label{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:6px}.field input,.field select{width:100%;background:#071420;border:1px solid var(--line);color:var(--text);border-radius:9px;padding:10px 11px;min-width:0}.field input:focus,.field select:focus{outline:2px solid #42d8ed66;border-color:var(--cyan)}.btn{border:1px solid var(--line);color:var(--text);background:#19293a;padding:10px 14px;border-radius:10px;font-size:11px;font-weight:750}.btn:hover:not(:disabled){filter:brightness(1.15)}.btn.primary{background:linear-gradient(120deg,#55ddec,#5ce0ae);color:#06202a;border:0}.btn.danger{color:#ffc1c9;border-color:#78404a;background:#351c28}.btn.ghost{background:transparent}.controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:17px}.controls .btn{flex:1;min-width:105px}.helper{font-size:10px;color:var(--muted);margin-top:9px}.target-note{padding:10px 12px;border:1px solid var(--line);background:#081522;border-radius:10px;margin-top:13px;font:11px ui-monospace,monospace;color:#c4d5e6;overflow-wrap:anywhere}.target-note strong{color:#fff}.dashboard{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.metric{padding:14px;border:1px solid var(--line);background:#0a1725;border-radius:13px;min-width:0}.metric.primary{border-color:#276276;background:linear-gradient(135deg,#0e2938,#0b1c2a)}.metric label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:800}.value{font:700 clamp(18px,2.2vw,25px) ui-monospace,monospace;letter-spacing:-.04em;margin-top:8px;overflow-wrap:anywhere}.value.cyan{color:#8aeff9}.value.green{color:#8af0c6}.value.amber{color:var(--amber)}.metric small{display:block;font-size:9px;color:var(--muted);margin-top:5px}.progress-panel{margin-top:16px;padding:15px;border:1px solid var(--line);border-radius:13px;background:#091624}.progress-head{display:flex;justify-content:space-between;gap:10px;font-size:11px;margin-bottom:8px}.progress-head span:first-child{color:var(--muted);text-transform:uppercase;font-size:9px;font-weight:800;letter-spacing:.07em}.progress-head span:last-child{color:var(--cyan);font:700 12px ui-monospace,monospace}.track{height:12px;background:#020a12;border:1px solid #27384a;border-radius:20px;overflow:hidden}.fill{height:100%;width:0;background:linear-gradient(90deg,#42d8ed,#5ce0ae);transition:width .2s}.progress-foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:var(--muted);font:10px ui-monospace,monospace;margin-top:8px}.chart{margin-top:16px}.chart-head{display:flex;justify-content:space-between;align-items:start;gap:12px}.chart-head h3{margin:0;font-size:12px}.chart-head p{font-size:10px;color:var(--muted);margin:3px 0 0}.chart-current{text-align:right;color:var(--cyan);font:700 13px ui-monospace,monospace}.chart-current small{display:block;font:9px var(--sans);color:var(--muted);text-transform:uppercase}.chart-wrap{height:180px;margin-top:12px;position:relative}.chart-wrap canvas{width:100%;height:100%;display:block}.chart-empty{position:absolute;inset:0;display:grid;place-items:center;color:#71869c;font-size:10px;pointer-events:none}.below{display:grid;grid-template-columns:1fr 1fr;gap:17px;margin-top:17px}.advanced{margin-top:16px}.advanced summary{cursor:pointer;font-size:12px;font-weight:750;color:#c6d9ea}.advanced-inner{margin-top:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}.health{margin-top:10px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font-size:10px;color:var(--muted);overflow-wrap:anywhere}.health.ok{color:#9df0c9;border-color:#286c60}.health.error{color:#ffc1c9;border-color:#78404a}.history{display:flex;flex-direction:column;gap:8px}.history-row{display:grid;grid-template-columns:82px 1fr auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid #223347}.history-row:last-child{border:0}.hstate{font-size:9px;font-weight:800;text-transform:uppercase;border-radius:20px;padding:4px 7px;text-align:center;color:#9df0c9;background:#12332f}.hstate.error{color:#ffc1c9;background:#3a2029}.hmain strong{font:700 11px ui-monospace,monospace;display:block}.hmain small{font-size:9px;color:var(--muted)}.hmeta{text-align:right;font:9px ui-monospace,monospace;color:var(--muted)}.empty{padding:18px 5px;text-align:center;color:var(--muted);font-size:10px}.footer{border-top:1px solid var(--line);margin-top:22px;padding-top:16px;text-align:center;color:#8194a9;font-size:10px;line-height:1.7}.footer strong{color:#c7d6e4}.modal-backdrop{position:fixed;inset:0;background:#020811d9;backdrop-filter:blur(5px);display:grid;place-items:center;padding:18px;z-index:10}.modal{width:min(430px,100%);border:1px solid #41566d;border-radius:17px;background:#102033;padding:22px;box-shadow:0 24px 70px #0009}.modal h2{margin:0;font-size:18px}.modal p{font-size:12px;color:var(--muted);line-height:1.6}.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}.toast{position:fixed;right:16px;bottom:16px;max-width:330px;padding:11px 14px;border-radius:10px;background:#13263a;border:1px solid #496176;color:#eaf5ff;font-size:11px;z-index:20;box-shadow:0 10px 30px #0008}
+@media(max-width:800px){.layout{grid-template-columns:1fr}.below{grid-template-columns:1fr}}@media(max-width:480px){.wrap{padding:16px 12px 30px}.panel{padding:15px}.brand h1{font-size:19px}.targets{grid-template-columns:repeat(2,minmax(0,1fr))}.custom{grid-template-columns:1fr 1fr}.custom .field:first-child{grid-column:1/-1}.custom .btn{grid-column:1/-1}.dashboard{gap:7px}.metric{padding:11px}.value{font-size:18px}.controls .btn{min-width:calc(50% - 8px)}.history-row{grid-template-columns:70px 1fr}.hmeta{grid-column:2;text-align:left}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div class="brand"><div class="logo" aria-hidden="true">◈</div><div><h1>Data Waster <span>Pro</span></h1><p>Real HTTP downloads · Live response-byte telemetry</p></div></div>
+  <div class="top-right"><span class="pill" id="networkInfo">Network estimate unavailable</span><span class="pill" id="status">Idle</span></div>
+</header>
+
+<div class="intro"><strong>⚠ Data usage warning:</strong> This tool downloads real data from Cloudflare's public speed-test endpoint. It can use your mobile or broadband allowance. A hard limit of <strong>1 GB per session</strong> is enforced; there is no unlimited mode. The counter measures response-body bytes read by this browser, not your ISP's exact billed usage.</div>
+
+<main>
+<div class="layout">
+<section class="panel">
+  <h2>Choose your data target</h2><p class="sub">Decimal units · 1 MB = 1,000,000 bytes · Maximum 1 GB per session</p>
+  <div class="targets" id="targets">
+    <button class="target" data-mb="10">10 MB<small>10 million bytes</small></button>
+    <button class="target" data-mb="50">50 MB<small>50 million bytes</small></button>
+    <button class="target active" data-mb="100">100 MB<small>100 million bytes</small></button>
+    <button class="target" data-mb="250">250 MB<small>250 million bytes</small></button>
+    <button class="target" data-mb="500">500 MB<small>500 million bytes</small></button>
+    <button class="target" data-mb="1000">1 GB<small>1 billion bytes</small></button>
+  </div>
+  <div class="custom">
+    <div class="field"><label for="customAmount">Custom amount (MB)</label><input id="customAmount" type="number" min="1" max="1000" step="1" placeholder="Enter 1–1000"></div>
+    <button id="applyCustom" class="btn">Set target</button>
+    <button id="resetTarget" class="btn ghost">Reset</button>
+  </div>
+  <div class="helper" id="customHint">Select a preset or enter a custom amount.</div>
+  <div class="controls">
+    <button id="start" class="btn primary">▶ Start download</button>
+    <button id="pause" class="btn" disabled>Ⅱ Pause</button>
+    <button id="resume" class="btn" disabled>▶ Resume</button>
+    <button id="stop" class="btn danger" disabled>■ Stop</button>
+  </div>
+  <div class="target-note" id="targetSummary">Target: <strong>100 MB</strong> · 100,000,000 bytes</div>
+  <details class="advanced">
+    <summary>Endpoint diagnostics</summary>
+    <div class="advanced-inner">
+      <button id="testEndpoint" class="btn">Test Cloudflare endpoint</button>
+      <span class="helper">Uses a small 32 KB request only.</span>
+    </div>
+    <div id="health" class="health">Not tested yet.</div>
+  </details>
+</section>
+
+<section class="panel">
+  <h2>Live session dashboard</h2><p class="sub">Measured from real streamed HTTP response chunks</p>
+  <div class="dashboard">
+    <article class="metric primary"><label>Response data received</label><div class="value cyan" id="downloaded">0 B</div><small id="downloadedSub">No data transferred</small></article>
+    <article class="metric"><label>Current throughput</label><div class="value" id="speed">—</div><small id="speedSub">Waiting for session</small></article>
+    <article class="metric"><label>Average throughput</label><div class="value green" id="average">—</div><small>Since active session start</small></article>
+    <article class="metric"><label>Elapsed active time</label><div class="value" id="elapsed">00:00</div><small id="elapsedSub">Not started</small></article>
+    <article class="metric"><label>Remaining data</label><div class="value amber" id="remaining">100 MB</div><small id="remainingSub">Of selected target</small></article>
+    <article class="metric"><label>Estimated time left</label><div class="value" id="eta">—</div><small>Based on current average</small></article>
+  </div>
+  <div class="progress-panel">
+    <div class="progress-head"><span>Session progress</span><span id="percent">0.0%</span></div>
+    <div class="track" role="progressbar" id="progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="fill" id="fill"></div></div>
+    <div class="progress-foot"><span id="progressBytes">0 B of 100 MB</span><span id="requests">0 requests</span></div>
+  </div>
+  <div class="chart">
+    <div class="chart-head"><div><h3>Live throughput</h3><p>Rolling 60-second history</p></div><div class="chart-current"><span id="chartSpeed">—</span><small>Current speed</small></div></div>
+    <div class="chart-wrap"><canvas id="chart" aria-label="Live download throughput chart"></canvas><div class="chart-empty" id="chartEmpty">Waiting for network data…</div></div>
+  </div>
+</section>
+</div>
+
+<div class="below">
+<section class="panel">
+  <h2>Session history</h2><p class="sub">Stored only in this browser on this device</p>
+  <div class="controls" style="margin:0 0 10px"><button id="exportHistory" class="btn ghost">Export JSON</button><button id="clearHistory" class="btn danger">Clear history</button></div>
+  <div id="history" class="history"><div class="empty">No sessions yet.</div></div>
+</section>
+<section class="panel">
+  <h2>How this tool works</h2><p class="sub">Read before starting a large transfer</p>
+  <ul style="padding-left:18px;margin:0;color:#b8c9d9;font-size:11px;line-height:1.8">
+    <li>It requests test data from <code>speed.cloudflare.com</code> over HTTPS and counts readable response-body bytes.</li>
+    <li>One download stream is used to make the byte target more predictable and reduce excess in-flight traffic.</li>
+    <li>Requests use small chunks; pause, resume and stop controls abort the current stream.</li>
+    <li>A 20-second stalled request is stopped automatically. Each session is capped at 1 GB.</li>
+    <li>No response data is saved to disk or uploaded to this website. Session history stays in local browser storage.</li>
+  </ul>
+  <div class="health" style="margin-top:13px">Important: Browser payload counters exclude HTTP headers, TLS overhead, retransmissions and other network traffic. Your mobile operator or ISP may report a different amount. Do not use this with a metered connection unless you accept the cost.</div>
+</section>
+</div>
+</main>
+
+<footer class="footer"><strong>Data Waster Pro</strong> · A ToolsHub utility<br>Public endpoint availability and CORS rules are controlled by Cloudflare. Use responsibly. Downloaded test data is discarded in memory.</footer>
+</div>
+
+<div id="modal" class="modal-backdrop" hidden><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><h2 id="modalTitle">Confirm data download</h2><p id="modalText"></p><div class="modal-actions"><button id="cancelStart" class="btn ghost">Cancel</button><button id="confirmStart" class="btn primary">I understand — start</button></div></div></div>
+<div id="toast" class="toast" hidden role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+"use strict";
+const ENDPOINT="https://speed.cloudflare.com/__down";
+const MB=1000000,MAX=1000*MB,CHUNK=2*MB,STALL_MS=20000,HISTORY_KEY="toolshub_data_waster_history_v1",MAX_HISTORY=20;
+const $=id=>document.getElementById(id);
+const el={network:$("networkInfo"),status:$("status"),targets:$("targets"),custom:$("customAmount"),hint:$("customHint"),summary:$("targetSummary"),start:$("start"),pause:$("pause"),resume:$("resume"),stop:$("stop"),downloaded:$("downloaded"),downloadedSub:$("downloadedSub"),speed:$("speed"),speedSub:$("speedSub"),average:$("average"),elapsed:$("elapsed"),elapsedSub:$("elapsedSub"),remaining:$("remaining"),remainingSub:$("remainingSub"),eta:$("eta"),percent:$("percent"),progress:$("progress"),fill:$("fill"),progressBytes:$("progressBytes"),requests:$("requests"),chart:$("chart"),chartSpeed:$("chartSpeed"),chartEmpty:$("chartEmpty"),history:$("history"),health:$("health"),modal:$("modal"),modalText:$("modalText"),toast:$("toast")};
+const s={status:"idle",target:100*MB,total:0,requests:0,startedAt:0,activeMs:0,currentSpeed:null,samples:[],points:[],controller:null,runId:0,history:[],lastToast:0};
+let ctx=null,chartWidth=0,chartHeight=0,toastTimer=0;
+const fmtBytes=n=>{if(!Number.isFinite(n)||n<0)return"—";if(n<1000)return Math.round(n)+" B";const u=["KB","MB","GB","TB"],i=Math.min(Math.floor(Math.log10(n)/3)-1,3),v=n/Math.pow(1000,i+1);return v.toFixed(v>=100?0:v>=10?1:2)+" "+u[i]};
+const fmtSpeed=n=>Number.isFinite(n)?fmtBytes(n)+"/s":"—";
+const duration=ms=>{if(!Number.isFinite(ms)||ms<0)return"—";const t=Math.floor(ms/1000),h=Math.floor(t/3600),m=Math.floor(t%3600/60),sec=t%60;return h?String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")+":"+String(sec).padStart(2,"0"):String(m).padStart(2,"0")+":"+String(sec).padStart(2,"0")};
+const elapsed=()=>s.activeMs+(s.startedAt?performance.now()-s.startedAt:0);
+const avg=()=>elapsed()>0&&s.total>0?s.total/(elapsed()/1000):null;
+const escapeHtml=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function notify(msg){el.toast.textContent=msg;el.toast.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.toast.hidden=true,3800)}
+function setTarget(bytes){if(s.status==="running"||s.status==="paused")return;if(!Number.isFinite(bytes)||bytes<MB||bytes>MAX){notify("Choose a target between 1 MB and 1 GB.");return}s.target=Math.round(bytes);document.querySelectorAll("[data-mb]").forEach(b=>b.classList.toggle("active",Number(b.dataset.mb)*MB===s.target));el.custom.value="";el.hint.textContent="Target set to "+fmtBytes(s.target)+".";el.summary.innerHTML="Target: <strong>"+escapeHtml(fmtBytes(s.target))+"</strong> · "+s.target.toLocaleString()+" bytes";render()}
+function saveHistory(){try{localStorage.setItem(HISTORY_KEY,JSON.stringify(s.history.slice(0,MAX_HISTORY)))}catch(e){}}
+function loadHistory(){try{const a=JSON.parse(localStorage.getItem(HISTORY_KEY)||"[]");if(Array.isArray(a))s.history=a.filter(x=>x&&typeof x==="object").slice(0,MAX_HISTORY)}catch(e){s.history=[]}}
+function renderHistory(){if(!s.history.length){el.history.innerHTML='<div class="empty">No sessions yet.</div>';return}el.history.innerHTML=s.history.map(h=>'<div class="history-row"><span class="hstate '+(h.status==="Error"?"error":"")+'">'+escapeHtml(h.status)+'</span><div class="hmain"><strong>'+escapeHtml(fmtBytes(h.bytes))+'</strong><small>of '+escapeHtml(fmtBytes(h.target))+' · '+escapeHtml(h.date)+'</small></div><div class="hmeta">'+escapeHtml(h.duration)+'<br>'+escapeHtml(fmtSpeed(h.avg))+'</div></div>').join("")}
+function persistSession(outcome){const e=elapsed(),a=avg();s.history.unshift({date:new Date().toLocaleString(),status:outcome,bytes:s.total,target:s.target,duration:duration(e),durationMs:e,avg:a,requests:s.requests});s.history=s.history.slice(0,MAX_HISTORY);saveHistory();renderHistory()}
+function updateButtons(){const busy=s.status==="running"||s.status==="paused";el.start.disabled=busy;el.pause.disabled=s.status!=="running";el.resume.disabled=s.status!=="paused";el.stop.disabled=!busy;document.querySelectorAll("[data-mb]").forEach(b=>b.disabled=busy);el.custom.disabled=busy;$("applyCustom").disabled=busy;$("resetTarget").disabled=busy}
+function render(){const p=Math.min(100,s.total/s.target*100),remaining=Math.max(0,s.target-s.total),a=avg(),left=a&&remaining>0?remaining/a*1000:0;el.status.textContent=s.status==="running"?"Downloading":s.status[0].toUpperCase()+s.status.slice(1);el.status.className="pill"+(s.status==="running"?" live":s.status==="paused"?" warn":"");el.downloaded.textContent=fmtBytes(s.total);el.downloadedSub.textContent=s.total.toLocaleString()+" response-body bytes read";el.speed.textContent=fmtSpeed(s.currentSpeed);el.speedSub.textContent=s.currentSpeed?((s.currentSpeed*8/1e6).toFixed(2)+" Mbps · measured"):s.status==="running"?"Measuring throughput…":"Waiting for session";el.average.textContent=fmtSpeed(a);el.elapsed.textContent=duration(elapsed());el.elapsedSub.textContent=s.status==="paused"?"Timer paused":s.status==="running"?"Active transfer time":"Active transfer time";el.remaining.textContent=fmtBytes(remaining);el.remainingSub.textContent="of "+fmtBytes(s.target)+" target";el.eta.textContent=s.status==="completed"?"Done":left>0?duration(left):"—";el.percent.textContent=p.toFixed(1)+"%";el.fill.style.width=p+"%";el.progress.setAttribute("aria-valuenow",p.toFixed(1));el.progressBytes.textContent=fmtBytes(s.total)+" of "+fmtBytes(s.target);el.requests.textContent=s.requests+" requests";el.chartSpeed.textContent=fmtSpeed(s.currentSpeed);updateButtons()}
+function resizeChart(){const r=el.chart.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2);chartWidth=Math.max(200,r.width);chartHeight=Math.max(150,r.height);el.chart.width=Math.round(chartWidth*dpr);el.chart.height=Math.round(chartHeight*dpr);ctx=el.chart.getContext("2d");ctx.setTransform(dpr,0,0,dpr,0,0);drawChart()}
+function drawChart(){if(!ctx)return;ctx.clearRect(0,0,chartWidth,chartHeight);const now=performance.now(),pts=s.points.filter(p=>now-p.t<=60000);if(pts.length<2){el.chartEmpty.hidden=false;return}el.chartEmpty.hidden=true;const pad={l:62,r:9,t:12,b:23},w=chartWidth-pad.l-pad.r,h=chartHeight-pad.t-pad.b,max=Math.max(1,...pts.map(p=>p.v));ctx.font="10px ui-monospace,monospace";ctx.fillStyle="#8196aa";ctx.textAlign="right";for(let i=0;i<=3;i++){const y=pad.t+h*i/3;ctx.strokeStyle="#ffffff16";ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(chartWidth-pad.r,y);ctx.stroke();ctx.fillText(fmtSpeed(max*(1-i/3)),pad.l-6,y+3)}ctx.textAlign="left";ctx.fillText("60s",pad.l,chartHeight-5);ctx.textAlign="right";ctx.fillText("now",chartWidth-pad.r,chartHeight-5);const x=t=>pad.l+Math.max(0,1-(now-t)/60000)*w,y=v=>pad.t+h-(v/max)*h;ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(x(p.t),y(p.v)):ctx.moveTo(x(p.t),y(p.v)));ctx.strokeStyle="#42d8ed";ctx.lineWidth=2;ctx.stroke()}
+function addSpeed(n,now){const prev=s.samples[s.samples.length-1];if(prev){const dt=(now-prev.t)/1000;if(dt>0)s.currentSpeed=(n-prev.bytes)/dt}s.samples.push({t:now,bytes:n});while(s.samples.length>2&&now-s.samples[0].t>2000)s.samples.shift();if(s.currentSpeed!==null&&Number.isFinite(s.currentSpeed)){s.points.push({t:now,v:s.currentSpeed});while(s.points.length&&now-s.points[0].t>65000)s.points.shift()}}
+function buildUrl(bytes){const u=new URL(ENDPOINT);u.searchParams.set("bytes",String(bytes));u.searchParams.set("_cb",Date.now()+"-"+Math.random().toString(36).slice(2));return u.toString()}
+async function downloadLoop(id){while(id===s.runId&&s.status==="running"&&s.total<s.target){const requestBytes=Math.min(CHUNK,s.target-s.total),controller=new AbortController();s.controller=controller;const timeout=setTimeout(()=>controller.abort(),STALL_MS);try{s.requests++;const response=await fetch(buildUrl(requestBytes),{mode:"cors",credentials:"omit",cache:"no-store",redirect:"follow",signal:controller.signal});if(!response.ok)throw new Error("HTTP "+response.status+" "+response.statusText);if(!response.body||!response.body.getReader)throw new Error("Readable streaming is not supported by this endpoint/browser.");const reader=response.body.getReader();let received=0;try{while(true){const part=await reader.read();if(part.done)break;if(id!==s.runId||s.status!=="running"){try{await reader.cancel()}catch(e){}break}const size=part.value?part.value.byteLength:0;if(!size)continue;received+=size;s.total+=size;addSpeed(s.total,performance.now());if(s.total>=s.target){try{await reader.cancel()}catch(e){}break}render();drawChart()}}finally{try{reader.releaseLock()}catch(e){}}if(id!==s.runId||s.status!=="running")break;if(received===0)throw new Error("The endpoint returned no readable response bytes.")}catch(err){if(id!==s.runId)break;if(s.status!=="running"&&err.name==="AbortError")break;if(err.name==="AbortError")throw new Error("No response data arrived for 20 seconds. The request was stopped.");throw err}finally{clearTimeout(timeout);if(s.controller===controller)s.controller=null}render()}if(id===s.runId&&s.status==="running"){if(s.total>=s.target){s.status="completed";s.activeMs=elapsed();s.startedAt=0;finalize("Completed")}else{throw new Error("The download stopped before reaching the selected target.")}}}
+function finalize(outcome){s.status=outcome.toLowerCase();s.currentSpeed=null;s.controller=null;persistSession(outcome);render();if(outcome==="Completed")notify("Target reached. Session completed.");else if(outcome==="Error")notify("Download failed. See endpoint diagnostics.");else notify("Session stopped.");drawChart()}
+async function start(){if(s.status==="running"||s.status==="paused")return;if(!confirmStart())return;s.status="running";s.total=0;s.requests=0;s.activeMs=0;s.startedAt=performance.now();s.currentSpeed=null;s.samples=[];s.points=[];s.runId++;const id=s.runId;render();notify("Starting a real download of up to "+fmtBytes(s.target)+".");try{await downloadLoop(id)}catch(err){if(id!==s.runId)return;s.activeMs=elapsed();s.startedAt=0;s.status="error";s.currentSpeed=null;el.health.className="health error";el.health.textContent="Download error: "+(err.message||String(err));finalize("Error")}}
+function confirmStart(){el.modalText.textContent="This will download up to "+fmtBytes(s.target)+" of real data using your internet connection. It may count against your data package or incur charges. A hard limit of 1 GB applies. Continue only if you understand the cost.";el.modal.hidden=false;return false}
+function pause(){if(s.status!=="running")return;s.status="paused";s.activeMs+=performance.now()-s.startedAt;s.startedAt=0;s.runId++;if(s.controller)s.controller.abort();s.controller=null;s.currentSpeed=null;render();notify("Download paused. Resume to continue.")}
+function resume(){if(s.status!=="paused")return;s.status="running";s.startedAt=performance.now();s.samples=[];s.currentSpeed=null;s.runId++;const id=s.runId;render();downloadLoop(id).catch(err=>{if(id!==s.runId)return;s.activeMs=elapsed();s.startedAt=0;s.status="error";el.health.className="health error";el.health.textContent="Download error: "+(err.message||String(err));finalize("Error")})}
+function stop(){if(s.status!=="running"&&s.status!=="paused")return;if(s.status==="running")s.activeMs+=performance.now()-s.startedAt;s.startedAt=0;s.status="stopped";s.runId++;if(s.controller)s.controller.abort();s.controller=null;s.currentSpeed=null;finalize("Stopped")}
+async function testEndpoint(){el.health.className="health";el.health.textContent="Testing CORS and streaming…";const c=new AbortController(),timer=setTimeout(()=>c.abort(),10000);try{const t=performance.now(),r=await fetch(buildUrl(32768),{mode:"cors",credentials:"omit",cache:"no-store",signal:c.signal});if(!r.ok)throw new Error("HTTP "+r.status);if(!r.body)throw new Error("Readable response body unavailable.");const reader=r.body.getReader(),part=await reader.read();try{await reader.cancel()}catch(e){}const n=part.value?part.value.byteLength:0;if(!n)throw new Error("No readable bytes received.");el.health.className="health ok";el.health.textContent="✓ Endpoint reachable · CORS OK · read "+fmtBytes(n)+" in "+Math.round(performance.now()-t)+" ms."}catch(e){el.health.className="health error";el.health.textContent="✕ "+(e.name==="AbortError"?"Test timed out.":e.message||String(e))}finally{clearTimeout(timer)}}
+function tick(){if(s.status==="running"){render();drawChart()}}
+el.targets.addEventListener("click",e=>{const b=e.target.closest("[data-mb]");if(b)setTarget(Number(b.dataset.mb)*MB)});
+$("applyCustom").addEventListener("click",()=>{const v=Number(el.custom.value);if(!Number.isFinite(v)||v<1||v>1000||!Number.isInteger(v)){el.hint.textContent="Enter a whole number from 1 to 1000 MB.";return}setTarget(v*MB)});
+$("resetTarget").addEventListener("click",()=>setTarget(100*MB));
+el.start.addEventListener("click",()=>{if(s.status==="completed"||s.status==="stopped"||s.status==="error")start();else start()});
+$("cancelStart").addEventListener("click",()=>el.modal.hidden=true);
+$("confirmStart").addEventListener("click",()=>{el.modal.hidden=true;startConfirmed()});
+function startConfirmed(){if(s.status==="running"||s.status==="paused")return;s.status="running";s.total=0;s.requests=0;s.activeMs=0;s.startedAt=performance.now();s.currentSpeed=null;s.samples=[];s.points=[];s.runId++;const id=s.runId;render();notify("Starting a real download of up to "+fmtBytes(s.target)+".");downloadLoop(id).catch(err=>{if(id!==s.runId)return;s.activeMs=elapsed();s.startedAt=0;s.status="error";el.health.className="health error";el.health.textContent="Download error: "+(err.message||String(err));finalize("Error")})}
+el.pause.addEventListener("click",pause);el.resume.addEventListener("click",resume);el.stop.addEventListener("click",stop);$("testEndpoint").addEventListener("click",testEndpoint);
+$("exportHistory").addEventListener("click",()=>{if(!s.history.length){notify("No history to export.");return}const blob=new Blob([JSON.stringify(s.history,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="data-waster-history.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)});
+$("clearHistory").addEventListener("click",()=>{if(!s.history.length)return;if(confirm("Clear all locally stored session history?")){s.history=[];saveHistory();renderHistory();notify("Local history cleared.")}});
+if(navigator.connection){const n=navigator.connection,p=[];if(n.effectiveType)p.push(n.effectiveType.toUpperCase());if(n.downlink)p.push(n.downlink+" Mbps estimate");el.network.textContent=p.length?p.join(" · "):"Network estimate unavailable";el.network.title="Browser-reported estimate, not measured throughput."}
+loadHistory();renderHistory();render();resizeChart();window.addEventListener("resize",resizeChart);setInterval(tick,300);
+})();
+</script>
+<script>
+/* The confirmation modal is intentionally wired in a separate, tiny guard so the
+   download cannot begin until the user makes an explicit second click. */
+</script>
+</body>
+</html>
