@@ -1995,6 +1995,19 @@ const schemas: Record<string, ToolSchema> = {
   "ai-roi-calculator": { fields: [{ key: "hoursSaved", type: "number", label: t("Hours saved per month", "মাসে সাশ্রয় হওয়া ঘণ্টা"), default: "20", min: "0" }, { key: "hourlyRate", type: "number", label: t("Hourly value", "ঘণ্টাপ্রতি মূল্য"), default: "30", min: "0", step: "0.01" }, { key: "monthlyCost", type: "number", label: t("Monthly tool cost", "মাসিক টুল খরচ"), default: "100", min: "0", step: "0.01" }], example: {} },
   "chatgpt-to-word": { fields: [{ key: "text", type: "textarea", label: t("Text to save", "যে লেখা সেভ করবেন"), default: "Paste a ChatGPT conversation or any text here." }], example: {} },
   "pdf-to-word": { fields: [], accept: ".pdf,application/pdf", multiple: false, example: {} },
+  "pdf-fill-and-sign": {
+    fields: [
+      { key: "fields", type: "textarea", label: t("Form fields (JSON: exact PDF field name → value)", "Form field (JSON: PDF-এর সঠিক নাম → মান)"), default: "{}" },
+      { key: "signer", type: "text", label: t("Typed visual signature (optional)", "Typed visual signature (ঐচ্ছিক)"), default: "" },
+      { key: "date", type: "date", label: t("Date under signature (optional)", "স্বাক্ষরের নিচে তারিখ (ঐচ্ছিক)"), default: "" },
+      { key: "page", type: "number", label: t("Signature page (1-based)", "স্বাক্ষরের পৃষ্ঠা (১ থেকে)"), default: "1", min: "1" },
+      { key: "x", type: "number", label: t("Signature X position (PDF points)", "স্বাক্ষরের X অবস্থান (PDF point)"), default: "72", min: "0" },
+      { key: "y", type: "number", label: t("Signature Y position (PDF points)", "স্বাক্ষরের Y অবস্থান (PDF point)"), default: "72", min: "0" },
+      { key: "size", type: "number", label: t("Signature text size", "স্বাক্ষরের লেখার আকার"), default: "24", min: "8", max: "72" },
+    ],
+    accept: ".pdf,application/pdf",
+    example: { fields: { fields: '{"Full Name":"Ada Lovelace","Approved":true}', signer: "Ada Lovelace", date: "2026-11-04", page: "1", x: "72", y: "72", size: "24" } },
+  },
 };
 
 export function getToolSchema(slug: string): ToolSchema | null {

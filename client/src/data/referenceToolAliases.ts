@@ -14,6 +14,7 @@ export const referenceAliasesByTarget: Record<string, string[]> = {
   "image-crop": ["image-cropper"],
   "image-resize": ["image-resizer"],
   "compress-pdf": ["pdf-compress"],
+  "pdf-fill-and-sign": ["pdf-fill-and-sign"],
   "pdf-merge": ["pdf-merge-split"],
   "pdf-split": ["pdf-merge-split"],
   "pdf-to-images": ["pdf-converter"],

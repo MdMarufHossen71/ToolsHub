@@ -76,6 +76,70 @@ const MAGIC: Array<[string, number[], string]> = [
 export const runFileTools: ToolRunner = async (slug, input, _option, _t, extra) => {
   const F = (key: string, fallback = "") => field(extra, key, fallback);
 
+  if (slug === "pdf-fill-and-sign") {
+    const [file] = needFiles(extra, 1, "application/pdf");
+    const rawFields = F("fields", "{}");
+    if (rawFields.length > 100_000) throw new ToolError("tool.error.generic");
+    let values: Record<string, string | number | boolean | string[]>;
+    try {
+      const parsed: unknown = JSON.parse(rawFields || "{}");
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("invalid field map");
+      const entries = Object.entries(parsed as Record<string, unknown>);
+      if (entries.some(([, value]) => !(typeof value === "string" || typeof value === "number" || typeof value === "boolean" || (Array.isArray(value) && value.every((item) => typeof item === "string"))))) throw new Error("unsupported field value");
+      values = Object.fromEntries(entries) as typeof values;
+    } catch {
+      throw new ToolError("tool.error.generic");
+    }
+
+    const pdf = await import("pdf-lib");
+    let pdfDoc: Awaited<ReturnType<typeof pdf.PDFDocument.load>>;
+    try {
+      pdfDoc = await pdf.PDFDocument.load(await file.arrayBuffer());
+    } catch {
+      throw new ToolError("tool.error.generic");
+    }
+    const form = pdfDoc.getForm();
+    const availableFields = form.getFields().map((item) => item.getName());
+    let filled = 0;
+    try {
+      for (const item of form.getFields()) {
+        const value = values[item.getName()];
+        if (value === undefined) continue;
+        if (item instanceof pdf.PDFTextField) item.setText(String(value));
+        else if (item instanceof pdf.PDFCheckBox) (value === true || value === "true" || value === "yes" ? item.check() : item.uncheck());
+        else if (item instanceof pdf.PDFDropdown || item instanceof pdf.PDFOptionList) item.select(Array.isArray(value) ? value : String(value));
+        else if (item instanceof pdf.PDFRadioGroup) item.select(String(value));
+        else continue;
+        filled += 1;
+      }
+      if (filled > 0) form.updateFieldAppearances();
+    } catch {
+      throw new ToolError("tool.error.generic");
+    }
+
+    const signer = F("signer").trim().slice(0, 120);
+    if (signer) {
+      const pageNumber = Number(F("page", "1"));
+      const x = Number(F("x", "72"));
+      const y = Number(F("y", "72"));
+      const size = Number(F("size", "24"));
+      const pages = pdfDoc.getPages();
+      if (!Number.isInteger(pageNumber) || pageNumber < 1 || pageNumber > pages.length || ![x, y, size].every(Number.isFinite) || x < 0 || y < 0 || size < 8 || size > 72) throw new ToolError("tool.error.number");
+      const target = pages[pageNumber - 1];
+      if (!target || x > target.getWidth() || y > target.getHeight()) throw new ToolError("tool.error.number");
+      const font = await pdfDoc.embedFont(pdf.StandardFonts.HelveticaOblique);
+      target.drawText(signer, { x, y, size, font, color: pdf.rgb(0.11, 0.2, 0.36), maxWidth: Math.max(1, target.getWidth() - x - 24) });
+      const date = F("date").trim().slice(0, 40);
+      if (date) target.drawText(date, { x, y: Math.max(0, y - size * 0.8), size: Math.max(8, size * 0.55), font, color: pdf.rgb(0.25, 0.3, 0.38), maxWidth: Math.max(1, target.getWidth() - x - 24) });
+    }
+
+    const bytes = await pdfDoc.save({ useObjectStreams: true });
+    const safeName = file.name.replace(/\.pdf$/i, "").replace(/[^a-zA-Z0-9_-]/g, "-").slice(0, 80) || "document";
+    return {
+      text: JSON.stringify({ availableFormFields: availableFields, fieldsFilled: filled, visualSignatureAdded: Boolean(signer), note: "The typed signature is only a visual mark; it does not verify identity or create a cryptographic PDF signature." }, null, 2),
+      artifacts: [downloadArtifact(`${safeName}-filled.pdf`, "application/pdf", bytes)],
+    };
+  }
   if (slug === "chatgpt-to-word") {
     const text = F("text", input);
     if (!text.trim()) return { text: _t("tool.result.needsInput") };

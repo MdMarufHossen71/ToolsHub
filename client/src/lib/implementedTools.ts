@@ -84,7 +84,7 @@ export const IMPLEMENTED_TOOLS: ReadonlySet<string> = new Set([
   "split-file", "join-files", "qr-file-transfer", "file-type-detector", "file-size-converter",
   "batch-file-rename", "text-to-file-download", "zip-creator-extractor", "chatgpt-to-word",
   "pdf-merge", "pdf-split", "pdf-rotate", "pdf-page-reorder", "pdf-watermark",
-  "images-to-pdf", "svg-optimizer", "exif-viewer", "pdf-to-images", "compress-pdf", "pdf-to-word",
+  "images-to-pdf", "svg-optimizer", "exif-viewer", "pdf-to-images", "compress-pdf", "pdf-to-word", "pdf-fill-and-sign",
   "invoice-generator", "quote-generator", "receipt-generator", "purchase-order-generator",
   // Image Studio
   "image-resize", "image-crop", "image-rotate", "image-flip", "image-format-converter",
