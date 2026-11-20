@@ -106,7 +106,10 @@ export const runFileTools: ToolRunner = async (slug, input, _option, _t, extra) 
         const value = values[item.getName()];
         if (value === undefined) continue;
         if (item instanceof pdf.PDFTextField) item.setText(String(value));
-        else if (item instanceof pdf.PDFCheckBox) (value === true || value === "true" || value === "yes" ? item.check() : item.uncheck());
+        else if (item instanceof pdf.PDFCheckBox) {
+          if (value === true || value === "true" || value === "yes") item.check();
+          else item.uncheck();
+        }
         else if (item instanceof pdf.PDFDropdown || item instanceof pdf.PDFOptionList) item.select(Array.isArray(value) ? value : String(value));
         else if (item instanceof pdf.PDFRadioGroup) item.select(String(value));
         else continue;

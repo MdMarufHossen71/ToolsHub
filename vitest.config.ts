@@ -1,9 +1,10 @@
 import path from "node:path";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
+import { ggwaveCspPlugin } from "./scripts/ggwave-csp-plugin";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [ggwaveCspPlugin(), react()],
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "client", "src"),

@@ -6,6 +6,7 @@
 
 import { crc16Ccitt } from "./integrity";
 import { sanitizeMime } from "./filename";
+import { base64UrlToBytes, bytesToBase64Url } from "../transfer/shared";
 import {
   QFT_MAX_CHUNKS,
   QFT_MAX_FILE_BYTES,
@@ -21,28 +22,9 @@ import {
   type QftTransferMeta,
 } from "./types";
 
-export function bytesToBase64Url(bytes: Uint8Array): string {
-  let binary = "";
-  const STEP = 0x8000;
-  for (let i = 0; i < bytes.length; i += STEP) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + STEP));
-  }
-  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-
-export function base64UrlToBytes(text: string): Uint8Array | null {
-  if (!/^[A-Za-z0-9\-_]*$/.test(text)) return null;
-  try {
-    let b64 = text.replace(/-/g, "+").replace(/_/g, "/");
-    while (b64.length % 4 !== 0) b64 += "=";
-    const binary = atob(b64);
-    const out = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i += 1) out[i] = binary.charCodeAt(i);
-    return out;
-  } catch {
-    return null;
-  }
-}
+// Re-exported for the existing QR modules and tests; the implementation now
+// lives in `lib/transfer/shared.ts` so the sound channel uses the same codec.
+export { base64UrlToBytes, bytesToBase64Url };
 
 function checksumOf(canonical: string): string {
   return crc16Ccitt(canonical).toString(16).padStart(4, "0");

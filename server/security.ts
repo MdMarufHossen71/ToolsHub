@@ -19,7 +19,7 @@ export const CSP_SCRIPT_404_HASH = "sha256-dxoochAej0b6SOanassAQcyuGnxPoYrH/Q2ZR
 export const HSTS_VALUE = "max-age=63072000; includeSubDomains";
 
 /** Mirrors the `Permissions-Policy` value in `vercel.json`. */
-export const PERMISSIONS_POLICY_VALUE = "camera=(self), microphone=(), geolocation=()";
+export const PERMISSIONS_POLICY_VALUE = "camera=(self), microphone=(self), geolocation=()";
 
 /** Directive list in `vercel.json` order. */
 export const CSP_DIRECTIVES = {

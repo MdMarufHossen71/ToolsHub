@@ -82,6 +82,7 @@ const LIVE_STEPS: Record<string, GuideStep[]> = {
   "voice-recorder": [say("allow"), say("s.recorder"), say("stop"), step("tool.guide.step.copyDownload")],
   "particles-js-playground": [say("s.particles"), say("adjust"), say("watch"), say("explore")],
   "qr-file-transfer": [say("allow"), say("start"), say("watch"), say("stop")],
+  "sound-file-transfer": [say("allow"), say("start"), say("watch"), say("stop")],
 };
 
 /** Join localized field labels into one readable list for the "fill in the fields" step. */

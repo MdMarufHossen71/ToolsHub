@@ -29,6 +29,7 @@ export const LIVE_TOOL_SLUGS: ReadonlySet<string> = new Set([
   "voice-recorder",
   "particles-js-playground",
   "qr-file-transfer",
+  "sound-file-transfer",
   "speech-to-text",
   "text-to-speech",
 ]);

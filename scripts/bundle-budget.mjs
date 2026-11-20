@@ -25,7 +25,11 @@ const DIST = path.join(ROOT, "dist", "public");
 const ASSETS = path.join(DIST, "assets");
 
 const MAX_CHUNK_BYTES = 620 * 1024;
-const MAX_TOTAL_BYTES = 6 * 1024 * 1024;
+// Lazy tool chunks count toward the total even though they never reach the
+// initial paint. The 6.5 MB ceiling leaves room for the ~133 KB ggwave WASM
+// module behind Sound File Transfer (loaded only when that tool runs); the
+// per-chunk gate above is what protects first load.
+const MAX_TOTAL_BYTES = 6.5 * 1024 * 1024;
 
 if (!existsSync(ASSETS)) throw new Error(`[budget] ${ASSETS} is missing — run this after \`vite build\``);
 

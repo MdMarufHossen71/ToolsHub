@@ -300,6 +300,7 @@ export const toolDescriptions: Record<string, { en: string; bn: string }> = {
   "ZIP Creator Extractor": { en: "Pack files into a ZIP archive, or unpack one to look inside.", bn: "ফাইল ZIP আর্কাইভে বাঁধুন, বা খুলে ভেতরে কী আছে দেখুন।" },
   "Text to File Download": { en: "Save a block of text as a file with the name and extension you pick.", bn: "লেখাকে নিজের দেওয়া নাম ও এক্সটেনশনে ফাইল হিসেবে সেভ করুন।" },
   "QR File Transfer": { en: "Split a small file into animated QR frames for offline screen-to-camera transfer.", bn: "ছোট ফাইলকে QR ফ্রেমে ভেঙে অফলাইনে স্ক্রিন থেকে ক্যামেরায় পাঠান।" },
+  "Sound File Transfer": { en: "Send a small file between devices as sound, decoded by a microphone — no network at all.", bn: "ছোট ফাইল শব্দ হিসেবে ডিভাইস থেকে ডিভাইসে পাঠান, মাইক্রোফোন দিয়ে ডিকোড করুন — কোনো নেটওয়ার্ক ছাড়াই।" },
 
   // SEO & Web
   "Htaccess Redirect Generator": { en: "Write Apache redirect and rewrite rules from plain from-and-to pairs.", bn: "সাধারণ কোথা-থেকে-কোথায় জোড়া থেকে Apache রিডাইরেক্ট ও রিরাইট নিয়ম লিখুন।" },
@@ -363,7 +364,7 @@ export const toolDescriptions: Record<string, { en: string; bn: string }> = {
   "Meeting Cost Calculator": { en: "Estimate meeting person-hours and cost using the attendee and hourly-cost figures you enter.", bn: "অংশগ্রহণকারী ও ঘণ্টাপ্রতি খরচ দিয়ে মিটিংয়ের person-hour ও খরচের অনুমান করুন।" },
   "Readability Checker": { en: "Review word counts and an approximate English readability score; Bangla scoring is not supported.", bn: "শব্দের হিসাব ও আনুমানিক ইংরেজি পাঠযোগ্যতার স্কোর দেখুন; বাংলা স্কোর সমর্থিত নয়।" },
   "PDF to Word": { en: "Extract selectable text from a PDF into a simple DOCX; scanned pages and original formatting are not preserved.", bn: "PDF-এর নির্বাচনযোগ্য লেখা সাধারণ DOCX-এ নিন; স্ক্যান পৃষ্ঠা ও মূল ফরম্যাট অক্ষুণ্ণ থাকে না।" },
-  "PDF Fill & Sign": { en: "Fill PDF AcroForm fields from a JSON map and add an optional typed visual signature locally; no identity or cryptographic signature is created.", bn: "JSON map দিয়ে PDF AcroForm পূরণ ও ঐচ্ছিক typed visual signature যোগ করুন; identity বা cryptographic signature তৈরি হয় না।" },
+  "PDF Fill and Sign": { en: "Fill PDF AcroForm fields from a JSON map and add an optional typed visual signature locally; no identity or cryptographic signature is created.", bn: "JSON map দিয়ে PDF AcroForm পূরণ ও ঐচ্ছিক typed visual signature যোগ করুন; identity বা cryptographic signature তৈরি হয় না।" },
   "ChatGPT to Word": { en: "Save pasted text as a simple DOCX file locally; paragraph text is preserved without web upload.", bn: "পেস্ট করা লেখা লোকালেই সাধারণ DOCX ফাইল হিসেবে সেভ করুন; ওয়েবে আপলোড হয় না।" },
   "Token Counter": { en: "Estimate token count from text length and word pieces; exact counts depend on the model tokenizer.", bn: "লেখার দৈর্ঘ্য ও শব্দাংশ থেকে টোকেনের অনুমান করুন; সঠিক সংখ্যা মডেলভেদে বদলায়।" },
   "LLM API Cost Calculator": { en: "Estimate API cost using token counts and per-million rates that you supply.", bn: "আপনার দেওয়া টোকেন সংখ্যা ও প্রতি-মিলিয়ন রেট দিয়ে API খরচের অনুমান করুন।" },

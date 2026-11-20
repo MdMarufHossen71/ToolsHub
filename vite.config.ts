@@ -6,6 +6,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { defineConfig, type Connect, type Plugin, type ViteDevServer } from "vite";
 import { vitePluginManusRuntime } from "vite-plugin-manus-runtime";
+import { ggwaveCspPlugin } from "./scripts/ggwave-csp-plugin";
 
 // =============================================================================
 // Manus Debug Collector - Vite Plugin
@@ -330,6 +331,9 @@ function vitePluginStatic404(): Plugin {
 // follow the Rules of React (enforced by `pnpm run lint`) get automatic
 // memoization; anything else bails out to normal rendering, never a break.
 const plugins = [
+  // First: the sound-transfer tool imports this virtual module lazily, and the
+  // replacement must happen before Vite's dep optimizer sees `ggwave`.
+  ggwaveCspPlugin(),
   react({
     babel: {
       plugins: [["babel-plugin-react-compiler", {}]],

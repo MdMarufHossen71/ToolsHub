@@ -13,6 +13,7 @@ import { FaviconGen } from "./FaviconGen";
 import { Wysiwyg } from "./Wysiwyg";
 import { CameraRecorder, ScreenRecorder, VoiceRecorder } from "./Recorders";
 import { QrFileTransfer } from "./QrFileTransfer";
+import { SoundFileTransfer } from "./SoundFileTransfer";
 import { SpeechToText } from "./SpeechToText";
 import { TextToSpeech } from "./TextToSpeech";
 import { ParticlesPlayground } from "./ParticlesPlayground";
@@ -39,6 +40,7 @@ const liveTools: Record<string, ComponentType> = {
   "voice-recorder": VoiceRecorder,
   "particles-js-playground": ParticlesPlayground,
   "qr-file-transfer": QrFileTransfer,
+  "sound-file-transfer": SoundFileTransfer,
   "speech-to-text": SpeechToText,
   "text-to-speech": TextToSpeech,
 };
